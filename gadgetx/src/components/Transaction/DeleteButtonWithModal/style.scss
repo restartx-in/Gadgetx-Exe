@@ -1,0 +1,91 @@
+.delete_modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+
+  &__popup_content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+
+    &-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      &-title {
+        margin: 0;
+        font-size: 18px;
+      }
+      &-close_btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+    }
+
+    &-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+
+      &-btn {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      &-close {
+        background: #e0e0e0;
+      }
+
+      &-apply {
+        background: #e53e3e;
+        color: white;
+
+        &:disabled {
+          background: #a0aec0;
+          cursor: not-allowed;
+        }
+      }
+    }
+    &-body {
+      margin: 20px 0;
+      font-size: 16px;
+    }
+  }
+}
+
+.delete_modal_trigger_btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap:8px;
+  background-color: #ffffff;
+  color: #ef4444;
+  padding: 0.5rem;
+  // border:solid rgb(238, 80, 80);
+  // border: 1px solid #d1d5db ;
+  border-radius: 6px;
+  // cursor: pointer;
+  border-color: #ef4444;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+  // &:hover {
+  //   background-color: #fef2f2;
+  //   border-color: #ef4444;
+  // }
+  &__icon {
+    width: 16px;
+    height: 16px;
+    color: #ef4444;
+  }
+}

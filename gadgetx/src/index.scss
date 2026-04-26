@@ -1,0 +1,1276 @@
+@use 'sass:list';
+
+:root {
+  --color-hover: #e8ecf7;
+  /* Typography */
+  --line-height-base: 1.5;
+  --font-weight-400: 400;
+  --font-weight-500: 500; /* Medium (default) */
+  --font-weight-600: 600;
+  --font-weight-700: 700;
+
+  /* Color Palette – Indigo brand & neutrals */
+  --color-primary-50: #eef2ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #f9fafb;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+  --color-neutral-1000: #0f172a;
+  --text-field-active-color:#1976d2;
+  --border-color:#c9c9c9;
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-danger: #f60b0b;
+  --color-warning: #f59e0b;
+  --color-info: #0ea5e9;
+  --skeleton-light: #f0f0f0;
+
+  /* Spacing Scale */
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
+
+  /* Radius, Borders & Shadows */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --radius-full: 9999px;
+  --border-width-base: 1px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-medium: 250ms ease-in-out;
+  --transition-slow: 400ms ease-in-out;
+
+  /* Z-Index Scale */
+  --z-index-1: 1;
+  --z-index-10: 10; /* Dropdowns, Popovers */
+  --z-index-20: 20; /* Sticky Headers */
+  --z-index-30: 30; /* Modal Backdrop */
+  --z-index-40: 40; /* Modal Dialog */
+  --z-index-50: 50; /* Notifications */
+}
+
+:root {
+  /* Colors */
+  --color-blue: #007bff;
+  --color-brand-base: var(--sidbar-bg);
+  --color-brand-light: #3b82f6;
+  --color-brand-dark: #1d4ed8;
+  --color-neutral-900: #222b45;
+  --color-neutral-800: #1e293b;
+  --color-neutral-700: #374151;
+  --color-neutral-500: #6b7280;
+  --color-neutral-400: #888;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-100: #f3f4f6;
+  --color-success: #22c55e;
+  --color-danger: #f60b0b;
+  --color-warning: #f59e42;
+  --color-info: #2563eb;
+  --color-bg-base: #f7f9fb;
+  --color-text-base: #121133;
+  --color-text-light: #121133;
+  --color-page-title: #bbc8ec;
+  --color-light-red: #aaa;
+  --app-bg: #f4f7fe;
+  --contend: #ffff;
+  --sidbar-bg: #121133;
+  --navy: #121133;
+  --sidebar-hover: #282747;
+  --sidebar-hover-text: #fff5fc;
+  --sidebar-text: #979bb8;
+  --maroon-red: #fb003f;
+  --olive-green: #006d5a;
+  --primary-blue: #92b4ef;
+
+  --border-light: #eff1f4;
+  --text-dark: #0b1017;
+  --separator-color: #64686b;
+  --scrollbar-thumb: #cbd5e1;
+}
+
+:root {
+  --spacing-page-padding: 32px;
+  --spacing-section-margin: 24px;
+  --spacing-element-gap: 16px;
+
+  --color-background: #f9f9f9;
+  --color-bg-card: #ffffff;
+  --color-surface: #ffffff;
+  --color-border-base: #dcdcdc;
+  --color-border: #e0e0e0;
+  --color-primary: #007bff;
+  --color-primary-700: #0056b3;
+  --color-brand-base: #2196f3;
+  --color-text-light: #121133;
+  --color-text-dark: var(--sidbar-bg);
+  --color-text-subtle: #aaa;
+  --color-black: #000; /* Assuming this is what 'black' refers to in existing shadows */
+
+  --radius-lg: 12px;
+  --border-radius-lg: 12px;
+  --border-radius-md: 8px;
+  --border-width-base: 1px;
+
+  --font-family-base: 'Poppins';
+  --font-weight-500: 500;
+  --font-weight-600: 600;
+  --font-weight-700: 700;
+
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2-5xl: 2rem;
+
+  --space-6: 24px;
+}
+:root {
+  /* Colors */
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+
+  --border-radius-sm: 0.25rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 0.75rem;
+}
+
+html,
+body,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none;
+}
+
+////////////////////////////////////////////////////////
+
+:root {
+  --fs8: 8px;
+  --fs10: 10px;
+  --fs12: 12px;
+  --fs14: 14px;
+  --fs16: 16px;
+  --fs18: 18px;
+  --fs20: 20px;
+  --fs22: 22px;
+  --fs24: 24px;
+  --fs26: 26px;
+  --fs28: 28px;
+  --fs30: 30px;
+  --fs32: 32px;
+  --fs34: 34px;
+  --fs36: 36px;
+  --fs38: 38px;
+  --fs40: 40px;
+}
+.fw400 {
+  font-weight: 400 !important;
+}
+.fw500 {
+  font-weight: 500 !important;
+}
+.fw600 {
+  font-weight: 600 !important;
+}
+.fw700 {
+  font-weight: 700 !important;
+}
+
+@for $size from 8 through 40 {
+  @if list.index(
+    (8, 10, 12, 14, 15, 16, 18, 20, 22, 24, 25, 26, 28, 30, 32, 34, 36, 38, 40),
+    $size
+  )
+  {
+    .fs#{$size} {
+      font-size: var(--fs#{$size}) !important;
+      font-family: 'poppins';
+    }
+  }
+}
+
+@media (max-width: 1600px) {
+  :root {
+    --fs8: 7px;
+    --fs10: 9px;
+    --fs12: 11px;
+    --fs14: 13px;
+    --fs16: 15px;
+    --fs18: 17px;
+    --fs20: 19px;
+    --fs22: 21px;
+    --fs24: 23px;
+    --fs26: 25px;
+    --fs28: 27px;
+    --fs30: 29px;
+    --fs32: 31px;
+    --fs34: 33px;
+    --fs36: 35px;
+    --fs38: 37px;
+    --fs40: 39px;
+  }
+}
+
+@media (max-width: 1350px) {
+  :root {
+    --fs8: 6px;
+    --fs10: 8px;
+    --fs12: 10px;
+    --fs14: 12px;
+    --fs16: 14px;
+    --fs18: 16px;
+    --fs20: 18px;
+    --fs22: 20px;
+    --fs24: 22px;
+    --fs26: 24px;
+    --fs28: 26px;
+    --fs30: 28px;
+    --fs32: 30px;
+    --fs34: 32px;
+    --fs36: 34px;
+    --fs38: 36px;
+    --fs40: 38px;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --fs8: 5px;
+    --fs10: 7px;
+    --fs12: 9px;
+    --fs14: 11px;
+    --fs16: 13px;
+    --fs18: 15px;
+    --fs20: 17px;
+    --fs22: 19px;
+    --fs24: 21px;
+    --fs26: 23px;
+    --fs28: 25px;
+    --fs30: 27px;
+    --fs32: 29px;
+    --fs34: 31px;
+    --fs36: 33px;
+    --fs38: 35px;
+    --fs40: 37px;
+  }
+}
+
+@media (max-width: 750px) {
+  :root {
+    --fs8: 4px;
+    --fs10: 6px;
+    --fs12: 8px;
+    --fs14: 10px;
+    --fs16: 12px;
+    --fs18: 14px;
+    --fs20: 16px;
+    --fs22: 18px;
+    --fs24: 20px;
+    --fs26: 22px;
+    --fs28: 24px;
+    --fs30: 26px;
+    --fs32: 28px;
+    --fs34: 30px;
+    --fs36: 32px;
+    --fs38: 34px;
+    --fs40: 36px;
+  }
+}
+
+// Padding
+
+:root {
+  --padding-2: 2px;
+  --padding-4: 4px;
+  --padding-6: 6px;
+  --padding-8: 8px;
+  --padding-10: 10px;
+  --padding-12: 12px;
+  --padding-14: 14px;
+  --padding-15: 15px;
+  --padding-16: 16px;
+  --padding-18: 18px;
+  --padding-20: 20px;
+  --padding-22: 22px;
+  --padding-24: 24px;
+  --padding-25: 25px;
+  --padding-26: 26px;
+  --padding-28: 28px;
+  --padding-30: 30px;
+  --padding-32: 32px;
+  --padding-34: 34px;
+  --padding-36: 36px;
+  --padding-38: 38px;
+  --padding-40: 40px;
+}
+
+@for $size from 2 through 40 {
+  @if list.index(
+    (
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      15,
+      16,
+      18,
+      20,
+      22,
+      24,
+      25,
+      26,
+      28,
+      30,
+      32,
+      34,
+      36,
+      38,
+      40
+    ),
+    $size
+  )
+  {
+    .p#{$size} {
+      padding: var(--padding-#{$size}) !important;
+    }
+    .pt#{$size} {
+      padding-top: var(--padding-#{$size}) !important;
+    }
+    .pr#{$size} {
+      padding-right: var(--padding-#{$size}) !important;
+    }
+    .pb#{$size} {
+      padding-bottom: var(--padding-#{$size}) !important;
+    }
+    .pl#{$size} {
+      padding-left: var(--padding-#{$size}) !important;
+    }
+  }
+}
+
+/* =========================
+   Responsive Adjustments
+   ========================= */
+@media (max-width: 1600px) {
+  :root {
+    --padding-40: 36px;
+    --padding-38: 34px;
+    --padding-36: 32px;
+    --padding-34: 30px;
+    --padding-32: 28px;
+    --padding-30: 27px;
+    --padding-28: 25px;
+    --padding-26: 23px;
+    --padding-25: 22px;
+    --padding-24: 21px;
+    --padding-22: 20px;
+    --padding-20: 18px;
+    --padding-18: 16px;
+    --padding-16: 14px;
+    --padding-15: 13px;
+    --padding-14: 12px;
+    --padding-12: 10px;
+    --padding-10: 8px;
+    --padding-8: 6px;
+    --padding-6: 4px;
+    --padding-4: 2px;
+    --padding-2: 1px;
+  }
+}
+
+@media (max-width: 1350px) {
+  :root {
+    --padding-40: 32px;
+    --padding-38: 30px;
+    --padding-36: 28px;
+    --padding-34: 26px;
+    --padding-32: 24px;
+    --padding-30: 25px;
+    --padding-28: 23px;
+    --padding-26: 21px;
+    --padding-25: 20px;
+    --padding-24: 19px;
+    --padding-22: 18px;
+    --padding-20: 16px;
+    --padding-18: 15px;
+    --padding-16: 13px;
+    --padding-15: 11px;
+    --padding-14: 10px;
+    --padding-12: 8px;
+    --padding-10: 6px;
+    --padding-8: 4px;
+    --padding-6: 3px;
+    --padding-4: 2px;
+    --padding-2: 1px;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --padding-40: 28px;
+    --padding-38: 27px;
+    --padding-36: 26px;
+    --padding-34: 24px;
+    --padding-32: 22px;
+    --padding-30: 24px;
+    --padding-28: 22px;
+    --padding-26: 20px;
+    --padding-25: 19px;
+    --padding-24: 18px;
+    --padding-22: 17px;
+    --padding-20: 15px;
+    --padding-18: 13px;
+    --padding-16: 11px;
+    --padding-15: 10px;
+    --padding-14: 9px;
+    --padding-12: 7px;
+    --padding-10: 5px;
+    --padding-8: 4px;
+    --padding-6: 3px;
+    --padding-4: 2px;
+    --padding-2: 1px;
+  }
+}
+
+@media (max-width: 750px) {
+  :root {
+    --padding-40: 26px;
+    --padding-38: 25px;
+    --padding-36: 24px;
+    --padding-34: 23px;
+    --padding-32: 22px;
+    --padding-30: 23px;
+    --padding-28: 21px;
+    --padding-26: 19px;
+    --padding-25: 18px;
+    --padding-24: 17px;
+    --padding-22: 15px;
+    --padding-20: 14px;
+    --padding-18: 12px;
+    --padding-16: 10px;
+    --padding-15: 8px;
+    --padding-14: 7px;
+    --padding-12: 6px;
+    --padding-10: 4px;
+    --padding-8: 3px;
+    --padding-6: 2px;
+    --padding-4: 1px;
+    --padding-2: 1px;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --padding-40: 24px;
+    --padding-38: 23px;
+    --padding-36: 22px;
+    --padding-34: 21px;
+    --padding-32: 20px;
+    --padding-30: 22px;
+    --padding-28: 20px;
+    --padding-26: 18px;
+    --padding-25: 17px;
+    --padding-24: 16px;
+    --padding-22: 15px;
+    --padding-20: 14px;
+    --padding-18: 10px;
+    --padding-16: 8px;
+    --padding-15: 6px;
+    --padding-14: 5px;
+    --padding-12: 4px;
+    --padding-10: 3px;
+    --padding-8: 2px;
+    --padding-6: 2px;
+    --padding-4: 1px;
+    --padding-2: 1px;
+  }
+}
+
+// Margin
+
+:root {
+  --margin-2: 2px;
+  --margin-4: 4px;
+  --margin-6: 6px;
+  --margin-8: 8px;
+  --margin-10: 10px;
+  --margin-12: 12px;
+  --margin-14: 14px;
+  --margin-15: 15px;
+  --margin-16: 16px;
+  --margin-18: 18px;
+  --margin-20: 20px;
+  --margin-22: 22px;
+  --margin-24: 24px;
+  --margin-25: 25px;
+  --margin-26: 26px;
+  --margin-28: 28px;
+  --margin-30: 30px;
+  --margin-32: 32px;
+  --margin-34: 34px;
+  --margin-36: 36px;
+  --margin-38: 38px;
+  --margin-40: 40px;
+}
+
+@for $size from 2 through 40 {
+  @if list.index(
+    (
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      15,
+      16,
+      18,
+      20,
+      22,
+      24,
+      25,
+      26,
+      28,
+      30,
+      32,
+      34,
+      36,
+      38,
+      40
+    ),
+    $size
+  )
+  {
+    .m#{$size} {
+      margin: var(--margin-#{$size}) !important;
+    }
+    .mt#{$size} {
+      margin-top: var(--margin-#{$size}) !important;
+    }
+    .mr#{$size} {
+      margin-right: var(--margin-#{$size}) !important;
+    }
+    .mb#{$size} {
+      margin-bottom: var(--margin-#{$size}) !important;
+    }
+    .ml#{$size} {
+      margin-left: var(--margin-#{$size}) !important;
+    }
+  }
+}
+
+@media (max-width: 1600px) {
+  :root {
+    --margin-40: 36px;
+    --margin-38: 34px;
+    --margin-36: 32px;
+    --margin-34: 30px;
+    --margin-32: 28px;
+    --margin-30: 27px;
+    --margin-28: 25px;
+    --margin-26: 23px;
+    --margin-25: 22px;
+    --margin-24: 21px;
+    --margin-22: 20px;
+    --margin-20: 18px;
+    --margin-18: 16px;
+    --margin-16: 14px;
+    --margin-15: 13px;
+    --margin-14: 12px;
+    --margin-12: 10px;
+    --margin-10: 8px;
+    --margin-8: 6px;
+    --margin-6: 4px;
+    --margin-4: 2px;
+    --margin-2: 1px;
+  }
+}
+
+@media (max-width: 1350px) {
+  :root {
+    --margin-40: 32px;
+    --margin-38: 30px;
+    --margin-36: 28px;
+    --margin-34: 26px;
+    --margin-32: 24px;
+    --margin-30: 25px;
+    --margin-28: 23px;
+    --margin-26: 21px;
+    --margin-25: 20px;
+    --margin-24: 19px;
+    --margin-22: 18px;
+    --margin-20: 16px;
+    --margin-18: 15px;
+    --margin-16: 13px;
+    --margin-15: 11px;
+    --margin-14: 10px;
+    --margin-12: 8px;
+    --margin-10: 6px;
+    --margin-8: 4px;
+    --margin-6: 3px;
+    --margin-4: 2px;
+    --margin-2: 1px;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --margin-40: 28px;
+    --margin-38: 27px;
+    --margin-36: 26px;
+    --margin-34: 24px;
+    --margin-32: 22px;
+    --margin-30: 24px;
+    --margin-28: 22px;
+    --margin-26: 20px;
+    --margin-25: 19px;
+    --margin-24: 18px;
+    --margin-22: 17px;
+    --margin-20: 15px;
+    --margin-18: 13px;
+    --margin-16: 11px;
+    --margin-15: 10px;
+    --margin-14: 9px;
+    --margin-12: 7px;
+    --margin-10: 5px;
+    --margin-8: 4px;
+    --margin-6: 3px;
+    --margin-4: 2px;
+    --margin-2: 1px;
+  }
+}
+
+@media (max-width: 750px) {
+  :root {
+    --margin-40: 26px;
+    --margin-38: 25px;
+    --margin-36: 24px;
+    --margin-34: 23px;
+    --margin-32: 22px;
+    --margin-30: 23px;
+    --margin-28: 21px;
+    --margin-26: 19px;
+    --margin-25: 18px;
+    --margin-24: 17px;
+    --margin-22: 15px;
+    --margin-20: 14px;
+    --margin-18: 12px;
+    --margin-16: 10px;
+    --margin-15: 8px;
+    --margin-14: 7px;
+    --margin-12: 6px;
+    --margin-10: 4px;
+    --margin-8: 3px;
+    --margin-6: 2px;
+    --margin-4: 1px;
+    --margin-2: 1px;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --margin-40: 24px;
+    --margin-38: 23px;
+    --margin-36: 22px;
+    --margin-34: 21px;
+    --margin-32: 20px;
+    --margin-30: 22px;
+    --margin-28: 20px;
+    --margin-26: 18px;
+    --margin-25: 17px;
+    --margin-24: 16px;
+    --margin-22: 15px;
+    --margin-20: 14px;
+    --margin-18: 10px;
+    --margin-16: 8px;
+    --margin-15: 6px;
+    --margin-14: 5px;
+    --margin-12: 4px;
+    --margin-10: 3px;
+    --margin-8: 2px;
+    --margin-6: 2px;
+    --margin-4: 1px;
+    --margin-2: 1px;
+  }
+}
+
+/* Gap */
+
+:root {
+  --gap-4: 4px;
+  --gap-6: 6px;
+  --gap-8: 8px;
+  --gap-10: 10px;
+  --gap-12: 12px;
+  --gap-14: 14px;
+  --gap-16: 16px;
+  --gap-18: 18px;
+  --gap-20: 20px;
+  --gap-22: 22px;
+  --gap-24: 24px;
+  --gap-26: 26px;
+  --gap-28: 28px;
+  --gap-30: 30px;
+  --gap-32: 32px;
+  --gap-34: 34px;
+  --gap-36: 36px;
+  --gap-38: 38px;
+  --gap-40: 40px;
+}
+
+@for $size from 4 through 40 {
+  @if list.index(
+    (
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      15,
+      16,
+      18,
+      20,
+      22,
+      24,
+      25,
+      26,
+      28,
+      30,
+      32,
+      34,
+      36,
+      38,
+      40
+    ),
+    $size
+  )
+  {
+    .gap#{$size} {
+      gap: var(--gap-#{$size}) !important;
+    }
+  }
+}
+
+@media (max-width: 1600px) {
+  :root {
+    --gap-4: 2px;
+    --gap-6: 4px;
+    --gap-8: 6px;
+    --gap-10: 8px;
+    --gap-12: 10px;
+    --gap-14: 12px;
+    --gap-16: 14px;
+    --gap-18: 16px;
+    --gap-20: 18px;
+    --gap-22: 20px;
+    --gap-24: 22px;
+    --gap-26: 24px;
+    --gap-28: 26px;
+    --gap-30: 28px;
+    --gap-32: 30px;
+    --gap-34: 32px;
+    --gap-36: 34px;
+    --gap-38: 36px;
+    --gap-40: 38px;
+  }
+}
+
+@media (max-width: 1350px) {
+  :root {
+    --gap-4: 2px;
+    --gap-6: 3px;
+    --gap-8: 4px;
+    --gap-10: 6px;
+    --gap-12: 8px;
+    --gap-14: 10px;
+    --gap-16: 12px;
+    --gap-18: 14px;
+    --gap-20: 16px;
+    --gap-22: 18px;
+    --gap-24: 20px;
+    --gap-26: 22px;
+    --gap-28: 24px;
+    --gap-30: 26px;
+    --gap-32: 28px;
+    --gap-34: 30px;
+    --gap-36: 32px;
+    --gap-38: 34px;
+    --gap-40: 36px;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --gap-4: 2px;
+    --gap-6: 3px;
+    --gap-8: 4px;
+    --gap-10: 5px;
+    --gap-12: 7px;
+    --gap-14: 9px;
+    --gap-16: 10px;
+    --gap-18: 12px;
+    --gap-20: 14px;
+    --gap-22: 16px;
+    --gap-24: 18px;
+    --gap-26: 20px;
+    --gap-28: 22px;
+    --gap-30: 24px;
+    --gap-32: 26px;
+    --gap-34: 28px;
+    --gap-36: 30px;
+    --gap-38: 32px;
+    --gap-40: 34px;
+  }
+}
+
+@media (max-width: 750px) {
+  :root {
+    --gap-4: 1px;
+    --gap-6: 2px;
+    --gap-8: 3px;
+    --gap-10: 4px;
+    --gap-12: 6px;
+    --gap-14: 8px;
+    --gap-16: 9px;
+    --gap-18: 10px;
+    --gap-20: 12px;
+    --gap-22: 14px;
+    --gap-24: 16px;
+    --gap-26: 18px;
+    --gap-28: 20px;
+    --gap-30: 22px;
+    --gap-32: 24px;
+    --gap-34: 26px;
+    --gap-36: 28px;
+    --gap-38: 30px;
+    --gap-40: 32px;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --gap-4: 1px;
+    --gap-6: 2px;
+    --gap-8: 2px;
+    --gap-10: 3px;
+    --gap-12: 5px;
+    --gap-14: 7px;
+    --gap-16: 8px;
+    --gap-18: 9px;
+    --gap-20: 10px;
+    --gap-22: 12px;
+    --gap-24: 14px;
+    --gap-26: 16px;
+    --gap-28: 18px;
+    --gap-30: 20px;
+    --gap-32: 22px;
+    --gap-34: 24px;
+    --gap-36: 26px;
+    --gap-38: 28px;
+    --gap-40: 30px;
+  }
+}
+
+// Height
+
+:root {
+  --height-4: 4px;
+  --height-6: 6px;
+  --height-8: 8px;
+  --height-10: 10px;
+  --height-12: 12px;
+  --height-14: 14px;
+  --height-16: 16px;
+  --height-18: 18px;
+  --height-20: 20px;
+  --height-22: 22px;
+  --height-24: 24px;
+  --height-26: 26px;
+  --height-28: 28px;
+  --height-30: 30px;
+  --height-32: 32px;
+  --height-34: 34px;
+  --height-36: 36px;
+  --height-38: 38px;
+  --height-40: 40px;
+  --height-42: 42px;
+  --height-44: 44px;
+  --height-46: 46px;
+  --height-48: 48px;
+}
+
+@for $size from 4 through 48 {
+  @if list.index(
+    (
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      15,
+      16,
+      18,
+      20,
+      22,
+      24,
+      25,
+      26,
+      28,
+      30,
+      32,
+      34,
+      36,
+      38,
+      40,
+      42,
+      44,
+      45,
+      46,
+      48
+    ),
+    $size
+  )
+  {
+    .iHeight#{$size} {
+      height: var(--height-#{$size}) !important;
+    }
+  }
+}
+
+@media (max-width: 1600px) {
+  :root {
+    --height-4: 2px;
+    --height-6: 4px;
+    --height-8: 6px;
+    --height-10: 8px;
+    --height-12: 10px;
+    --height-14: 12px;
+    --height-16: 13px;
+    --height-18: 14px;
+    --height-20: 15px;
+    --height-22: 16px;
+    --height-24: 18px;
+    --height-26: 20px;
+    --height-28: 21px;
+    --height-30: 23px;
+    --height-32: 24px;
+    --height-34: 26px;
+    --height-36: 27px;
+    --height-38: 29px;
+    --height-40: 36px;
+    --height-42: 37px;
+    --height-44: 39px;
+    --height-46: 41px;
+    --height-48: 44px;
+  }
+}
+
+@media (max-width: 1350px) {
+  :root {
+    --height-4: 2px;
+    --height-6: 3px;
+    --height-8: 4px;
+    --height-10: 6px;
+    --height-12: 8px;
+    --height-14: 10px;
+    --height-16: 11px;
+    --height-18: 12px;
+    --height-20: 13px;
+    --height-22: 14px;
+    --height-24: 16px;
+    --height-26: 18px;
+    --height-28: 19px;
+    --height-30: 21px;
+    --height-32: 22px;
+    --height-34: 24px;
+    --height-36: 25px;
+    --height-38: 27px;
+    --height-40: 32px;
+    --height-42: 33px;
+    --height-44: 35px;
+    --height-46: 37px;
+    --height-48: 40px;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --height-4: 2px;
+    --height-6: 3px;
+    --height-8: 4px;
+    --height-10: 5px;
+    --height-12: 7px;
+    --height-14: 9px;
+    --height-16: 10px;
+    --height-18: 11px;
+    --height-20: 12px;
+    --height-22: 13px;
+    --height-24: 15px;
+    --height-26: 17px;
+    --height-28: 18px;
+    --height-30: 20px;
+    --height-32: 21px;
+    --height-34: 23px;
+    --height-36: 24px;
+    --height-38: 26px;
+    --height-40: 30px;
+    --height-42: 31px;
+    --height-44: 33px;
+    --height-46: 35px;
+    --height-48: 38px;
+  }
+}
+
+@media (max-width: 750px) {
+  :root {
+    --height-4: 1px;
+    --height-6: 2px;
+    --height-8: 3px;
+    --height-10: 4px;
+    --height-12: 6px;
+    --height-14: 8px;
+    --height-16: 9px;
+    --height-18: 10px;
+    --height-20: 11px;
+    --height-22: 12px;
+    --height-24: 14px;
+    --height-26: 16px;
+    --height-28: 17px;
+    --height-30: 19px;
+    --height-32: 20px;
+    --height-34: 22px;
+    --height-36: 23px;
+    --height-38: 25px;
+    --height-40: 28px;
+    --height-42: 29px;
+    --height-44: 31px;
+    --height-46: 33px;
+    --height-48: 35px;
+  }
+}
+
+/* Width  */
+
+:root {
+  --width-4: 4px;
+  --width-6: 6px;
+  --width-8: 8px;
+  --width-10: 10px;
+  --width-12: 12px;
+  --width-14: 14px;
+  --width-16: 16px;
+  --width-18: 18px;
+  --width-20: 20px;
+  --width-22: 22px;
+  --width-24: 24px;
+  --width-26: 26px;
+  --width-28: 28px;
+  --width-30: 30px;
+  --width-32: 32px;
+  --width-34: 34px;
+  --width-36: 36px;
+  --width-38: 38px;
+  --width-40: 40px;
+  --width-42: 42px;
+  --width-44: 44px;
+  --width-46: 46px;
+  --width-48: 48px;
+}
+
+@for $size from 4 through 48 {
+  @if list.index(
+    (
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      15,
+      16,
+      18,
+      20,
+      22,
+      24,
+      25,
+      26,
+      28,
+      30,
+      32,
+      34,
+      36,
+      38,
+      40,
+      42,
+      44,
+      45,
+      46,
+      48
+    ),
+    $size
+  )
+  {
+    .iWidth#{$size} {
+      width: var(--width-#{$size}) !important;
+    }
+  }
+}
+
+@media (max-width: 1600px) {
+  :root {
+    --width-4: 2px;
+    --width-6: 4px;
+    --width-8: 6px;
+    --width-10: 8px;
+    --width-12: 10px;
+    --width-14: 12px;
+    --width-16: 13px;
+    --width-18: 14px;
+    --width-20: 15px;
+    --width-22: 16px;
+    --width-24: 18px;
+    --width-26: 20px;
+    --width-28: 21px;
+    --width-30: 23px;
+    --width-32: 24px;
+    --width-34: 26px;
+    --width-36: 27px;
+    --width-38: 29px;
+    --width-40: 36px;
+    --width-42: 37px;
+    --width-44: 39px;
+    --width-46: 41px;
+    --width-48: 44px;
+  }
+}
+
+@media (max-width: 1350px) {
+  :root {
+    --width-4: 2px;
+    --width-6: 3px;
+    --width-8: 4px;
+    --width-10: 6px;
+    --width-12: 8px;
+    --width-14: 10px;
+    --width-16: 11px;
+    --width-18: 12px;
+    --width-20: 13px;
+    --width-22: 14px;
+    --width-24: 16px;
+    --width-26: 18px;
+    --width-28: 19px;
+    --width-30: 21px;
+    --width-32: 22px;
+    --width-34: 24px;
+    --width-36: 25px;
+    --width-38: 27px;
+    --width-40: 32px;
+    --width-42: 33px;
+    --width-44: 35px;
+    --width-46: 37px;
+    --width-48: 40px;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --width-4: 2px;
+    --width-6: 3px;
+    --width-8: 4px;
+    --width-10: 5px;
+    --width-12: 7px;
+    --width-14: 9px;
+    --width-16: 10px;
+    --width-18: 11px;
+    --width-20: 12px;
+    --width-22: 13px;
+    --width-24: 15px;
+    --width-26: 17px;
+    --width-28: 18px;
+    --width-30: 20px;
+    --width-32: 21px;
+    --width-34: 23px;
+    --width-36: 24px;
+    --width-38: 26px;
+    --width-40: 30px;
+    --width-42: 31px;
+    --width-44: 33px;
+    --width-46: 35px;
+    --width-48: 38px;
+  }
+}
+
+@media (max-width: 750px) {
+  :root {
+    --width-4: 1px;
+    --width-6: 2px;
+    --width-8: 3px;
+    --width-10: 4px;
+    --width-12: 6px;
+    --width-14: 8px;
+    --width-16: 9px;
+    --width-18: 10px;
+    --width-20: 11px;
+    --width-22: 12px;
+    --width-24: 14px;
+    --width-26: 16px;
+    --width-28: 17px;
+    --width-30: 19px;
+    --width-32: 20px;
+    --width-34: 22px;
+    --width-36: 23px;
+    --width-38: 25px;
+    --width-40: 28px;
+    --width-42: 29px;
+    --width-44: 31px;
+    --width-46: 33px;
+    --width-48: 35px;
+  }
+}
+body {
+  margin: 0;
+  font-family: 'poppins';
+}

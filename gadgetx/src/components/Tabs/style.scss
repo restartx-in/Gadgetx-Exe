@@ -1,0 +1,62 @@
+
+:root {
+  --color-brand: #007bff;
+  --color-border-light: #ddd;
+  --color-bg-hover: #f0f0f0;
+  --transition-fast: 0.2s ease;
+}
+
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  &__list {
+    display: flex;
+    border-bottom: 2px solid var(--color-border-light);
+  }
+
+  &__tab {
+    padding: 10px 16px;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    background: none;
+    color: inherit; // Inherit default text color
+    transition: all var(--transition-fast);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px; // Align the bottom border with the list's border
+
+    &:hover {
+      background-color: var(--color-bg-hover);
+    }
+
+    &--active {
+      border-bottom-color: var(--color-brand);
+      color: var(--color-brand);
+      font-weight: bold;
+    }
+  }
+
+  &__panels {
+    margin-top: 15px;
+    padding: 5px;
+  }
+
+  &__panel {
+    animation: fadeIn var(--transition-fast);
+  }
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

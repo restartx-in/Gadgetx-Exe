@@ -1,0 +1,14 @@
+.TWVR {
+  display: flex;
+  justify-items: flex-start;
+  align-items: flex-end;
+
+  &-text {
+    line-height: 1;
+  }
+  button {
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+  }
+}

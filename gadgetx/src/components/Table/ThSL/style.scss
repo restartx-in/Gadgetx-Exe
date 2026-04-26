@@ -1,0 +1,23 @@
+.thsl div {
+  padding: 5px 0 5px 5px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-weight: 500;
+
+  @media (max-width: 768px) {
+    padding: 4px 0 4px 4px;
+    gap: 6px;
+  }
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 3px 0 3px 3px;
+    gap: 4px;
+  }
+}
+
+.thsl {
+  background-color: var(--color-hover);
+  padding-left: 6px;
+}

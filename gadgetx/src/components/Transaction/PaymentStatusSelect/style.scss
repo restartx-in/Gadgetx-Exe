@@ -1,0 +1,156 @@
+/* Variables for the professional look */
+$border-light: #e2e8f0;      // Light gray borders
+$text-dark: #1e293b;         // Dark text
+$text-muted: #64748b;        // Muted text (labels/icons)
+$separator-color: #f1f5f9;   // Line between items
+$scrollbar-thumb: #cbd5e1;   // Scrollbar
+$bg-hover: #f8fafc;          // Very light gray hover
+
+.paymentstatus-select {
+  position: relative;
+  width: 100%;
+
+  /* LABEL STYLING */
+  &__label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: $text-muted;
+  }
+
+  /* MUI TEXTFIELD OVERRIDES */
+  &__input {
+    &.MuiTextField-root {
+      width: 100%;
+
+      .MuiOutlinedInput-root {
+        background-color: var(--app-bg, #fff);
+        border-radius: 6px;
+        padding-right: 14px; 
+
+        /* Default Border */
+        fieldset {
+          border-color: $border-light;
+          transition: border-color 0.2s ease-in-out;
+        }
+
+        /* Hover State */
+        &:hover fieldset {
+          border-color: var(--primary-blue, #1976d2); 
+        }
+
+        /* Focused State */
+        &.Mui-focused fieldset {
+          border-color: var(--primary-blue, #1976d2);
+          border-width: 1px;
+          box-shadow: 0 0 0 1px var(--primary-blue, #1976d2);
+        }
+
+        /* Disabled State */
+        &.Mui-disabled {
+          background-color: #f8fafc;
+          fieldset {
+            border-color: $border-light;
+          }
+        }
+
+        /* The Input Text */
+        input {
+          color: $text-dark;
+          font-size: 1rem;
+          padding: 10px 12px;
+          cursor: pointer;
+          
+          &::placeholder {
+              color: $text-muted;
+              opacity: 1; 
+          }
+        }
+      }
+    }
+  }
+
+  /* CHEVRON STYLING */
+  &__chevron {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid $text-muted;
+    border-bottom: 2px solid $text-muted;
+    transform: rotate(45deg);
+    transition: transform 0.3s ease;
+    margin-bottom: 2px;
+    pointer-events: none;
+
+    &.open {
+      transform: rotate(-135deg);
+      margin-bottom: -2px;
+    }
+  }
+
+  /* DISABLED STATE WRAPPER */
+  &.disabled {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  /* DROPDOWN MENU */
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-height: 250px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    background-color: #ffffff;
+    border: 1px solid $border-light;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    width: 100%;
+
+    /* CUSTOM SCROLLBAR */
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: $scrollbar-thumb;
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background-color: #94a3b8;
+    }
+  }
+
+  /* LIST ITEMS */
+  &__option {
+    padding: 12px 14px;
+    font-size: 1rem;
+    color: $text-dark;
+    cursor: pointer;
+    background-color: #fff;
+    
+    /* SEPARATOR LINE */
+    border-bottom: 1px solid $separator-color;
+    transition: background-color 0.15s ease;
+
+    /* Remove border from the last item */
+    &:last-child {
+      border-bottom: none;
+    }
+
+    /* Hover & Active States */
+    &.active,
+    &:hover {
+      background-color: $bg-hover;
+      color: #000;
+    }
+  }
+}

@@ -1,0 +1,118 @@
+/* Variables for the professional look */
+$primary-blue: #3b82f6;      // Focus color
+$error-red: #f99595;         // Error color
+$border-light: #c9c9c9;      // Light gray borders (Matched to global)
+$text-dark: #1e293b;         // Dark text
+$bg-disabled: #f8fafc;       // Disabled background
+
+.custom-phone-input {
+  position: relative;
+  width: 100%;
+
+
+  &__field {
+    &.MuiTextField-root {
+      width: 100%;
+
+      .MuiOutlinedInput-root {
+        background-color: var(--app-bg, #fff);
+        border-radius: 6px;
+
+        /* Default Border */
+        fieldset {
+          border-color: $border-light;
+          transition: border-color 0.2s ease-in-out;
+        }
+
+        // /* Hover State */
+        // &:hover fieldset {
+        //   border-color: #94a3b8;
+        // }
+
+        /* Focused State */
+        &.Mui-focused fieldset {
+          border-color: var(--primary-blue, #1976d2);
+          border-width: 1px;
+        }
+
+        /* Error State (Specific to Phone Field validation) */
+        &.Mui-error fieldset {
+          border-color: $error-red;
+        }
+        // &.Mui-error.Mui-focused fieldset {
+        //   box-shadow: 0 0 0 1px $error-red;
+        //   border-color: $error-red;
+        // }
+
+        /* Disabled State */
+        &.Mui-disabled {
+          background-color: $bg-disabled;
+          fieldset {
+            border-color: #dce1e7;
+          }
+        }
+
+        /* The Input Text */
+        input {
+          color: $text-dark;
+          font-size: 14px;
+          padding: 10px 14px;
+          
+          &::placeholder {
+            color: #999;
+            opacity: 1;
+          }
+        }
+      }
+    }
+  }
+
+  /* WRAPPER DISABLED STATE */
+  &.disabled {
+    opacity: 0.7;
+  }
+
+  /* ERROR TOOLTIP STYLING */
+  &__error-message {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 10;
+    background-color: #fff;
+    color: #ff0101;
+    border: 1px solid $error-red;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    // box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+
+    /* Exclamation Icon */
+    span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      background-color: #ff0101;
+      color: white;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 10px;
+      margin-right: 6px;
+    }
+
+    /* Little arrow pointing up */
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 100%;
+      left: 12px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: transparent transparent $error-red transparent;
+    }
+  }
+}

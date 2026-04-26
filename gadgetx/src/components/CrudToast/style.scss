@@ -1,0 +1,63 @@
+/* --- Keyframe Animations --- */
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translate(-50%, 100%);
+  }
+}
+
+/* --- Main Block: crud_toast --- */
+.crud_toast {
+  // Main styles
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 260px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  color: #fdfdfd;
+  z-index: 9999;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
+
+  // CREATE = Green
+  &.create-success {
+    background:   #018149;
+  }
+  &.create-error {
+    background: #ff0000;
+  }
+
+  // UPDATE = Blue
+  &.update-success {
+    background: #dcc900;
+  }
+  &.update-error {
+    background: #ff0000;
+  }
+
+  // DELETE = Red
+  &.delete-success {
+    background: #ee3723;
+  }
+  &.delete-error {
+    background: #ff0000;
+  }
+
+  // Fallback
+  &.unknown {
+    background: #ff0000;
+  }
+}

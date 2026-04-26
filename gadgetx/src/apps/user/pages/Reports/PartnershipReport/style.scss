@@ -1,0 +1,29 @@
+.partnership_report {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  &__mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/*
+  REMOVED STYLES:
+  - .tdstatus-content-wrappers
+  - .tdstatus--positive
+  - .tdstatus--neutral
+  - .tdstatus--negative
+  These are now handled by the universal TextBadge component.
+*/
+.list-item-status-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+

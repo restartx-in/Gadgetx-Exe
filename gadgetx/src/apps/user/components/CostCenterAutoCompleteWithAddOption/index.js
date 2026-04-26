@@ -1,0 +1,2 @@
+import CostCenterAutoCompleteWithAddOption from "./component"
+export default CostCenterAutoCompleteWithAddOption

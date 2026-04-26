@@ -1,0 +1,47 @@
+.download-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  background-color: var(--color-surface);
+  color: var(--color-text-dark);
+  border: 1px solid var(--color-border-base);
+  border-radius: 6px;
+  &:hover {
+    background-color: var(--color-surface);
+    border-color: var(--color-border-base);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    background-color: var(--color-neutral-200);
+    border-color: var(--color-neutral-300);
+  }
+
+  // Loader styles, similar to your submit button
+  &-loader {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-primary);
+    border-bottom-color: transparent; // Hides one side to make it spin
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: download-rotation 1s linear infinite;
+  }
+}
+
+@keyframes download-rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

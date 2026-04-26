@@ -1,0 +1,39 @@
+.expense_report_header {
+  margin-bottom: 20px;
+}
+
+.expense_report {
+  width: 100%;
+  padding: 22px;
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 6px 32px var(--color-neutral-300);
+  box-sizing: border-box;
+  &__add_button {
+    margin-left: auto;
+  }
+}
+.h_stack {
+  margin-bottom: -20px;
+}
+
+// Style for mobile view badge alignment
+.list-item-status-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 900px) {
+  .expense_report {
+    padding: 1px;
+    box-shadow: none;
+    background: transparent;
+  }
+}
+
+@media (max-width: 600px) {
+  .expense_report {
+    padding: 1px;
+  }
+}

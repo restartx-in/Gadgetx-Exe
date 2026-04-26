@@ -1,0 +1,282 @@
+.add_partner {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  padding: 36px 32px 28px 32px;
+  min-width: 340px;
+  width: 650px;
+  max-width: 550px;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  color: var(--color-text-dark);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-content: center;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    color: var(--color-text-dark);
+
+    &-title {
+      color: var(--color-text-dark);
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+
+    &-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+  }
+  &__details_card {
+    padding-top: 10px;
+
+    &-summary_cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      padding: 0;
+      margin-top: -20px;
+      margin-bottom: 0px;
+    }
+    &-summary_cards .summary_cards-summary_card {
+      min-height: 40px;
+      padding: 0 10px;
+      border-radius: 12px;
+      background: var(--contend);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--color-text-dark);
+      font-size: 12px;
+      line-height: 1; 
+
+      p {
+        margin: 0;
+      }
+    }
+
+    &-table_container {
+      margin-top: 8px;
+      overflow-x: auto;
+    }
+  }
+}
+
+
+@media (max-width: 600px) {
+  .add_partner {
+    min-width: unset;
+    width: 98vw;
+    padding: 18px 12px 12px 12px;
+
+    &__header {
+      margin-bottom: 12px;
+    }
+
+    &__form-actions {
+      flex-direction: column;
+      gap: 8px;
+
+      > button {
+        width: 20%;
+      }
+      &__details_card-summary_cards {
+        flex-direction: column;
+      }
+    }
+  }
+}
+.accounts_section__header{
+  margin-bottom: 18px;
+
+}
+.add_partner__accounts_section {
+  border: solid 1px var(--color-border-base);
+  padding: 10px;
+  width: 100%;
+  border-radius: 5px;
+    background-color:var(--app-bg);
+
+
+  .accounts_section__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #344054;
+  }
+
+  .accounts_section__account_card {
+    position: relative;
+    width: 100%;
+    border-bottom: #030303;
+  }
+
+  .account_card__type_select {
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    width:100%;
+
+    label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #344054;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #d0d5dd;
+      background-color: var(--contend);
+      box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
+      &:focus {
+        outline: none;
+        border-color: #4c82f7;
+        box-shadow: 0 0 0 2px rgba(76, 130, 247, 0.3);
+      }
+    }
+  }
+
+  .account_card__remove_btn {
+    z-index: 9999999;
+    position: absolute;
+    top: -15px;
+    right: 0px;
+    background-color: var(--contend);
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 300;
+    color: var(--color-danger);
+    padding: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  
+    &:disabled {
+      color: #d0d5dd;
+      cursor: not-allowed;
+      background-color: transparent;
+    }
+  }
+
+  .add_partner__add_account_btn {
+    width: 60px;
+    height: 35px;
+    border-radius: 8px;
+    background-color:var(--navy);
+    color:var(--color-surface);
+    cursor: pointer;
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: #f2f4f7;
+    }
+  }
+}
+.add_account_button_wrapper {
+  margin-left: auto;
+}
+
+.add_partner__details_card {
+  padding: 8px;
+}
+
+.add_partner__details_card-table_container {
+  overflow-x: auto;
+}
+.accounts_section__account_card-names {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-base);
+  border-radius: 8px;
+  line-height: var(--line-height-base);
+  color: var(--color-text-base);
+  box-sizing: border-box;
+  background-color: var(--contend);
+
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  &:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--color-brand-base);
+  }
+  &::selection {
+  color: var(--color-text-base);
+    background-color: var(--contend);
+  }
+
+  &:disabled {
+    background-color: var(--skeleton-light);
+    color: var(--color-disabled-text);
+  }
+}
+.accounts_section__account_card-names:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--contend) inset !important;
+  -webkit-text-fill-color: var(--color-text-base) !important;
+  transition: background-color 5000s ease-in-out 0s; 
+}
+
+.accounts_section__account_card-names:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--contend) inset !important;
+  -webkit-text-fill-color: var(--color-text-base) !important;
+}
+.add_partner_modal {
+  .custom_select_header {
+    background-color: var(--contend) !important;
+    color: var(--color-text-base) !important;
+    border: 1px solid var(--color-border-base);
+    font-size: 14px;
+    height: 40px;
+    padding: 10px 12px;
+  }
+}
+.accounts_section__account_card-description {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-base);
+  border-radius: 8px;
+  line-height: var(--line-height-base);
+  color: var(--color-text-base);
+  box-sizing: border-box;
+  background-color: var(--contend);
+
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  &:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--color-brand-base);
+  }
+}
+
+$mobile-breakpoint: 768px;
+
+@media (max-width: $mobile-breakpoint) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}

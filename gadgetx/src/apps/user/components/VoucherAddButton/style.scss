@@ -1,0 +1,54 @@
+.voucher_add_dropdown {
+  position: relative;
+  display: inline-block;
+
+  .dropdown_menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    background-color: var(--color-white);
+    border: 1px solid var(--color-grey-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    z-index: 1000;
+    padding: 6px 0;
+    animation: slideDown 0.2s ease-out;
+
+    &.hidden {
+      display: none;
+    }
+  }
+
+  .dropdown_item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: none;
+    color: var(--color-text-dark);
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background-color: var(--color-grey-light);
+    }
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Mobile support to match your .add_button logic
+@media (max-width: 900px) {
+  .voucher_add_dropdown {
+    .dropdown_menu {
+      left: 10;
+    }
+  }
+}

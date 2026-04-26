@@ -1,0 +1,2 @@
+import EmployeeAutoCompleteWithAddOption from './component'
+export default EmployeeAutoCompleteWithAddOption

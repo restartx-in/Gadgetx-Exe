@@ -1,0 +1,151 @@
+// Main container for the edit user page
+.edit-user {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1rem; // Add some padding around the card
+
+  &__card {
+    background-color: var(--color-neutral-100); // A light background for the card
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); // A subtle shadow
+    width: 100%;
+    max-width: 700px; // A reasonable max-width for the form
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Header section with user's name and role
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    border-bottom: 1px solid var(--color-bg-base);
+  }
+
+  &__username {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-neutral-900);
+    margin: 0;
+  }
+
+  &__role {
+    font-size: 1rem;
+    color: var(--color-neutral-500);
+    background-color: var(--appBg);
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    margin-top: 0.5rem;
+    text-transform: capitalize;
+  }
+
+  &__member-since {
+    font-size: 0.9rem;
+    color: var(--color-neutral-500);
+    margin-top: 0.5rem;
+  }
+
+  // Body section containing the form fields
+  &__body {
+    padding: 2rem;
+  }
+
+  &__section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-neutral-900);
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-bg-base);
+  }
+
+  // Container for the input fields
+  &__form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; // Space between form fields
+  }
+
+  // Footer with action buttons
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem 2rem;
+    background-color: var(--appBg);
+    border-top: 1px solid var(--color-bg-base);
+    border-bottom-left-radius: var(--border-radius-lg);
+    border-bottom-right-radius: var(--border-radius-lg);
+  }
+}
+
+// General button styling
+.btns {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 120px; // Give buttons a minimum width
+
+  &:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+    filter: none;
+  }
+
+  &--primary {
+    background-color: var(--color-primary-600);
+    color: var(--contend);
+  }
+  &--danger {
+    background-color: var(--color-danger);
+    color: var(--contend);
+  }
+  &--secondary {
+    background-color: var(--color-text-secondary);
+    color: var(--contend);
+  }
+}
+
+// Loading/Error states
+.loading-message,
+.error-message,
+.info-message {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+}
+
+// Responsive adjustments
+@media (max-width: 576px) {
+  .edit-user {
+    padding: 0.5rem;
+
+    &__card {
+      // Use full height on small screens if needed, but not required for this simple form
+    }
+
+    &__header, &__body, &__footer {
+      padding: 1.5rem;
+    }
+
+    &__footer {
+      flex-direction: column;
+      & .btns {
+        width: 100%;
+      }
+    }
+  }
+}

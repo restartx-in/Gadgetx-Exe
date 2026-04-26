@@ -1,0 +1,160 @@
+// --- START OF FILE style.scss ---
+
+.employee_list {
+  width: 100%;
+  padding: 22px;
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 6px 32px var(--color-neutral-300);
+  box-sizing: border-box;
+  position: relative;
+
+  &-error_message {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-danger);
+  }
+  &-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  &__add_button {
+    margin-left: auto;
+  }
+
+  &-table_container {
+    overflow-x: auto;
+  }
+}
+
+// Style for the new secondary action row in the header
+.page-header-secondary-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+// --- REFINED BULK ENTRY STYLES ---
+
+.bulk-entry-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%; // Make view take full height of its container
+}
+
+.bulk-entry-header {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.bulk-entry-global-controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 1rem;
+}
+
+.bulk-entry-scroll-container {
+  flex: 1; // This makes the container take up all remaining vertical space
+  overflow-y: auto; // Enables scrolling
+  padding-bottom: 6px;
+}
+
+.bulk-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1rem;
+}
+
+.employee-entry-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .avatar-placeholder {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .employee-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__name {
+    font-weight: 600;
+    color: var(--color-text-dark);
+    font-size: 1.1rem;
+  }
+
+  &__position {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-neutral-200);
+
+    label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-light);
+    }
+  }
+}
+
+// --- RESPONSIVE ADJUSTMENTS ---
+
+@media (max-width: 900px) {
+  .employee_list {
+    padding: 1px;
+    box-shadow: none;
+    background: transparent;
+  }
+}
+
+@media (max-width: 600px) {
+  .bulk-entry-scroll-container {
+    padding-top: 8px;
+  }
+  .employee_list {
+    padding: 1px;
+  }
+}

@@ -1,0 +1,180 @@
+.monthly_summary_report {
+  // Base styles for desktop and common elements
+  &__actions_container {
+    display: flex;
+    gap: var(--space-3);
+    flex-shrink: 0;
+  }
+
+  &__tabs_container {
+    margin-top: 10px;
+    margin-bottom: var(--space-2);
+
+    &-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+  }
+
+  &__tab_btn {
+    flex: 1 1 auto;
+    white-space: nowrap;
+    padding: var(--space-2) var(--space-4);
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+  }
+
+  &__mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    background-color: transparent;
+  }
+
+  &__mobile_card {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    border-bottom: 3px solid var(--skeleton-light);
+    width: 100%;
+
+    &-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    &-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-1);
+    }
+
+    &-details {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--space-1);
+    }
+
+    &-title {
+      color: var(--color-text-base);
+      font-weight: 600;
+      font-size: var(--fs20);
+    }
+
+    &-subtitle {
+      color: var(--color-neutral-500);
+      font-size: var(--fs16);
+    }
+
+    &-total {
+      font-weight: 600;
+      font-size: var(--fs18);
+      color: var(--color-text-base);
+      white-space: nowrap;
+    }
+
+    &-received,
+    &-paid {
+      color: var(--color-success);
+      font-size: var(--fs16);
+      white-space: nowrap;
+    }
+
+    &-balance {
+      color: var(--color-danger);
+      font-size: var(--fs16);
+      white-space: nowrap;
+    }
+  }
+
+  &__table_responsive {
+    width: 100%;
+    overflow-x: hidden;
+    margin-top: 10px;
+
+  }
+}
+
+// === UPDATE: Enhanced mobile-specific styles ===
+@media (max-width: 768px) {
+  .monthly_summary_report {
+    // New flexible header for mobile
+    &__page-header--mobile {
+      display: flex;
+      flex-wrap: wrap; // Allows items to wrap onto the next line
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-3); // Adds space when items wrap
+      width: 100%;
+      padding: 0;
+      border: none;
+    }
+
+    &__tabs_container {
+      margin: 0;
+      padding: 0;
+      overflow-x: auto;
+      flex-grow: 1; // Take available space on the line
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      &-tabs {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        gap: var(--space-2);
+        width: max-content;
+      }
+    }
+
+    &__actions_container {
+      gap: var(--space-2);
+
+      // Standardize button sizes in the actions container on mobile
+      .btn,
+      button {
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--fs14);
+      }
+    }
+
+    &__tab_btn {
+      flex-shrink: 0;
+      font-size: var(--fs14);
+      padding: var(--space-2) var(--space-3);
+    }
+
+    &__mobile-list {
+      padding: 0;
+      margin: 0;
+      gap: var(--space-2);
+    }
+
+    &__mobile_card {
+      padding: var(--space-3);
+    }
+
+    &__table_responsive {
+      overflow-x: hidden;
+    }
+
+    table {
+      width: 100% !important;
+      min-width: auto !important;
+      td,
+      th {
+        white-space: normal;
+        word-break: break-word;
+      }
+    }
+  }
+}

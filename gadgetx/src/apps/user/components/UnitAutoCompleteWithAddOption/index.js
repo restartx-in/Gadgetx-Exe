@@ -1,0 +1,2 @@
+import UnitAutoCompleteWithAddOption from './component'
+export default UnitAutoCompleteWithAddOption

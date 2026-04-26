@@ -1,0 +1,26 @@
+.action-button-component {
+  flex: 1; // Makes buttons take equal width within a flex container
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: 1px solid var(--color-border-base);
+  border-radius: 8px;
+  background-color: var(--color-primary-100);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  transition: border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+
+  &:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--color-brand-base);
+  }
+
+  &:disabled {
+    background-color: var(--skeleton-light);
+    color: var(--color-disabled-text);
+  }
+}

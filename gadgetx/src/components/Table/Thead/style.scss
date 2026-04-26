@@ -1,0 +1,9 @@
+.table_header {
+  background-color: var(--color-hover);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  &:hover {
+    background-color: var();
+  }
+}

@@ -1,0 +1,19 @@
+<!-- gx-icon-monoline.svg -->
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GX icon, monoline">
+  <!-- rounded square outline -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="none" stroke="#000" stroke-width="28"/>
+
+  <!-- GX (stroked) -->
+  <g fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="28" transform="translate(0,6)">
+    <!-- G: circular arc + short bar -->
+    <path d="M160,256
+             m0,-96
+             a96,96 0 1,0 0,192
+             a96,96 0 1,0 0,-192" />
+    <line x1="208" y1="272" x2="264" y2="272"/>
+
+    <!-- X: two diagonals -->
+    <line x1="312" y1="184" x2="432" y2="328"/>
+    <line x1="432" y1="184" x2="312" y2="328"/>
+  </g>
+</svg>

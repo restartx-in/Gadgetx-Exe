@@ -1,0 +1,2 @@
+import DoneByAutoCompleteWithAddOption from './component'
+export default DoneByAutoCompleteWithAddOption

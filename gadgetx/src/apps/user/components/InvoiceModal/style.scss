@@ -1,0 +1,98 @@
+/* Fullscreen overlay */
+.custom-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* Centered modal box */
+.custom-modal__container {
+  background: #fff;
+  width: 20%;
+  max-height: 90vh;
+  overflow-y: auto; /* 👈 Scroll the modal content vertically */
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+  padding: 20px;
+}
+.invoice-modal__header-image {
+  text-align: center;
+  margin-bottom: 20px; // Add some space below the image
+
+  .store-logo {
+    max-width: 180px;   // Adjust the size as needed
+    max-height: 100px;
+    object-fit: contain; // Ensures the image scales correctly without stretching
+  }
+}
+/* Invoice content */
+.invoice-modal__body {
+  font-family: Arial, sans-serif;
+  color: #222;
+  height: fit-content;
+}
+
+.invoice-modal__store-details h3 {
+  margin-bottom: 10px;
+}
+
+.invoice-modal__meta-details p {
+  margin: 2px 0;
+}
+
+.invoice-modal__items-list {
+  margin-top: 20px;
+}
+
+.invoice-modal__item {
+  padding: 6px 0;
+}
+
+.invoice-modal__summary {
+  margin-top: 20px;
+}
+
+.invoice-modal__summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+.invoice-modal__item-separator {
+  border: none;
+  border-top: 2px dotted #888;
+}
+.grand-total {
+  font-weight: bold;
+   border-top: 2px dotted #888;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.invoice-modal__footer-message {
+  text-align: center;
+  margin-top: 20px;
+  font-weight: 500;
+}
+
+/* Hide everything except the printable area when printing */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .invoice-modal__body,
+  .invoice-modal__body * {
+    visibility: visible;
+  }
+
+  .invoice-modal__body {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

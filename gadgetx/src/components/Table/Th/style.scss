@@ -1,0 +1,13 @@
+.table_header_cell {
+  text-align: left;
+  font-weight: 500;
+  //  font-size: var(--font-size-base);
+  background-color: var(--color-hover);
+
+  &-content {
+    padding: 5px 0px 5px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-items: flex-start;
+  }
+}

@@ -1,0 +1,124 @@
+// Color variables for easier management
+$create-color: #28a745; // Green
+$view-color: #007bff;   // Blue
+$edit-color: #fd7e14;   // Orange
+$delete-color: #dc3545; // Red
+$header-bg-color: #eaf1fb;
+$table-border-color: #e0e0e0;
+$group-header-bg: #f7f7f7; // A light grey for group titles
+
+.permissions-table-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px solid $table-border-color;
+  border-radius: 8px;
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+}
+
+.permission-header {
+  background-color: $header-bg-color;
+  text-transform: uppercase;
+  text-align: center;
+  font-weight: 600;
+  padding: 12px 8px;
+  position: sticky;
+  top: 0; // Makes the header sticky
+  z-index: 1;
+
+  input[type="checkbox"] {
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+}
+
+.permission-cell {
+  text-align: center;
+}
+
+// --- New Style for Group Header Row ---
+.group-header-row {
+  background-color: $group-header-bg;
+  
+  td {
+    font-weight: bold;
+    padding: 10px 12px;
+    // A subtle bottom border to separate the group title
+    border-bottom: 1px solid $table-border-color; 
+  }
+}
+
+
+/* --- The Switch --- */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+}
+
+/* --- The Slider --- */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+
+  &.round {
+    border-radius: 24px;
+  }
+
+  &:before {
+    position: absolute;
+    content: '';
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+  }
+  
+  &.round:before {
+    border-radius: 50%;
+  }
+}
+
+
+/* --- Color Variants based on permission type --- */
+.switch.create input:checked + .slider {
+  background-color: $create-color;
+}
+
+.switch.view input:checked + .slider {
+  background-color: $view-color;
+}
+
+.switch.edit input:checked + .slider {
+  background-color: $edit-color;
+}
+
+.switch.delete input:checked + .slider {
+  background-color: $delete-color;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 2px #555;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}

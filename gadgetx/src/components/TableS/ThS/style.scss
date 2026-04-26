@@ -1,0 +1,15 @@
+/* --- Main Block: table-header-cell --- */
+.table-header-cell {
+//   padding: var(--space-3) var(--space-4);
+   text-align: left;
+//    font-weight: var(--fw600);
+//     color: var(--color-black);
+//     white-space: nowrap;
+
+  &__content {
+    padding: 5px 0px 5px 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+}

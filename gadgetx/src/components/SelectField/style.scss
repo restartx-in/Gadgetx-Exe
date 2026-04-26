@@ -1,0 +1,154 @@
+$border-light: #eff1f4;
+$text-dark: #0b1017;         // Dark text
+$text-muted: #64748b;        // Muted text (labels/placeholders)
+$separator-color: #64686b;   // Line between items
+$scrollbar-thumb: #cbd5e1;   // Scrollbar
+$bg-hover: #f8fafc;          // Very light gray hover
+
+.custom-select {
+  position: relative;
+  width: 100%;
+
+  /* LABEL STYLING */
+  &__label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: $text-muted;
+  }
+
+  /* MUI TEXTFIELD OVERRIDES */
+  &__input {
+    &.MuiTextField-root {
+      width: 100%;
+
+      .MuiOutlinedInput-root {
+        background-color: var(--app-bg, #fff);
+        border-radius: 6px;
+        padding-right: 14px;
+
+        /* Default Border */
+           fieldset {
+        border-color:#c9c9c9;
+        transition: border-color 0.2s ease-in-out;
+      }
+
+
+        /* Focused State */
+         &.Mui-focused fieldset {
+        border-color: var(--primary-blue, #1976d2);
+        border-width: 1px;
+      }
+        /* Disabled State */
+        &.Mui-disabled {
+          background-color: #f8fafc;
+          fieldset {
+            border-color: $border-light;
+          }
+        }
+
+        input {
+          color: $text-dark;
+          font-size: 1rem;
+          padding: 10px 12px;
+          
+          &::placeholder {
+              color: $text-muted;
+              opacity: 1; 
+          }
+        }
+      }
+    }
+  }
+
+  /* CHEVRON STYLING */
+  &__chevron {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    border-right: 2px solid $text-muted;
+    border-bottom: 2px solid $text-muted;
+    transform: rotate(45deg);
+    transition: transform 0.3s ease;
+    margin-bottom: 2px;
+    pointer-events: none; /* Let click pass through to TextField */
+
+    &.open {
+      transform: rotate(-135deg);
+      margin-bottom: -2px;
+    }
+  }
+
+  /* DISABLED STATE WRAPPER */
+  &.disabled {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  /* DROPDOWN MENU (KEPT EXACTLY AS IS) */
+  &__list {
+      position: absolute;
+    top: calc(100% + 8px);
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+    z-index: 999999;  /* stays above modal */
+    max-height: 240px;
+    background-color: #ffffff;
+    border: 1px solid var(--color-border-base);
+    border-radius: 6px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    // box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+
+    /* Smooth scrolling on mobile */
+    -webkit-overflow-scrolling: touch;
+
+    /* SCROLLBAR */
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: $scrollbar-thumb;
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background-color: #94a3b8;
+    }
+
+    @media (max-width: 480px) {
+      max-height: 180px;
+      border-radius: 5px;
+    }
+  }
+
+  /* OPTION ITEMS */
+  &__option {
+    padding: 12px 14px;
+    font-size: 1rem;
+    color: $text-dark;
+    cursor: pointer;
+    background-color: #fff;
+    border-bottom: 1px solid $separator-color;
+    transition: background-color 0.15s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &.active,
+    &:hover {
+      background-color: #f8fafc;
+      color: #000;
+    }
+    @media (max-width: 480px) {
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    } 
+  }
+}

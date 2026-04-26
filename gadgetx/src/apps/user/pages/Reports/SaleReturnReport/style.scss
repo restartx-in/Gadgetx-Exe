@@ -1,0 +1,36 @@
+.sale_return_report {
+  width: 100%;
+  padding: 22px;
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 6px 32px var(--color-neutral-300);
+  box-sizing: border-box;
+
+  &__add_button{
+    margin-left: auto;
+  }
+  &-error_message {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-danger);
+  }
+  
+
+}
+
+// This media query makes the container transparent and removes padding/shadow
+// on tablets and mobile, which is ideal when it's just a list view.
+@media (max-width: 900px) {
+  .sale_return_report {
+    padding: 1px;
+    box-shadow: none;
+    background: transparent;
+  }
+}
+
+// Redundant rule from the original file, but kept for consistency.
+@media (max-width: 600px) {
+  .sale_return_report {
+    padding: 1px;
+  }
+}

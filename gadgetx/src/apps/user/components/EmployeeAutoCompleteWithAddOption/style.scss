@@ -1,0 +1,131 @@
+// GLOBAL VARIABLES
+$border-light: #eff1f4;
+$text-dark: #0b1017;
+$separator-color: #64686b;
+$scrollbar-thumb: #cbd5e1;
+
+.employeeeinputs-select {
+  position: relative;
+  width: 100%;
+
+  .MuiTextField-root {
+    width: 100%;
+    
+    .MuiOutlinedInput-root {
+      background-color: var(--app-bg, #fff); /* Fallback to white if var missing */
+      border-radius: 6px;
+
+      fieldset {
+        border-color:#c9c9c9;
+        transition: border-color 0.2s ease-in-out;
+      }
+
+
+      /* Focused State */
+      &.Mui-focused fieldset {
+        border-color: var(--primary-blue, #1976d2);
+        border-width: 2px;
+      }
+
+      /* Disabled State */
+      &.Mui-disabled {
+        background-color: #f8fafc;
+        fieldset {
+          border-color: $border-light;
+        }
+      }
+
+      input {
+        color: $text-dark;
+        font-size: 1rem;
+        padding: 10px 12px; /* Matches your previous padding */
+        
+        &::placeholder {
+            color: var(--sidebar-text, #64748b);
+            opacity: 1; 
+        }
+      }
+    }
+
+    /* Label Styling to match your previous look */
+    .MuiInputLabel-root {
+      color: #64748b;
+      
+      &.Mui-focused {
+        color: var(--primary-blue, #1976d2);
+      }
+    }
+  }
+
+  /* Edit Button inside dropdown */
+  &__edit-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #000;
+    padding: 4px;
+    border-radius: 4px;
+
+  }
+
+  &__dropdown {
+     border: 1px solid var(--color-border-base);
+    list-style-type: none;
+    position: absolute;
+    margin-top:1px;
+    top: 50px; /* updated to match autocomplete */
+    left: 0;
+    right: 0;
+    padding: 0 5px;
+    background: #fff;
+    border-radius: 12px;
+    z-index: 10;
+    max-height: 180px;
+    overflow-y: auto;
+
+   
+  }
+  &__option {
+    border-bottom: 1px solid var(--color-border-base);
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+
+    &:hover,
+    &.is-active {
+      background-color: var(--sidbar-Bg);
+    }
+    
+    &--add {
+        color: #000;
+        font-weight: 500;
+    }
+
+    @media (max-width: 480px) {
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+
+    &-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+
+      span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      @media (max-width: 480px) {
+        span {
+          max-width: 80%;
+        }
+      }
+    }
+  }
+}
+

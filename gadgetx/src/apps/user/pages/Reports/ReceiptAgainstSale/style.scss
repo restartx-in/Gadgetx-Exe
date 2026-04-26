@@ -1,0 +1,146 @@
+.receipt-against-sale {
+  display: flex;
+  flex-direction: column;
+  height: 100%;       
+  width: 100%;
+  overflow: hidden;   
+
+  &__header {
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e2e8f0;
+    // padding-bottom: 10px;
+    flex-shrink: 0;
+    margin-top: -12px;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column; // Changed from row to column to put form above table
+    flex: 1;
+    gap: 1rem;
+    overflow: hidden; 
+    padding-top: 1rem;
+
+    @media (max-width: 1024px) {
+      overflow-y: auto; // Allow full page scroll on mobile
+    }
+  }
+
+  &__form-panel {
+    width: 100%; // Changed from 320px to 100%
+    display: flex;
+    flex-direction: row; // On desktop, VStacks will sit side-by-side
+    gap: 1.5rem;
+    flex-shrink: 0;
+    height: fit-content; 
+
+    // Ensure the VStacks and the TextArea take appropriate space
+    & > * {
+      flex: 1;
+    }
+
+    @media (max-width: 1024px) {
+      flex-direction: column; // Stack VStacks vertically on mobile
+      gap: 1rem;
+    }
+  }
+
+  &__table-panel {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden; 
+    min-height: 300px; 
+    // Ensure table has a visible area
+  }
+
+  .table-container {
+    overflow-y: auto;
+    background-color: #ffffff;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      flex: 1;
+
+      th {
+        position: sticky;
+        top: 0;
+        background-color: #f8fafc;
+        z-index: 10;
+        padding: 12px;
+        text-align: left;
+      }
+
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        
+        .table-input {
+          margin-bottom: 0; // Prevent extra spacing inside table cells
+        }
+      }
+    }
+  }
+
+  .table-footer {
+    padding: 1rem;
+    border-top: 1px solid #e2e8f0;
+    background-color: #ffffff;
+    flex-shrink: 0;
+
+    .total-paying {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+  }
+
+  &__actions {
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 0;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+}
+
+/* Date visibility logic */
+.date-wrapper-mobile { 
+  display: none; 
+  padding-top: 10px;
+}
+@media (max-width: 768px) {
+  .receipt-against-sale {
+    &__header {
+      margin-top: -10px;
+    }
+  }
+}
+@media (max-width: 1024px) {
+  .date-wrapper-desktop { display: none; }
+  .date-wrapper-mobile { display: block; }
+  
+  .receipt-against-sale {
+    &__content {
+      overflow-y: auto;
+    }
+    &__table-panel {
+      overflow: visible; // Let the main container handle scrolling on mobile
+      flex: none; 
+    }
+    .table-container {
+      overflow-y: visible;
+    }
+  }
+}

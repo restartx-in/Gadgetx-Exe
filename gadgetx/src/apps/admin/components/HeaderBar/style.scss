@@ -1,0 +1,117 @@
+.admin-header-bar {
+  height: 100%;
+  width: 97%;
+  color: var(--sidbarBg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 100;
+
+  &__left-section {
+    display: flex;
+    align-items: center;
+  }
+
+  &__menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--color-admin-background-rgba);
+    }
+  }
+
+  &__title {
+    // margin-left: 8px;
+  }
+
+  &__right-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem; // same spacing pattern as header-bar
+  }
+
+  .header-bar__right-section-user-dropdown {
+    position: relative;
+
+    &-trigger {
+      background: none;
+      cursor: pointer;
+      color: var(--sidbarBg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.06);
+      }
+    }
+
+    &-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: var(--color-neutral-0);
+      color: #3c4043;
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-md, 8px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      width: 180px;
+      z-index: 2000;
+      overflow: hidden;
+      list-style: none;
+      padding: 6px 0;
+      margin: 0;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        font-size: 15px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        span {
+          flex-grow: 1;
+        }
+
+        svg {
+          flex-shrink: 0;
+          color: #3c4043;
+        }
+      }
+    }
+  }
+
+
+  @media (max-width: 900px) {
+    width: 94%;
+
+    &__menu-btn {
+      display: flex;
+    }
+
+    &__title {
+      font-size: 18px;
+    }
+  }
+}

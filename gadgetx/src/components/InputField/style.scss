@@ -1,0 +1,145 @@
+
+.custom-input,
+.custom-select {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  
+  min-width: 0;
+}
+
+
+.custom-input__label,
+.custom-select__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 0;
+}
+
+.custom-input__field {
+  
+  &.MuiTextField-root {
+    width: 100%;
+    
+    .MuiOutlinedInput-root {
+      background-color: var(--app-bg, #fff);
+      border-radius: 6px;
+      transition: all 0.2s ease;
+
+      fieldset {
+        border-color: #c9c9c9;
+        transition: border-color 0.2s ease-in-out;
+      }
+
+      &:hover fieldset {
+        border-color: #94a3b8;
+      }
+
+      /* Focus State */
+      &.Mui-focused fieldset {
+        border-color: var(--primary-blue, #1976d2);
+        border-width: 1px;
+      }
+
+      /* Disabled State */
+      &.Mui-disabled {
+        background-color: #f8fafc;
+        fieldset {
+          border-color: #dce1e7;
+        }
+      }
+
+      /* The actual input text */
+      input {
+        padding: 10px 14px;
+        font-size: 14px;
+        color: #000;
+        height: auto; 
+        
+        &::placeholder {
+          color: #999;
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+/* --------------------------------
+   SELECT STYLE
+-------------------------------- */
+.custom-select {
+  position: relative;
+}
+
+.custom-select__header {
+  padding: 10px 14px;
+  border: 1px solid #dce1e7;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-select__placeholder {
+  color: #999;
+}
+
+.custom-select__chevron {
+  border: solid #666;
+  border-width: 0 2px 2px 0;
+  padding: 3px;
+  transform: rotate(45deg);
+}
+
+/* Dropdown list */
+.custom-select__list {
+  position: absolute;
+  top: 105%;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #dce1e7;
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 999;
+  padding: 6px 0;
+}
+
+.custom-select__option {
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.custom-select__option:hover,
+.custom-select__option.selected {
+  background: #f0f3ff;
+}
+
+/* --------------------------------
+   AUTO-LAYOUT FIX FOR ALL PAGES
+-------------------------------- */
+.modal-body,
+.filter-body,
+.form-container,
+.content-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* On mobile → 1 column */
+@media (max-width: 768px) {
+  .modal-body,
+  .filter-body,
+  .form-container,
+  .content-body {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+}

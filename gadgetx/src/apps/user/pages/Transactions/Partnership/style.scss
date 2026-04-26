@@ -1,0 +1,17 @@
+add_purchase {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  padding: 36px 32px 28px 32px;
+  min-width: 340px;
+  max-width: 550px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    min-width: unset;
+    width: 98vw;
+    padding: 18px 12px;
+  }
+}

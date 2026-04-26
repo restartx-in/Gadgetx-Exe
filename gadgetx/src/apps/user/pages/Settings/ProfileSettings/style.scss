@@ -1,0 +1,19 @@
+.settings_page__sections{
+  padding: .5rem;
+  background-color: var(--color-white, #ffffff);
+  // border: #040303 solid 1px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 3rem;
+  &-submit_button2{
+    margin-top: 1rem;
+  }
+
+
+}
+.settings_page__sections-title{
+  margin-bottom: 1rem;
+}
+.editbutton{
+    margin-top: 1rem;
+}

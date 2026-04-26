@@ -1,0 +1,2 @@
+import SupplierAutoCompleteWithAddOption from './component'
+export default SupplierAutoCompleteWithAddOption

@@ -1,0 +1,109 @@
+// .print-settings__form{
+//   grid-template-columns: 1fr;
+// }
+
+// .print-settings-modal__overlay {
+//   position: fixed;
+//   top: 0;
+//   left: 0;
+//   right: 0;
+//   bottom: 0;
+//   background-color: rgba(0, 0, 0, 0.5);
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   z-index: 1000;
+// }
+
+// .print-settings-modal__content {
+//   background: white;
+//   padding: 30px;
+//   border-radius: 8px;
+//   max-width: 600px;
+//   width: 100%;
+//   max-height: 90vh; /* Changed to 90vh to ensure it fits on screen with expansion */
+//   display: flex;
+//   flex-direction: column;
+// }
+
+// .print-settings-modal__header {
+//   display: flex;
+//   justify-content: space-between;
+//   align-items: center;
+//   padding-bottom: 16px;
+//   border-bottom: 1px solid #e0e0e0; /* Fallback color if var undefined */
+//   border-bottom: 1px solid var(--border-color);
+// }
+
+// .print-settings-modal__close-btn {
+//   background: none;
+//   border: none;
+//   cursor: pointer;
+//   padding: 0;
+//   line-height: 0;
+// }
+
+// .print-settings-modal__body {
+//   overflow-y: auto; /* Ensure scroll if expanded content is tall */
+//   max-height: 60vh; 
+//   padding: 24px 4px;
+// }
+
+// .print-settings-modal__footer {
+//   gap: 16px;
+//   padding-top: 16px;
+//   border-top: 1px solid var(--border-color);
+// }
+
+// /* Accordion Styles */
+// .print-settings__accordion {
+//   margin-bottom: 20px;
+//   border: 1px solid #e0e0e0;
+//   border-radius: 6px;
+//   overflow: hidden;
+// }
+
+// .print-settings__accordion-header {
+//   display: flex;
+//   justify-content: space-between;
+//   align-items: center;
+//   // background-color: #f8f9fa;
+//   padding: 12px;
+//   cursor: pointer;
+//   user-select: none;
+//   transition: background-color 0.2s ease;
+// }
+
+// .print-settings__accordion-header:hover {
+//   // background-color: #f1f1f1;
+// }
+
+// .print-settings__accordion-content {
+//   padding: 16px;
+//   border-top: 1px solid #e0e0e0;
+//   background-color: #fff;
+//   animation: slideDown 0.3s ease-in-out;
+// }
+
+// /* Existing Image Styles adapted */
+// .print-settings__image-upload {
+//   display: flex;
+//   flex-direction: column;
+//   align-items: flex-start;
+//   gap: 12px;
+//   width: 100%;
+// }
+
+// .print-settings__preview-image {
+//   max-width: 150px;
+//   height: auto;
+//   border: 1px solid #ccc;
+//   border-radius: 4px;
+//   background-color: #f9f9f9; /* Contrast for transparent logos */
+// }
+
+// /* Animation */
+// @keyframes slideDown {
+//   from { opacity: 0; transform: translateY(-10px); }
+//   to { opacity: 1; transform: translateY(0); }
+// }

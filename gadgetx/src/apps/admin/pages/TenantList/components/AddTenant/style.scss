@@ -1,0 +1,22 @@
+.add-cost-center-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; 
+}
+
+@media (max-width: 600px) {
+  .add-cost-center-modal {
+    min-width: unset;
+    width: 98vw;
+    padding: 18px 12px 12px 12px;
+  }
+
+  .add-cost-center-modal__footer {
+    flex-direction: column;
+    gap: 8px;
+
+    > * {
+      width: 100%;
+    }
+  }
+}

@@ -1,0 +1,2 @@
+import LedgerAutoCompleteWithAddOptionWithBalance from "./component";
+export default LedgerAutoCompleteWithAddOptionWithBalance;

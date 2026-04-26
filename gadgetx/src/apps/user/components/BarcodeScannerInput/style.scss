@@ -1,0 +1,76 @@
+.barcode-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  .input-with-button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+
+    .search-type-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+
+      background-color: #f4f7fe;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      color: #495057;
+      font-size: 1rem;
+      cursor: pointer;
+
+      height: 38px;
+      padding: 0 20px 0 15px;
+      min-width: 80px;
+      flex-shrink: 0; 
+
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 16px 12px;
+
+      &:focus {
+        border-color:none;
+        outline: none;
+      }
+    }
+
+    .input-field-container {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .scan-toggle-btn {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0; // Prevent the button from shrinking
+
+      &:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+      }
+
+      &.active {
+        background-color: #dc3545;
+      }
+
+      svg {
+        pointer-events: none;
+      }
+    }
+  }
+
+  .hidden-scanner {
+    display: none; // hides camera element entirely
+  }
+}

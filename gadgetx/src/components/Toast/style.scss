@@ -1,0 +1,34 @@
+
+:root {
+  --color-toast-success-bg: #18ab3a;
+  --color-toast-warning-bg: #f39c12;
+  --color-toast-error-bg: #e74c3c;
+  --color-toast-text-light: #ffffff;
+}
+
+.chakra_toast {
+    position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 260px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  color: #fff;
+  z-index: 9999;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
+
+  &.success {
+    background-color: var(--color-toast-success-bg);
+  }
+
+  &.warning {
+    background-color: var(--color-toast-warning-bg);
+  }
+
+  &.error {
+    background-color: var(--color-toast-error-bg);
+    color: var(--color-toast-text-light);
+  }
+}

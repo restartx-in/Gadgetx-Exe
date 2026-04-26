@@ -1,0 +1,13 @@
+/* --- Main Block: table-row --- */
+.table_row {
+  transition: background-color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-primary-50);
+  }
+
+//   &.table-row--total {
+//     font-weight: var(--fw700);
+//     background-color: var(--color-neutral-100) !important;
+//   }
+}

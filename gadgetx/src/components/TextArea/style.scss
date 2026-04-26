@@ -1,0 +1,70 @@
+$border-light: #eff1f4;
+$text-dark: #0b1017;
+
+.custom-textarea {
+  position: relative;
+  width: 100%;
+
+  // Target the root MUI component inside our wrapper
+  .MuiTextField-root {
+    width: 100%;
+    
+    // Target the Input container
+    .MuiOutlinedInput-root {
+      background-color: var(--app-bg, #fff);
+      border-radius: 10px;
+      padding: 0; // Reset padding so inner text area controls it via MUI defaults or specific override below
+
+      fieldset {
+        border-color: #c9c9c9;
+        transition: border-color 0.2s ease-in-out;
+      }
+
+      /* Hover State */
+      &:hover fieldset {
+        border-color: #b0b0b0; 
+      }
+
+      /* Focused State */
+      &.Mui-focused fieldset {
+        border-color: var(--text-field-active-color);
+        border-width: 1px;
+      }
+
+      /* Disabled State */
+      &.Mui-disabled {
+        background-color: #f8fafc;
+        fieldset {
+          // border-color: $border-light;
+        }
+      }
+
+      /* The actual textarea element inside MUI */
+      .MuiInputBase-input {
+        color: $text-dark;
+        font-size: 1rem;
+        padding: 10px 12px; // Match padding of your single line inputs
+        
+        &::placeholder {
+            color: var(--sidebar-text, #64748b);
+            opacity: 1; 
+        }
+      }
+    }
+
+    /* Label Styling */
+    .MuiInputLabel-root {
+      color: #64748b;
+      
+      &.Mui-focused {
+        color: var(--text-field-active-color, #1976d2);
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-textarea {
+    margin-bottom: 12px;
+  }
+}

@@ -1,0 +1,39 @@
+.page_title {
+  display: flex;
+  flex-direction: row; 
+  align-items: center; 
+  gap: 0.75rem; 
+  flex-wrap: wrap; 
+
+
+  .page_title-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary, #555);
+    font-weight: 500;
+
+    background-color: #e9ecef;
+    padding: 3px 10px;
+    border-radius: 6px; 
+    display: inline-block;
+  }
+
+  @media (max-width: 768px) {
+    .page_title-text {
+      font-size: 22px;
+    }
+
+    .page_title-subtitle {
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page_title-text {
+      font-size: 20px;
+    }
+
+    .page_title-subtitle {
+      font-size: 12px;
+    }
+  }
+}

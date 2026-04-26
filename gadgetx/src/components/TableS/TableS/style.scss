@@ -1,0 +1,15 @@
+.common_table_wrapper {
+  width:99.9%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  // margin-bottom: var(--space-6);
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: var(--contend);
+    // font-size: var(--fs500);
+    
+  }
+}
+

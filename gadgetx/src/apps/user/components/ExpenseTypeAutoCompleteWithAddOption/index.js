@@ -1,0 +1,2 @@
+import ExpenseTypeAutoCompleteWithAddOption from './component'
+export default ExpenseTypeAutoCompleteWithAddOption

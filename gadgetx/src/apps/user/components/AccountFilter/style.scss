@@ -1,0 +1,132 @@
+.account_filter_wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  position: relative; // for gradients
+}
+
+.account_filter_scroll_wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+width: 100%;
+  border-radius: 8px;
+  background-color:var(--contend);
+  position: relative;
+  overflow: hidden; // ensures gradients overlay correctly
+}
+
+.account_filter_container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+
+  // Hide scrollbar
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+// Fade effect for edges (when arrows are visible)
+.account_filter_scroll_wrapper::before,
+.account_filter_scroll_wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.account_filter_scroll_wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, #fff, transparent);
+  opacity: 0; // hidden by default
+}
+
+.account_filter_scroll_wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, #fff, transparent);
+  opacity: 0; // hidden by default
+}
+
+// Control gradient visibility with arrows
+.account_filter_wrapper.show-left .account_filter_scroll_wrapper::before {
+  opacity: 1;
+}
+
+.account_filter_wrapper.show-right .account_filter_scroll_wrapper::after {
+  opacity: 1;
+}
+
+.scroll_arrow_button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--contend);
+  color:var(--sidbar-bg);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  z-index: 3; // above gradients
+
+  &:hover:not(:disabled) {
+    background-color:var(--app-bg);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &.left svg {
+    transform: rotate(180deg);
+  }
+}
+
+.account_filter_button {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 50px;
+  background-color: #f8fafc;
+  color:var(--sidbar-bg);
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  line-height: 1.5;
+  border: none;
+
+  &:hover {
+    background-color: #d1d1df;
+  }
+
+  &.active {
+    background-color:var(--sidebar-hover);
+    color:var(--contend);
+    border-color: #1e293b;
+    font-weight: 600;
+  }
+}

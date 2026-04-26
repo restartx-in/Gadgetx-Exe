@@ -1,0 +1,13 @@
+.cost_center {
+  &-add_button {
+    margin-left: auto;
+  }
+}
+
+.cost_center-mobile-list {
+  .list-item {
+    padding-top: 0px;
+    margin-top: -10px;
+    padding-bottom: 0px;
+  }
+}

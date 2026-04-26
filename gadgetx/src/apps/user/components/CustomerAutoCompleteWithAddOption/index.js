@@ -1,0 +1,2 @@
+import CustomerAutoCompleteWithAddOption from './component'
+export default CustomerAutoCompleteWithAddOption

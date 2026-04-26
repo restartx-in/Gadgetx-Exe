@@ -1,0 +1,16 @@
+export const Transaction = Object.freeze({
+  Sale: "Sale",
+  Purchase: "Purchase",
+  Expense: "Expense",
+  Employee: "Employee",
+  Supplier: "Supplier",
+  Customer: "Customer",
+  Account: "Account",
+  ExpenseType: "ExpenseType",
+  Item: "Item",
+  Partner: "Partner",
+  Jobsheet: "JobSheet",
+  SaleReturn: "SaleReturn",
+  EmployeePosition: "EmployeePosition",
+  Role: "Role",
+});

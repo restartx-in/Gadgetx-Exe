@@ -1,0 +1,140 @@
+.cashbook_list {
+  width: 100%;
+  padding: 22px;
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 6px 32px var(--color-neutral-300);
+  box-sizing: border-box;
+
+  &__add_button {
+    margin-left: auto;
+  }
+}
+.page_header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.cashbook-filters {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+}
+
+.account_filter_wrapper {
+  min-width: 0;
+  overflow: hidden;
+  justify-content: space-between;
+}
+
+.account_filter_scroll_wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.account_filter_container {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  position: relative;
+  z-index: 1;
+
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.mobile-list-view {
+  display: flex;
+  flex-direction: column;
+}
+
+.td_num {
+  padding-left: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.td_num--debit {
+  color: var(--color-danger);
+}
+
+.td_num--credit {
+  color: green;
+}
+
+/*
+  REMOVED STYLES:
+  - .td-test
+  - .td--positive
+  - .td--neutral
+  - .td--negative
+  These are now handled by the universal TextBadge component.
+*/
+
+@media (max-width: 900px) {
+  .cashbook_list {
+    padding: 1px;
+    box-shadow: none;
+    background: transparent;
+  }
+}
+
+.td_numeric {
+  padding-left: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.account_total_display {
+  display: flex;
+  align-items: center;
+}
+
+.total-display-box {
+  display: block;
+  line-height: 16px;
+  padding: 5px 10px;
+  margin: 0;
+  width: fit-content;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.total--positive {
+  color: green;
+  background-color: #e6f9e6;
+  box-shadow: 0 1px 3px rgba(0, 128, 0, 0.2);
+}
+
+.total--negative {
+  color: var(--color-danger);
+  background-color: #ffe6e6;
+  box-shadow: 0 1px 3px rgba(255, 0, 0, 0.25);
+}
+.AccountTotalDisplay_wrapper {
+  margin-bottom: 10px;
+  margin-top: -7px;
+}
+.vehicle_name {
+  color: var(--color-neutral-700);
+}

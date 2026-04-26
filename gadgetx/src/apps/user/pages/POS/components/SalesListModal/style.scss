@@ -1,0 +1,68 @@
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-sales-table,
+  #printable-sales-table * {
+    visibility: visible;
+  }
+  #printable-sales-table {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .print-title {
+    text-align: center;
+    font-family: poppins, sans-serif;
+  }
+}
+
+.modal-table-container {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 8px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #f9f9f9;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 20px;
+  }
+}
+
+.status-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #fff;
+  text-transform: capitalize;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.status-paid {
+    background: green;
+  }
+  &.status-partial {
+    background: orange;
+  }
+  &.status-returned {
+    background: red;
+  }
+}
+
+.edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+
+}

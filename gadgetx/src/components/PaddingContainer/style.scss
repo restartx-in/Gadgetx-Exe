@@ -1,0 +1,10 @@
+.padding-containers {
+  padding: 32px;
+  background: var(--color-bg);
+}
+
+@media (max-width: 768px) {
+  .padding-containers {
+    padding: 15px; 
+  }
+}

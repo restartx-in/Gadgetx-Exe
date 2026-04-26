@@ -1,0 +1,201 @@
+/* ThermalReceipt.scss */
+
+/* Main Container (Simulating the paper) */
+.thermal-receipt-sheet {
+  background: #fff;
+  width: 100%;
+  max-width: 80mm; /* Standard Thermal Width */
+  margin: 0px;
+  padding: 10px;
+  // font-family: 'Courier New', Courier, monospace; /* Classic Receipt Look */
+  color: #000;
+  box-sizing: border-box;
+.arabic-text {
+  direction: rtl;
+  font-family: 'Tahoma', sans-serif;
+}
+
+/* For auto-translated static labels */
+.label-pair {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.arabic-label {
+  direction: rtl;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 0.9em; /* Make translation slightly smaller */
+  color: #333;
+}
+}
+
+/* --- Header Section --- */
+.thermal-header {
+  text-align: center;
+  margin-bottom: 15px;
+
+  .header-image {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+    img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      /* Max height control to save paper */
+      max-height: 120px; 
+    }
+  }
+
+  h3 {
+    margin: 5px 0;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .store-info {
+    font-size: 12px;
+    line-height: 1.3;
+    p { margin: 2px 0; }
+  }
+}
+
+/* --- Meta Details (Date, Receipt No) --- */
+.thermal-meta {
+  font-size: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 8px;
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+}
+
+/* --- Items Grid (Your specific layout) --- */
+.thermal-items {
+  border-bottom: 1px dashed #000;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+
+  /* The Grid Definition */
+  .grid-row {
+    display: grid;
+    /* Name | Qty | Price | Amount */
+    grid-template-columns: auto 50px 60px 70px; 
+    gap: 5px;
+    align-items: start;
+    padding: 4px 0;
+  }
+
+  .header-row {
+    font-weight: 700;
+    border-bottom: 1px solid #000;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+  }
+
+  /* Column Alignments */
+  .col-name { text-align: left; word-break: break-word; }
+  .col-qty  { text-align: center; }
+  .col-price { text-align: right; }
+  .col-total { text-align: right; font-weight: 600; }
+}
+
+/* --- Summary Section --- */
+.thermal-summary {
+  font-size: 13px;
+  margin-bottom: 15px;
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    
+    &.grand-total {
+      font-weight: 800;
+      font-size: 15px;
+      border-top: 1px dashed #000;
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+
+    &.balance-due {
+      font-weight: 700;
+    }
+  }
+}
+
+/* --- Payment Modes --- */
+.thermal-payment {
+  border-top: 1px dashed #000;
+  padding-top: 8px;
+  font-size: 12px;
+  margin-bottom: 15px;
+
+  .payment-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 2px 0;
+  }
+}
+
+/* --- Footer (Codes & Message) --- */
+.thermal-footer {
+  text-align: center;
+  margin-top: 10px;
+
+  .barcode-wrap, .qr-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+    img, canvas { max-width: 100%; }
+  }
+
+  .footer-message {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+}
+
+@media print {
+
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  /* Hide everything */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Show only receipt */
+  .thermal-receipt-sheet,
+  .thermal-receipt-sheet * {
+    visibility: visible !important;
+  }
+
+  /* CENTER the receipt on the printed page */
+  .thermal-receipt-sheet {
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 80mm;
+    max-width: 80mm;
+
+    /* Reduce shifting on printers */
+    padding: 5px;
+    margin: 0;
+    background: #fff;
+  }
+}

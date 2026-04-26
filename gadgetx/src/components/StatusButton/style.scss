@@ -1,0 +1,106 @@
+:root {
+  // Base & State Colours
+  --colour-white: #fff;
+  --colour-disabled-bg: #f3f4f6;
+  --colour-disabled-border: #d1d5db;
+  --colour-disabled-text: #6b7280;
+
+  // Selected State Colours
+  --colour-selected-bg: #150f35; // Dark Slate/Navy
+  --colour-selected-text: #fff;
+
+  // "All" Status Colours
+  --colour-all-bg: #e7f3fd; // Light Blue
+  --colour-all-text: #3566b1; // Medium Blue
+
+  // "Available" Status Colours
+  --colour-available-bg: #d1fae5; // Light Green
+  --colour-available-text: #059669; // Medium Green
+
+  // "Maintenance" Status Colours
+  --colour-maintenance-bg: #fbf1e5  ; // Light Amber/Yellow
+  --colour-maintenance-text: #da9973; // Medium Amber
+
+  // "Sold" Status Colours
+  --colour-sold-bg: #ffefeb; // Light Red
+  --colour-sold-text: #ed8d90; // Medium Red
+
+  // Base Button Styles
+  --radius-md: 8px;
+  --fs-sm: 0.85rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.1rem;
+  --fw-500: 500;
+  --transition-fast: 150ms ease-in-out;
+}
+
+.status_button {
+  // --- Base styles for the block ---
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 12px;
+  min-width: 48px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  // --- Size Modifiers ---
+  &--small {
+    height: 30px;
+  }
+  &--medium {
+    height: 33px;
+  }
+  &--large {
+    height: 48px;
+    padding: 0 20px;
+  }
+
+  // --- Variant Styles ---
+  &--all {
+    background-color: var(--colour-all-bg);
+    color: var(--colour-all-text);
+  }
+  &--available {
+    background-color: var(--colour-available-bg);
+    color: var(--colour-available-text);
+  }
+  &--maintenance {
+    background-color: var(--colour-maintenance-bg);
+    color: var(--colour-maintenance-text);
+  }
+  &--sold {
+    background-color: var(--colour-sold-bg);
+    color: var(--colour-sold-text);
+  }
+
+  // --- Selected State Override ---
+  // This rule appears *after* the variant styles, so it will override them when active.
+  &--selected:not(:disabled) {
+    background-color: var(--colour-selected-bg);
+    color: var(--colour-selected-text);
+  }
+
+  // --- Disabled State Override ---
+  // This is the final override and has the highest priority.
+  &:disabled {
+    cursor: not-allowed;
+    background-color: var(--colour-disabled-bg);
+    color: var(--colour-disabled-text);
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .status_button {
+    padding: 0 6px;
+  }
+}

@@ -1,0 +1,13 @@
+.cancel_btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  background-color:var(--color-white); /* override */
+  color: var(--navy) !important;
+  border-radius: 6px !important;
+
+  border: 1px solid var(--navy) !important;
+  cursor: pointer !important;
+  padding: 6px 35px;
+}

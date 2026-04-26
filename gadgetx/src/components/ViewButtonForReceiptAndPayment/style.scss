@@ -1,0 +1,38 @@
+.ViewButtonForReceiptAndPayment {
+  // Existing styles for the button container
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 15px;
+  font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid currentColor;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  // Ensure the container itself can shrink padding on mobile if needed
+}
+
+/* Style for the text element */
+.ViewButtonForReceiptAndPayment__text {
+    /* Desktop/Default: visible */
+    display: inline;
+}
+
+/* Mobile View: Hide text */
+@media (max-width: 768px) {
+    .ViewButtonForReceiptAndPayment__text {
+        display: none;
+    }
+
+    /* Optional: Reduce padding on the button itself on mobile if only the icon is visible */
+    .ViewButtonForReceiptAndPayment {
+        padding: 8px 10px; /* Adjust padding to be more compact around just the icon */
+    }
+}

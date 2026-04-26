@@ -1,0 +1,2 @@
+import CategoryAutoCompleteWithAddOption from './component'
+export default CategoryAutoCompleteWithAddOption

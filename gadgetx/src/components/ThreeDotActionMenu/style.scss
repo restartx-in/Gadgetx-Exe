@@ -1,0 +1,68 @@
+/* ThreeDotActionMenu Styles */
+.three-dot-menu {
+  position: relative;
+  display: inline-block;
+
+  // The circular button with the dots
+  &__trigger {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 1000;
+
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #f0f0f0;
+    }
+  }
+
+  // The dropdown container
+  &__dropdown {
+    position:flex ;
+    // right: 0;
+    // top: 22%;  
+    z-index: 2000;
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    // min-width: 140px;
+    overflow: hidden;
+    border: 1px solid #eee;
+  }
+
+  // The buttons inside the dropdown
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0px;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    text-align: left;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #f9f9f9;
+    }
+
+    // Specific style for the Delete button
+    &--delete {
+      color: #e02020;
+      border-top: 1px solid #f0f0f0;
+
+      &:hover {
+        background-color: #fff1f0;
+      }
+    }
+  }
+}

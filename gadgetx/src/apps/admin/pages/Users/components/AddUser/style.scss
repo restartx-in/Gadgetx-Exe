@@ -1,0 +1,158 @@
+.add_user {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh; 
+ 
+  &__form {
+    width: 100%;
+    // max-width: 800px;
+    // padding: 10px;
+    padding-top: 0px;
+    // background-color: #ffffff;
+    border-radius: 8px;
+    overflow-y: auto;
+    max-height: calc(100vh - 90px);
+    // box-shadow:
+    //   0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    //   0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    // border: 1px solid #e5e7eb;
+
+    &-title {
+      text-align: center;
+      color: #111827;
+      margin-bottom: 10px;
+    }
+
+    &-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 20px;
+      label {
+        display: inline-block;
+        color: #374151;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .duration-btn {
+      padding: 8px 16px;
+      margin-right: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      background: var(--app-bg);
+      cursor: pointer;
+      font-size: 14px;
+
+      &:hover {
+        background: var(--app-bg);
+      }
+    
+      &.active {
+        background: var(--color-primary-800);
+        color:var(--contend);
+        border-color: var(--primary-color);
+      }
+}
+
+    }
+
+    &-group {
+      // background-color: red;
+      margin-bottom: 20px;
+      label {
+        display: inline-block;
+        color: #374151;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      &-input {
+        width: 100%;
+        padding: 0.75rem;
+      }
+
+      &-permissions {
+        padding: 1rem;
+
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem 2rem;
+        &-checkbox_label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #374151;
+          cursor: pointer;
+          margin: 0;
+
+          input[type='checkbox'] {
+            height: 1em;
+            width: 1em;
+            cursor: pointer;
+            margin-right: 5px;
+          }
+        }
+      }
+
+      &-vehicle_details {
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+
+        &-checkbox_label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #374151;
+          cursor: pointer;
+
+          input[type='checkbox'] {
+            height: 1em;
+            width: 1em;
+            cursor: pointer;
+            margin-right: 10px;
+          }
+        }
+
+        &-nested {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid #e5e7eb;
+        }
+      }
+    }
+
+    &-error {
+      color: #dc2626;
+      text-align: center;
+      margin-top: 1rem;
+    }
+  }
+
+  &__submit_btn {
+    width: 100%;   
+    padding: 0.8rem 1rem;
+    color: #ffffff;
+    background-color: #2563eb;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 1rem;
+
+    &:hover {
+      background-color: #1d4ed8;
+    }
+
+    &:disabled {
+      background-color: #93c5fd;
+      cursor: not-allowed;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .add_user__form-row{
+      grid-template-columns: repeat(1, 2fr);
+  }
+}

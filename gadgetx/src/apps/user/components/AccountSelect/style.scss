@@ -1,0 +1,12 @@
+// This file is mostly for organizational purposes.
+// The main styling comes from the generic Select component's style.scss.
+.account_select {
+  // You can add specific styles for the account select wrapper here if needed.
+  // For example, if you wanted a specific icon or color.
+}
+
+// You can also add styles for the error state if you wish
+.custom_select_header.error {
+    border-color: var(--color-danger-500); // Example error color
+    color: var(--color-danger-500);
+}

@@ -1,0 +1,147 @@
+$border-light: #eff1f4;
+$text-dark: #0b1017;
+$separator-color: #64686b;
+$scrollbar-thumb: #cbd5e1;
+
+.autocomplete {
+  border-radius: 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  line-height: var(--line-height-base);
+
+  &__label {
+    margin-bottom: var(--space-2);
+  }
+
+  .autocomplete__option.active {
+    background-color: var(--app-bg);
+    color: #333;
+  }
+}
+
+.costcenterinput-select {
+  position: relative;
+  width: 100%;
+
+  .MuiTextField-root {
+    width: 100%;
+
+    .MuiOutlinedInput-root {
+      background-color: var(--app-bg, #fff);
+      border-radius: 8px;
+      transition:
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
+
+      fieldset {
+        border-color:#c9c9c9;
+        transition: border-color 0.2s ease-in-out;
+      }
+
+      &.Mui-focused fieldset {
+        border-color: var(--color-brand-base);
+        border-width: 2px;
+      }
+
+      &.Mui-disabled {
+        background-color: var(--skeleton-light);
+        fieldset {
+          border-color: $border-light;
+        }
+      }
+
+      input,
+      .autocomplete__input {
+        padding: var(--space-2) var(--space-3);
+        font-size: 1rem;
+        color: $text-dark;
+        line-height: var(--line-height-base);
+        background-color: var(--app-bg);
+
+        &::placeholder {
+          color: var(--sidebar-text, #64748b);
+          opacity: 1;
+        }
+
+        &:disabled {
+          background-color: var(--skeleton-light);
+          color: var(--color-disabled-text);
+        }
+      }
+
+      &:focus-within {
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+      }
+    }
+
+    .MuiInputLabel-root {
+      color: #64748b;
+
+      &.Mui-focused {
+        color: var(--color-brand-base);
+      }
+    }
+  }
+
+  &__dropdown {
+    border: 1px solid var(--color-border-base);
+    list-style-type: none;
+    position: absolute;
+    margin-top:1px;
+    top: 50px; /* updated to match autocomplete */
+    left: 0;
+    right: 0;
+    padding: 0 5px;
+    background: #fff;
+    border-radius: 12px;
+    z-index: 10;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  &__option {
+    border-bottom: 1px solid var(--color-border-base);
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+
+    &:hover,
+    &.is-active {
+      background-color: var(--sidbar-Bg);
+    }
+
+    &-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .costcenterinput-select {
+    margin-bottom: 12px;
+
+    &__dropdown {
+      border-radius: 6px;
+    }
+
+    &__option {
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+
+    &__option-content span {
+      max-width: 80%;
+    }
+  }
+}
+

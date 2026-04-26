@@ -1,0 +1,132 @@
+.country-settings {
+  padding: 16px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  &__header-right {
+    display: flex;
+    align-items: center;
+  }
+
+    &__save-btn {
+    display: inline-flex;
+    align-items: center;        
+    justify-content: center;    
+    padding: 10px 24px;         
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    line-height: 1;             
+    height: 42px;               
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.25s ease;
+
+    &:hover:not(:disabled) {
+      color: var(--primary-color);
+      background-color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+  }
+
+
+  &__search {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    .search-icon {
+      color: #888;
+      margin-right: 8px;
+    }
+
+    input {
+      border: none;
+      outline: none;
+      flex: 1;
+      font-size: 15px;
+      background: transparent;
+    }
+  }
+
+    &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  &__option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    border: 1px solid #f2f2f2;
+    transition: 0.15s ease;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    &.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+  }
+
+
+  &__option-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__flag {
+    font-size: 26px;
+  }
+
+  &__option-right {
+    font-size: 17px;
+    font-weight: 600;
+    color: #444;
+    text-align: right;
+    min-width: 40px; 
+  }
+
+  &__currency-symbol {
+    display: inline-block;
+  }
+
+  .no-results {
+    text-align: center;
+    color: #888;
+    margin-top: 20px;
+  }
+}

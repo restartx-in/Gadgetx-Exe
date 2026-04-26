@@ -1,0 +1,174 @@
+.ledger-balance-autocomplete {
+  position: relative;
+  width: 100%;
+
+  .MuiTextField-root {
+    width: 100%;
+
+    .MuiOutlinedInput-root {
+      background-color: var(--app-bg, #ffffff);
+      border-radius: 6px;
+
+      fieldset {
+        border-color: #c9c9c9;
+        transition: border-color 0.2s ease-in-out;
+      }
+
+      /* Focused State */
+      &.Mui-focused fieldset {
+        border-color: var(--primary-blue, #1976d2);
+        border-width: 2px;
+      }
+
+      /* Disabled State */
+      &.Mui-disabled {
+        background-color: #f8fafc;
+
+        fieldset {
+          border-color: var(--color-border-light, #e5e7eb);
+        }
+      }
+
+      input {
+        color: var(--text-dark, #0f172a);
+        font-size: 1rem;
+        padding: 10px 12px;
+
+        &::placeholder {
+          color: var(--sidebar-text, #64748b);
+          opacity: 1;
+        }
+      }
+    }
+
+    /* Label Styling */
+    .MuiInputLabel-root {
+      color: #64748b;
+
+      &.Mui-focused {
+        color: var(--primary-blue, #1976d2);
+      }
+    }
+  }
+
+  /* Edit Button inside dropdown */
+  &__edit-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #000;
+    padding: 4px;
+    border-radius: 4px;
+
+    &:hover {
+      background-color: #f1f5f9;
+    }
+  }
+
+  /* Dropdown */
+  &__dropdown {
+    border: 1px solid var(--color-border-base, #e5e7eb);
+    list-style-type: none;
+    position: absolute;
+    margin-top: 1px;
+    top: 50px;
+    left: 0;
+    right: 0;
+    padding: 4px;
+    background: #ffffff;
+    border-radius: 12px;
+    z-index: 10;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  /* Dropdown Option */
+  &__option {
+    border-bottom: 1px solid var(--color-border-base, #e5e7eb);
+    padding: var(--space-2, 8px) var(--space-3, 12px);
+    cursor: pointer;
+    transition: background-color var(--transition-fast, 0.15s ease);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover,
+    &.active {
+      background-color: var(--sidebar-bg, #f1f5f9);
+    }
+
+    &--add {
+      color: #000;
+      font-weight: 500;
+    }
+
+    @media (max-width: 480px) {
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+
+    &-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+
+      span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      @media (max-width: 480px) {
+        span {
+          max-width: 80%;
+        }
+      }
+    }
+  }
+}
+
+/* ====================================================================
+   Shared / Account & Ledger Option Content
+==================================================================== */
+
+.account-balance-autocomplete__option-content,
+.ledger-balance-autocomplete__option-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+
+  .left-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .right-section {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+}
+
+/* ====================================================================
+   Mobile Spacing Fix
+==================================================================== */
+
+@media (max-width: 480px) {
+  .customersinput-select,
+  .account-balance-autocomplete,
+  .ledger-balance-autocomplete {
+    margin-bottom: 12px;
+  }
+}

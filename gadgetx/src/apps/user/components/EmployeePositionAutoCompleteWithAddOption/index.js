@@ -1,0 +1,2 @@
+import EmployeePositionAutoCompleteWithAddOption from "./component";
+export default EmployeePositionAutoCompleteWithAddOption;

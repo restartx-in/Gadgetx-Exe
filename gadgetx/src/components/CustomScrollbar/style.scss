@@ -1,0 +1,31 @@
+/* components/CustomScrollbar/CustomScrollbar.scss */
+
+.custom-scrollbar-container {
+  overflow-y: auto;
+  max-height: 200px; /* Default height, can be overridden */
+  position: relative;
+  margin-top:0px;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #87919e transparent;
+
+  /* Webkit Browsers (Chrome, Safari, Edge) */
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #dbe1cb;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+}

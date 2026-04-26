@@ -1,0 +1,81 @@
+/* RegisterModal.scss */
+
+// Styling for the modal container itself
+.register-modal {
+  min-width: 400px; // Default minimum width for desktop
+  
+  // Header overrides (if needed based on your global Modal styles)
+  &__header {
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  // Body layout
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px; // Spacing between form fields
+    padding-top: 10px;
+
+    .modal-instruction {
+      font-size: 0.95rem;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      label {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #444;
+
+        .required {
+          color: #e53e3e;
+          margin-left: 2px;
+        }
+      }
+    }
+  }
+
+  // Footer layout
+  &__footer {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .register-modal {
+    min-width: unset;
+    width: 95vw; // Take up most of screen width
+    padding: 16px; // Adjust padding if Modal component supports className overrides affecting padding
+  }
+
+  .register-modal__footer {
+    flex-direction: column-reverse; // Stack buttons, submit on top usually or standard bottom
+    gap: 10px;
+
+    > * {
+      width: 100%; // Full width buttons
+    }
+    
+    // Optional: if you want specific ordering
+    .cancel-btn {
+        order: 1;
+    }
+    .submit-btn {
+        order: 0;
+    }
+  }
+}

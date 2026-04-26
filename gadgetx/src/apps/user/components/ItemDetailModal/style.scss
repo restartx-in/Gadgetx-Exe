@@ -1,0 +1,123 @@
+.p-0 {
+  padding: 0 !important;
+}
+
+.item-detail-modal {
+  display: flex;
+  flex-direction: column;
+  font-family: 'Poppins', sans-serif;
+
+  &__hero {
+    margin-left: 20px;
+    background-color: #fff;
+    border-bottom: 1px solid #f3f4f6;
+
+    .product-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 8px 0;
+      line-height: 1.4;
+    }
+
+    .stock-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 99px;
+
+      &.in-stock {
+        background-color: #ecfdf5;
+        color: #059669;
+      }
+      &.out-stock {
+        background-color: #fef2f2;
+        color: #dc2626;
+      }
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 24px;
+    background-color: #fff;
+
+    .grid-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b7280;
+        font-weight: 600;
+      }
+
+      .value {
+        font-size: 15px;
+        color: #374151;
+        font-weight: 500;
+
+        &.fw-bold {
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
+  &__summary {
+    background-color: #f9fafb;
+    padding: 20px 24px;
+    border-top: 1px dashed #d1d5db;
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      .summary-label {
+        font-size: 14px;
+        color: #4b5563;
+      }
+
+      .summary-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+
+        &.text-tax {
+          color: #db2777;
+        }
+      }
+    }
+
+    .divider {
+      height: 1px;
+      background-color: #e5e7eb;
+      margin: 12px 0;
+    }
+
+    .total-row {
+      margin-bottom: 0;
+      margin-top: 4px;
+
+      .summary-label {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+      }
+
+      .summary-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2563eb;
+      }
+    }
+  }
+}

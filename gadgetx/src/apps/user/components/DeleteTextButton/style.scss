@@ -1,0 +1,78 @@
+.delete_text_btn {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+
+  &__popup_content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+
+    &-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      &-title {
+        margin: 0;
+        font-size: 18px;
+      }
+      &-close_btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+    }
+
+    &-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+
+      &-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      &-close {
+        background: #e0e0e0;
+      }
+
+      &-apply {
+        background: #e53e3e;
+        color: white;
+
+        &:disabled {
+          background: #a0aec0;
+          cursor: not-allowed;
+        }
+      }
+    }
+    // &-body {
+    //   margin: 20px 0;
+    //   font-size: 16px;
+    // }
+  }
+}
+
+.delete_text_btn_trigger_btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  background-color: white; /* override */
+  color: var(--navy) !important;
+  border-radius: 6px !important;
+
+  border: 1px solid var(--navy) !important;
+  cursor: pointer !important;
+  padding: 6px 35px;
+}

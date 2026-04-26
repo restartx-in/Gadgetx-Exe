@@ -1,0 +1,25 @@
+import SaleReturn from "../../apps/user/pages/Transactions/SaleReturn/component";
+
+export const Report = Object.freeze({
+  Sale: "Sale",
+  Purchase: "Purchase",
+  Expense: "Expense",
+  SaleReturn: "SaleReturn",
+  Supplier: "Suppliers",
+  Customer: "Customer",
+  Employee: "Employee",
+  CashBook: "cashbook",
+  ExpenseType: "Expense type",
+  Item: "Item",
+  Partner: "Partner",
+  Jobsheet: "JobSheet",
+  DoneBy: "DoneBy",
+  CostCenter: "CostCenter",
+  Brand: "Brand",
+  Category: "Category",
+  Accounts: "Accounts",
+  Unit: "Unit",
+  EmployeePosition: "Employee position",
+  RolePermissions: "Permissions",
+  Role: "Role",
+});

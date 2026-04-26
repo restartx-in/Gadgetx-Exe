@@ -1,0 +1,15 @@
+
+
+// Media queries remain the same
+@media (max-width: 768px) {
+  .header-bar {
+    &__left-section {
+      &-page-title {
+        display: none;
+      }
+      &-brand-name {
+        font-size: var(--fs18);
+      }
+    }
+  }
+}

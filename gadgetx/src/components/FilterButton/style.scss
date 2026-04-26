@@ -1,0 +1,38 @@
+/* --- Main Block: filter_button --- */
+.filter_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  background-color: #ffffff;
+  color: #374151;
+  padding: 0.5rem 0.5rem;
+  padding-top:12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+
+  svg {
+    color:var(--navy);  /* For libraries that use currentColor */
+  }
+
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #a1a1aa;
+  }
+  @media (max-width: 768px) {
+    &-text {
+      display: none;
+      padding: 0.5rem;
+    }
+    
+  }
+
+   @media (min-width: 769px) {
+    &-icon {
+      display: none;
+    }
+  }
+ }
