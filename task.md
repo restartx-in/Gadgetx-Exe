@@ -1,0 +1,8 @@
+- [x] Create `gadgetx-desktop` wrapper project
+- [x] Copy `gadgetx` and `gadgetx-server` into the wrapper
+- [x] Install dependencies for all components
+- [x] Create Electron `main.cjs` for process orchestration
+- [x] Configure production environment for frontend
+- [/] Build frontend for production
+- [ ] Manual verification in development mode
+- [ ] Package into `.exe` using `electron-builder`
