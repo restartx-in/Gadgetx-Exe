@@ -87,21 +87,19 @@ class ExpenseController {
     }
   }
 
-  async update(req, res, next) {
+async update(req, res, next) {
     try {
+      
       const updatedExpense = await this.service.update(
         req.params.id,
         req.user.tenant_id,
         req.body,
         req.db
       );
-      if (!updatedExpense) {
-        return res
-          .status(404)
-          .json({ message: "Expense not found or not authorized to update" });
-      }
+      
       res.json(updatedExpense);
     } catch (error) {
+      // If our service throws the "Not found" error, it comes here
       next(error);
     }
   }

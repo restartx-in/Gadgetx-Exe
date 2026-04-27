@@ -77,7 +77,8 @@ const generateBarcodeImage = (invoiceNumber) => {
   }
 };
 
-const SaleRow = React.memo(
+
+    const SaleRow = React.memo(
   ({
     sls,
     index,
@@ -88,28 +89,39 @@ const SaleRow = React.memo(
     getSaleMenuItems,
     DotMenu,
   }) => {
-    const balance = (sls.total_amount || 0) - (sls.paid_amount || 0);
+    const balance = (parseFloat(sls.total_amount) || 0) - (parseFloat(sls.paid_amount) || 0);
+        console.log("cutomer",sls);
+
     const menuItems = useMemo(
       () => getSaleMenuItems(sls, handlers),
       [sls, handlers, getSaleMenuItems],
     );
+
     return (
       <Tr>
         <TdSL index={index} page={page} pageSize={pageSize} />
+        
         {columns.map((field) => {
-          if (field.value === "date")
+          // 1. DATE
+          if (field.value === "date") {
             return <TdDate key={field.value}>{sls.date}</TdDate>;
-          if (field.value === "customer")
+          }
+          // 2. CUSTOMER
+          if (field.value === "customer") {
             return (
               <TdOverflow key={field.value}>
-                {sls.party_name || "N/A"}
+                {sls.party_name || "Walk-in"}
               </TdOverflow>
             );
-          if (field.value === "invoice_number")
+          }
+          // 3. INVOICE NUMBER
+          if (field.value === "invoice_number") {
             return (
               <TdOverflow key={field.value}>{sls.invoice_number}</TdOverflow>
             );
-          if (field.value === "status")
+          }
+          // 4. STATUS
+          if (field.value === "status") {
             return (
               <Td key={field.value}>
                 <TextBadge variant="paymentStatus" type={sls.status}>
@@ -117,7 +129,9 @@ const SaleRow = React.memo(
                 </TextBadge>
               </Td>
             );
-          if (field.value === "account")
+          }
+          // 5. ACCOUNT
+          if (field.value === "account") {
             return (
               <TdOverflow key={field.value}>
                 {(sls.payment_methods || [])
@@ -125,29 +139,51 @@ const SaleRow = React.memo(
                   .join(", ") || "N/A"}
               </TdOverflow>
             );
-          if (field.value === "total_amount")
+          }
+          // 6. TOTAL AMOUNT
+          if (field.value === "total_amount") {
             return <TdNumeric key={field.value}>{sls.total_amount}</TdNumeric>;
-          if (field.value === "paid_amount")
+          }
+          // 7. PAID AMOUNT
+          if (field.value === "paid_amount") {
             return (
               <TdNumeric key={field.value}>{sls.paid_amount || 0}</TdNumeric>
             );
-          if (field.value === "balance")
+          }
+          // 8. BALANCE
+          if (field.value === "balance") {
             return (
               <TdNumeric key={field.value}>{balance.toFixed(2)}</TdNumeric>
             );
-          if (field.value === "done_by")
+          }
+          // 9. DONE BY
+          if (field.value === "done_by") {
             return (
               <TdOverflow key={field.value}>
                 {sls.done_by_name || "N/A"}
               </TdOverflow>
             );
-          if (field.value === "cost_center")
+          }
+          // 10. COST CENTER
+          if (field.value === "cost_center") {
             return (
               <TdOverflow key={field.value}>
                 {sls.cost_center_name || "N/A"}
               </TdOverflow>
             );
-          return null;
+          }
+          // 11. IS ONLINE (The missing piece in your previous code)
+          if (field.value === "is_online") {
+            return (
+              <Td key={field.value}>
+                 {sls.is_online ? "Yes" : "No"}
+              </Td>
+            );
+          }
+
+          // IMPORTANT: If a field is enabled in Column Selector but not handled above, 
+          // we MUST return an empty Td to prevent the table from shifting.
+          return <Td key={field.value}>-</Td>;
         })}
         <Td>
           <DotMenu items={menuItems} />

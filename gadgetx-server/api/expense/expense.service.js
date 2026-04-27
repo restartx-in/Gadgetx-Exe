@@ -121,22 +121,30 @@ class ExpenseService {
     const client = await db.connect();
     try {
       await client.query("BEGIN");
+      
+      // 1. Fetch the existing expense
       const oldExpense = await this.expenseRepository.getById(
         client,
         id,
         tenantId,
       );
 
-      // Reverse old payment logic
+      // SAFETY CHECK: This prevents the "undefined" error
+      if (!oldExpense) {
+        throw new Error(`Expense with ID ${id} not found or not authorized.`);
+      }
+
+      // 2. Reverse old payment logic from Ledger
       if (parseFloat(oldExpense.amount_paid) > 0 && oldExpense.ledger_id) {
         await this.ledgerService.adjustBalance(
           client,
           oldExpense.ledger_id,
           tenantId,
-          parseFloat(oldExpense.amount_paid),
+          parseFloat(oldExpense.amount_paid), // Add back the old amount
         );
       }
 
+      // 3. Update the record
       const updatedExpense = await this.expenseRepository.update(
         client,
         id,
@@ -144,7 +152,11 @@ class ExpenseService {
         expenseData,
       );
 
-      // Apply new payment logic and create Voucher
+      if (!updatedExpense) {
+          throw new Error("Failed to update expense record.");
+      }
+
+      // 4. Apply new payment logic and create Voucher
       if (
         parseFloat(updatedExpense.amount_paid) > 0 &&
         updatedExpense.ledger_id
@@ -161,7 +173,7 @@ class ExpenseService {
           cost_center_id: updatedExpense.cost_center_id,
           done_by_id: updatedExpense.done_by_id,
           mode_of_payment_id: null,
-          expense_type_id: updatedExpense.expense_type_id, // FIX: Explicitly passing the ID
+          expense_type_id: updatedExpense.expense_type_id,
         };
 
         const newVoucher = await this.voucherRepository.create(
@@ -181,6 +193,7 @@ class ExpenseService {
           ],
         );
 
+        // Deduct the new amount
         await this.ledgerService.adjustBalance(
           client,
           updatedExpense.ledger_id,
@@ -190,14 +203,13 @@ class ExpenseService {
       }
 
       await client.query("COMMIT");
-      const data = await this.getById(id, tenantId, db);
       return {
         status: "success",
-        data,
+        data: updatedExpense,
       };
     } catch (error) {
       await client.query("ROLLBACK");
-      throw error;
+      throw error; // Let the controller handle the error message
     } finally {
       client.release();
     }
@@ -224,8 +236,7 @@ class ExpenseService {
 
       const result = await this.expenseRepository.delete(client, id, tenantId);
       await client.query("COMMIT");
-      return {status: "success",
-        data:result};
+         return await this.getById(id, tenantId, db); 
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;

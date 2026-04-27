@@ -285,15 +285,30 @@ class ExpenseRepository {
   }
 
   async update(db, id, tenantId, data) {
-    const fields = Object.keys(data);
-    const values = Object.values(data);
+    // 1. Prepare data (exclude restricted fields)
+    const { tenant_id, id: _, category, ledger_name, done_by_name, cost_center_name, ...updateData } = data;
+    
+    const fields = Object.keys(updateData);
+    const values = Object.values(updateData);
+    
     if (fields.length === 0) return this.getById(db, id, tenantId);
+
+    // 2. Construct the Update Query
     const setClause = fields.map((f, i) => `"${f}" = $${i + 1}`).join(", ");
-    const query = `UPDATE expenses SET ${setClause} WHERE id = $${
-      fields.length + 1
-    } AND tenant_id = $${fields.length + 2} RETURNING *`;
-    const { rows } = await db.query(query, [...values, id, tenantId]);
-    return rows[0];
+    
+    const query = `
+      UPDATE expenses 
+      SET ${setClause} 
+      WHERE id = $${fields.length + 1} 
+      AND tenant_id = $${fields.length + 2}
+    `;
+
+    // 3. Execute the update
+    await db.query(query, [...values, id, tenantId]);
+
+    // 4. Manually fetch and return the updated record
+    // This bypasses the "RETURNING" issue in the SQLite bridge
+    return await this.getById(db, id, tenantId);
   }
 
   async delete(db, id, tenantId) {
