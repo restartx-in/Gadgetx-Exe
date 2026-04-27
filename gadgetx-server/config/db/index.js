@@ -74,12 +74,23 @@ const query = (sql, params = []) => {
       return "?";
     });
 
-    // ── 5. Detect query type ───────────────────────────────────────────────
+    // ── 5. Detect and handle RETURNING (SQLite < 3.35 fallback) ────────────
     const upperSql = sqliteSql.trim().toUpperCase();
-    const isSelect   = upperSql.startsWith("SELECT") || upperSql.startsWith("WITH");
-    const isReturning = upperSql.includes("RETURNING");
+    const isSelect = upperSql.startsWith("SELECT") || upperSql.startsWith("WITH");
+    let isReturning = upperSql.includes("RETURNING");
+    let returningTable = null;
 
-    if (isSelect || isReturning) {
+    if (isReturning && !isSelect) {
+      // Try to find the table name for the fallback SELECT
+      const insertMatch = upperSql.match(/INSERT\s+INTO\s+["']?([a-zA-Z0-9_]+)["']?/i);
+      const updateMatch = upperSql.match(/UPDATE\s+["']?([a-zA-Z0-9_]+)["']?/i);
+      returningTable = insertMatch ? insertMatch[1] : (updateMatch ? updateMatch[1] : null);
+      
+      // Strip the RETURNING clause for the initial execution
+      sqliteSql = sqliteSql.replace(/\bRETURNING\b\s+.*$/gi, "").trim();
+    }
+
+    if (isSelect) {
       db.all(sqliteSql, newParams, (err, rows) => {
         if (err) {
           console.error("SQLite query error:", err.message);
@@ -94,7 +105,21 @@ const query = (sql, params = []) => {
           console.error("SQLite run error:", err.message);
           reject(err);
         } else {
-          resolve({ rows: [], lastID: this.lastID, changes: this.changes });
+          const lastID = this.lastID;
+          const changes = this.changes;
+
+          if (isReturning && returningTable && lastID) {
+            // Fallback: Fetch the inserted/updated row
+            db.get(`SELECT * FROM "${returningTable}" WHERE rowid = ?`, [lastID], (err, row) => {
+              if (err || !row) {
+                resolve({ rows: [], lastID, changes });
+              } else {
+                resolve({ rows: [row], lastID, changes });
+              }
+            });
+          } else {
+            resolve({ rows: [], lastID, changes });
+          }
         }
       });
     }

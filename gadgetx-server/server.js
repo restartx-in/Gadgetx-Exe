@@ -6,8 +6,14 @@ const path = require("path");
 const dbSelector = require("./middlewares/dbSelector"); 
 
 const gadgetxapp = require("./app.routes");
+const createTables = require("./db/migrations/createTables");
 
 const app = express();
+
+// Run migrations on startup
+createTables()
+  .then(() => console.log("✅ Database tables verified/created"))
+  .catch((err) => console.error("❌ Database migration failed:", err));
 
 app.use(cors());
 app.use(express.json());

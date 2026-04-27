@@ -20,9 +20,12 @@ class UserRepository {
 
     const result = await db.query(
       `INSERT INTO "role" (tenant_id, name, permissions)
-     VALUES (NULL, 'super_admin', '{"full_access": true}')
-     RETURNING *`
+     VALUES (NULL, 'super_admin', '{"full_access": true}')`
     );
+    const roleId = result.lastID;
+    const roleResult = await db.query(`SELECT * FROM "role" WHERE id = $1`, [roleId]);
+    console.log("✅ Super Admin role created automatically.");
+    return roleResult.rows[0];
 
     console.log("✅ Super Admin role created automatically.");
     return result.rows[0];
@@ -120,15 +123,15 @@ class UserRepository {
       tenant_id = null;
     }
 
-    const { rows } = await db.query(
+    const result = await db.query(
       `
       INSERT INTO "user" (username, password, tenant_id, role_id)
       VALUES ($1, $2, $3, $4)
-      RETURNING id, username, role_id, tenant_id
     `,
       [username, hashedPassword, tenant_id, role_id]
     );
-    return rows[0];
+    const userId = result.lastID;
+    return { id: userId, username, role_id, tenant_id };
   }
 
   async update(db, id, { username, password }) { 
@@ -151,10 +154,10 @@ class UserRepository {
     queryParts.push(`updated_at = CURRENT_TIMESTAMP`);
     const query = `UPDATE "user" SET ${queryParts.join(
       ", "
-    )} WHERE id = $${paramIndex} RETURNING *`;
+    )} WHERE id = $${paramIndex}`;
     params.push(id);
-    const { rows } = await db.query(query, params);
-    return rows[0];
+    await db.query(query, params);
+    return this.getById(db, id);
   }
 
   async updateByAdmin(db, id, { username, role_id, active }) { 
@@ -180,18 +183,18 @@ class UserRepository {
     queryParts.push(`updated_at = CURRENT_TIMESTAMP`);
     const query = `UPDATE "user" SET ${queryParts.join(
       ", "
-    )} WHERE id = $${paramIndex} RETURNING *`;
+    )} WHERE id = $${paramIndex}`;
     params.push(id);
-    const { rows } = await db.query(query, params);
-    return rows[0];
+    await db.query(query, params);
+    return this.getById(db, id);
   }
 
   async delete(db, id) {
-    const { rows } = await db.query(
-      `DELETE FROM "user" WHERE id = $1 RETURNING id`,
+    await db.query(
+      `DELETE FROM "user" WHERE id = $1`,
       [id]
     );
-    return rows[0];
+    return { id };
   }
 
   async comparePasswords(candidate, hashed) {

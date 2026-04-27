@@ -18,9 +18,17 @@ function startServer() {
   // Copy DB to userData if it doesn't exist (packaged only)
   if (!isDev) {
     const fs = require('fs');
-    const bundledDbPath = path.join(app.getAppPath(), '..', 'gadgetx-server', 'gadgetx.db');
+    // Now looking inside the bundled app path
+    const bundledDbPath = path.join(app.getAppPath(), 'gadgetx-server', 'gadgetx.db');
+    
+    console.log('Checking for bundled DB at:', bundledDbPath);
+    console.log('Target DB path:', dbPath);
+
     if (!fs.existsSync(dbPath) && fs.existsSync(bundledDbPath)) {
+      console.log('Copying bundled database to userData folder...');
       fs.copyFileSync(bundledDbPath, dbPath);
+    } else if (!fs.existsSync(dbPath)) {
+      console.log('No bundled database found, a new one will be created.');
     }
   }
 
@@ -29,7 +37,7 @@ function startServer() {
   serverProcess = fork(serverPath, [], {
     env: { 
       ...process.env, 
-      PORT: '5000',
+      PORT: '5999',
       DB_FILE: dbPath,
       ACCESS_TOKEN_SECRET: 'access123',
       REFRESH_TOKEN_SECRET: 'refresh123',

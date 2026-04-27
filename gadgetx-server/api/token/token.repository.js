@@ -1,11 +1,12 @@
 class TokenRepository {
 
   async create(db, { user_id, refresh_token }) {
-    const result = await db.query(
-      "INSERT INTO token (user_id, refresh_token) VALUES ($1, $2) RETURNING *",
+    await db.query(
+      "INSERT INTO token (user_id, refresh_token) VALUES ($1, $2)",
       [user_id, refresh_token]
     );
-    return result.rows[0];
+    // SQLite doesn't always support RETURNING, so we return the object manually
+    return { user_id, refresh_token };
   }
 
   async getByToken(db, refresh_token) {

@@ -23,15 +23,14 @@
     "asarUnpack": [
       "gadgetx-server/**/*"
     ],
-    "extraFiles": [
-      {
-        "from": "gadgetx-server/gadgetx.db",
-        "to": "gadgetx-server/gadgetx.db"
-      }
-    ],
     "win": {
-      "target": "portable",
+      "target": "nsis",
       "forceCodeSigning": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true
     }
   },
   "keywords": [],

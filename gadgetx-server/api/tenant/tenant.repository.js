@@ -2,13 +2,13 @@ class TenantRepository {
 
   async create(db, tenantData) {
     const { name, type, plan } = tenantData
-    const { rows } = await db.query(
+    const result = await db.query(
       `INSERT INTO tenant (name, type, plan)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
+       VALUES ($1, $2, $3)`,
       [name, type, plan]
     )
-    return rows[0]
+    const tenantId = result.lastID;
+    return this.getById(db, tenantId)
   }
 
   async getAll(db, filters = {}) {
@@ -126,21 +126,18 @@ class TenantRepository {
     const query = `
       UPDATE tenant
       SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $${fields.length + 1}
-      RETURNING *`
-
+      WHERE id = $${fields.length + 1}`
     const queryValues = [...values, id]
-
-    const { rows } = await db.query(query, queryValues)
-    return rows[0]
+    await db.query(query, queryValues)
+    return this.getById(db, id)
   }
 
   async delete(db, id) {
-    const { rows } = await db.query(
-      'DELETE FROM tenant WHERE id = $1 RETURNING id',
+    await db.query(
+      'DELETE FROM tenant WHERE id = $1',
       [id]
     )
-    return rows[0]
+    return { id }
   }
 }
 
