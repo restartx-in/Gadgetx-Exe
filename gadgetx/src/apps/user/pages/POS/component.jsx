@@ -645,13 +645,15 @@ const POS = () => {
       order_status: "completed",
       expected_delivery: null,
       actual_delivery: new Date().toISOString(),
-      payment_status:
-        paymentDetails.status === "paid"
-          ? "paid"
-          : paymentDetails.paid_amount > 0
-            ? "partial"
-            : "unpaid",
-      paid_amount: paymentDetails.paid_amount || 0,
+      status: paymentDetails.status || "unpaid", 
+      order_status: "completed",
+  payment_status:
+    paymentDetails.status === "paid"
+      ? "paid"
+      : paymentDetails.paid_amount > 0
+        ? "partial"
+        : "unpaid",
+  paid_amount: paymentDetails.paid_amount || 0,
       change_return: paymentDetails.change_return || 0,
       discount: summary.discountAmount,
       order_date: new Date().toISOString(),

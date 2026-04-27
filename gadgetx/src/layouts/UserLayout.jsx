@@ -75,7 +75,7 @@ export default function GadgetxLayout() {
           /* Standard Layout */
           <div style={layoutStyle}>
             <HeaderBar
-              brandName="OptiVision"
+              brandName="InventoryX"
               onMenuClick={handleToggleCollapse}
               isCollapsed={isCollapsed}
             />
