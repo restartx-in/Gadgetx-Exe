@@ -10,8 +10,8 @@ import DoneByList from "@/apps/user/pages/List/DoneByList";
 import Settings from "@/apps/user/pages/Settings";
 import BrandList from "@/apps/user/pages/List/BrandList";
 import CategoryList from "@/apps/user/pages/List/CategoryList";
-import PartnerList from "@/apps/user/pages/List/PartnerList"
-import AccountList from "@/apps/user/pages/List/AccountList"
+// import PartnerList from "@/apps/user/pages/List/PartnerList"
+// import AccountList from "@/apps/user/pages/List/AccountList"
 import LedgerList from "@/apps/user/pages/List/LedgerList"
 import SupplierList from "@/apps/user/pages/List/SupplierList"
 import ModeOfPaymentList from "@/apps/user/pages/List/ModeOfPaymentList"
@@ -40,8 +40,8 @@ const userRoutes = [
 
   // { path: "/user-list", element: <UserList /> },
   { path: "/settings", element: <Settings /> },
-  { path: "/partner-list", element: <PartnerList /> },
-  { path: "/account-list", element: <AccountList /> },
+  // { path: "/partner-list", element: <PartnerList /> },
+  // { path: "/account-list", element: <AccountList /> },
   { path: "/ledger-list", element: <LedgerList /> },
   { path: "/mode-of-payment", element: <ModeOfPaymentList /> },
   { path: "/suppliers-list", element: <SupplierList /> },

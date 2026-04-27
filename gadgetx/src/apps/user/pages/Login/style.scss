@@ -193,9 +193,6 @@ $font-main: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       width: 100%; // Make button full width on mobile for better UX
     }
 
-    &:hover {
-      background-color: darken($orange-accent, 8%);
-    }
 
     &:disabled {
       opacity: 0.6;
