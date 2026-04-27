@@ -22,7 +22,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 4000;
 
-app.use('/api/gadgetx', dbSelector('gadgetx'), gadgetxapp);
+app.use('/api', dbSelector('gadgetx'), gadgetxapp);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

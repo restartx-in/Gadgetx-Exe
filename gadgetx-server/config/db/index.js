@@ -67,14 +67,35 @@ const query = (sql, params = []) => {
     // ── 3. Strip PostgreSQL type casts (::text, ::integer, etc.) ───────────
     sqliteSql = sqliteSql.replace(/::[a-zA-Z0-9_]+/g, "");
 
-    // ── 4. Convert $1, $2, … positional params → ? ────────────────────────
+    // ── 4. to_regclass fallback ────────────────────────────────────────────
+    sqliteSql = sqliteSql.replace(
+      /SELECT\s+to_regclass\s*\(\s*['"](?:public\.)?["']?(.+?)["']?['"]\s*\)\s+AS\s+table_name/gi,
+      "SELECT (SELECT name FROM sqlite_master WHERE type='table' AND name='$1') AS table_name"
+    );
+
+    // ── 5. SERIAL → INTEGER PRIMARY KEY AUTOINCREMENT ──────────────────────
+    sqliteSql = sqliteSql.replace(/\bSERIAL\s+PRIMARY\s+KEY\b/gi, "INTEGER PRIMARY KEY AUTOINCREMENT");
+    sqliteSql = sqliteSql.replace(/\bSERIAL\b/gi, "INTEGER"); // Fallback for SERIAL without PRIMARY KEY
+
+    // ── 6. More Type Translations ──────────────────────────────────────────
+    sqliteSql = sqliteSql.replace(/\bTEXT\s*\[\s*\]/gi, "TEXT");
+    sqliteSql = sqliteSql.replace(/\bINTEGER\s*\[\s*\]/gi, "TEXT");
+    sqliteSql = sqliteSql.replace(/\bINT\s*\[\s*\]/gi, "TEXT");
+    sqliteSql = sqliteSql.replace(/\bUUID\b/gi, "TEXT");
+    sqliteSql = sqliteSql.replace(/\bJSONB\b/gi, "JSON");
+    sqliteSql = sqliteSql.replace(/\bTIMESTAMP\s+WITH\s+TIME\s+ZONE\b/gi, "TIMESTAMP");
+    sqliteSql = sqliteSql.replace(/\bNOW\s*\(\s*\)/gi, "CURRENT_TIMESTAMP");
+    sqliteSql = sqliteSql.replace(/\bgen_random_uuid\s*\(\s*\)/gi, "NULL"); // Placeholder or let app handle it
+    sqliteSql = sqliteSql.replace(/DEFAULT\s+'\{.*?\}'/gi, "DEFAULT ''");
+    sqliteSql = sqliteSql.replace(/DEFAULT\s+'\[.*?\]'/gi, "DEFAULT '[]'");
+
+    // ── 7. Convert $1, $2, … positional params → ? ────────────────────────
     let newParams = [];
     sqliteSql = sqliteSql.replace(/\$(\d+)/g, (match, p1) => {
       newParams.push(params[parseInt(p1, 10) - 1]);
       return "?";
     });
 
-    // ── 5. Detect and handle RETURNING (SQLite < 3.35 fallback) ────────────
     const upperSql = sqliteSql.trim().toUpperCase();
     const isSelect = upperSql.startsWith("SELECT") || upperSql.startsWith("WITH");
     let isReturning = upperSql.includes("RETURNING");
@@ -82,46 +103,101 @@ const query = (sql, params = []) => {
 
     if (isReturning && !isSelect) {
       // Try to find the table name for the fallback SELECT
-      const insertMatch = upperSql.match(/INSERT\s+INTO\s+["']?([a-zA-Z0-9_]+)["']?/i);
-      const updateMatch = upperSql.match(/UPDATE\s+["']?([a-zA-Z0-9_]+)["']?/i);
+      const insertMatch = sqliteSql.match(/INSERT\s+INTO\s+["']?([a-zA-Z0-9_]+)["']?/i);
+      const updateMatch = sqliteSql.match(/UPDATE\s+["']?([a-zA-Z0-9_]+)["']?/i);
       returningTable = insertMatch ? insertMatch[1] : (updateMatch ? updateMatch[1] : null);
       
       // Strip the RETURNING clause for the initial execution
       sqliteSql = sqliteSql.replace(/\bRETURNING\b\s+.*$/gi, "").trim();
     }
 
-    if (isSelect) {
-      db.all(sqliteSql, newParams, (err, rows) => {
-        if (err) {
-          console.error("SQLite query error:", err.message);
-          reject(err);
-        } else {
-          resolve({ rows });
-        }
-      });
-    } else {
-      db.run(sqliteSql, newParams, function (err) {
-        if (err) {
-          console.error("SQLite run error:", err.message);
-          reject(err);
-        } else {
-          const lastID = this.lastID;
-          const changes = this.changes;
+    // ── 8. Swallow Postgres-specific Trigger Functions ─────────────────────
+    if (upperSql.includes("CREATE OR REPLACE FUNCTION")) {
+      resolve({ rows: [] });
+      return;
+    }
 
-          if (isReturning && returningTable && lastID) {
-            // Fallback: Fetch the inserted/updated row
-            db.get(`SELECT * FROM "${returningTable}" WHERE rowid = ?`, [lastID], (err, row) => {
-              if (err || !row) {
-                resolve({ rows: [], lastID, changes });
+    // ── 9. Basic Trigger Translation (for updated_at) ──────────────────────
+    if (upperSql.includes("CREATE TRIGGER") && (upperSql.includes("EXECUTE FUNCTION") || upperSql.includes("EXECUTE PROCEDURE"))) {
+      const triggerMatch = sqliteSql.match(/CREATE\s+TRIGGER\s+(\w+)\s+BEFORE\s+UPDATE\s+ON\s+(\w+)/i);
+      if (triggerMatch) {
+        const [_, triggerName, tableName] = triggerMatch;
+        sqliteSql = `
+          CREATE TRIGGER IF NOT EXISTS ${triggerName} AFTER UPDATE ON ${tableName}
+          BEGIN
+            UPDATE ${tableName} SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+          END;
+        `;
+      } else {
+        // Swallow unhandled triggers to prevent crashes
+        console.warn("⚠️ Swallowing unhandled trigger definition for SQLite:", sqliteSql.substring(0, 50) + "...");
+        resolve({ rows: [] });
+        return;
+      }
+    }
+
+    // ── 10. Extract ALTER TABLE from DO blocks ─────────────────────────────
+    if (upperSql.includes("DO $$") && upperSql.includes("ALTER TABLE")) {
+      const alterMatch = sqliteSql.match(/ALTER\s+TABLE\s+[\s\S]+?;/i);
+      if (alterMatch) {
+        sqliteSql = alterMatch[0];
+      } else {
+        resolve({ rows: [] });
+        return;
+      }
+    } else if (upperSql.includes("DO $$")) {
+      resolve({ rows: [] });
+      return;
+    }
+
+    // ── 11. ADD COLUMN IF NOT EXISTS fallback ──────────────────────────────
+    sqliteSql = sqliteSql.replace(/ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS/gi, "ADD COLUMN");
+
+    const runQuery = (singleSql, singleParams) => {
+      return new Promise((res, rej) => {
+        const isSelectQuery = singleSql.trim().toUpperCase().startsWith("SELECT") || singleSql.trim().toUpperCase().startsWith("WITH");
+        if (isSelectQuery) {
+          db.all(singleSql, singleParams, (err, rows) => {
+            if (err) rej(err);
+            else res({ rows });
+          });
+        } else {
+          db.run(singleSql, singleParams, function (err) {
+            if (err) {
+              // Ignore "duplicate column name" error for ALTER TABLE
+              if (err.message.includes("duplicate column name")) {
+                res({ rows: [], lastID: this?.lastID, changes: this?.changes });
               } else {
-                resolve({ rows: [row], lastID, changes });
+                rej(err);
               }
-            });
-          } else {
-            resolve({ rows: [], lastID, changes });
-          }
+            } else {
+              res({ rows: [], lastID: this.lastID, changes: this.changes });
+            }
+          });
         }
       });
+    };
+
+    // Split multiple statements (basic split)
+    const statements = sqliteSql.split(";").map(s => s.trim()).filter(s => s.length > 0);
+
+    if (statements.length > 1) {
+      // Run multiple statements in sequence
+      (async () => {
+        try {
+          let lastResult = { rows: [] };
+          for (const stmt of statements) {
+            lastResult = await runQuery(stmt, []); // Assume no params for multi-statement blocks
+          }
+          resolve(lastResult);
+        } catch (err) {
+          reject(err);
+        }
+      })();
+    } else if (statements.length === 1) {
+      runQuery(statements[0], newParams).then(resolve).catch(reject);
+    } else {
+      resolve({ rows: [] });
     }
   });
 };

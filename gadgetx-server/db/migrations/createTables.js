@@ -24,8 +24,8 @@ const createSaleReturnTable = require("../../api/saleReturn/saleReturn.table.js"
 const createSalesTable = require("../../api/sales/sales.table.js");
 const createDoneByTable = require("../../api/doneBy/doneBy.table.js");
 const createCostCenterTable = require("../../api/costCenter/costcenter.table.js");
-const createPrescriptionTable = require("../../api/Prescriptions/prescription.table.js");
-const createServicesTable = require("../../api/services/services.table.js");
+// const createPrescriptionTable = require("../../api/Prescriptions/prescription.table.js");
+// const createServicesTable = require("../../api/services/services.table.js");
 const createAccountTable = require("../../api/account/account.table.js");
 const createPartnerTable = require("../../api/partner/partner.table.js");
 const createPartyTable = require("../../api/party/party.table.js");
@@ -35,7 +35,7 @@ const createReportFieldPermissionsTable = require("../../api/reportFieldPermissi
 const createTrasactionLedgerTable = require("../../api/transactionLedger/transactionLedger.table.js");
 const createTransactionFieldPermissionsTable = require("../../api/transactionFieldPermissions/transactionFieldPermissions.table.js");
 const createTransactionTable = require("../../api/transaction/transaction.table.js");
-const createQueryTable = require("./tables/query.table.js");
+// const createQueryTable = require("./tables/query.table.js");
 const createPrintSettingsTable = require("../../api/printSettings/printSettings.table.js");
 const createVoucherTransactionTable = require("../../api/voucherTransaction/voucherTransaction.table.js");
 const createCustomPagesTable = require("../../api/customPages/customPages.table.js");
@@ -49,7 +49,7 @@ const createTables = async () => {
   try {
     console.log("🚀 Starting database migration...");
 
-    await createQueryTable(client);
+    // await createQueryTable(client);
 
     await createTenantTable(client);
     await createRoleTable(client);
@@ -65,7 +65,7 @@ const createTables = async () => {
     await createItemCustomFieldsTable(client);
     await createLedgerTable(client);
     await createPartyTable(client);
-    await createServicesTable(client);
+    // await createServicesTable(client);
     await createInvoiceNumberTable(client);
     await createTransactionTable(client);
     await createPartnerTable(client);
@@ -86,12 +86,12 @@ const createTables = async () => {
     await createPurchaseTable(client);
     await createItemTable(client);
     await createPurchaseItemTable(client);
-    // await createPurchaseReturnTable(client);
+    await createPurchaseReturnTable(client);
     await createSalesTable(client);
-    await createPrescriptionTable(client);
+    // await createPrescriptionTable(client);
     await createSaleItemTable(client);
     await createPrintSettingsTable(client);
-    // await createSaleReturnTable(client);
+    await createSaleReturnTable(client);
 
     // await createQueryTable(client);
     await createCustomPagesTable(client);

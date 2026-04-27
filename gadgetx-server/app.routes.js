@@ -39,41 +39,43 @@ const customPagesRoutes = require("./api/customPages/customPages.routes");
 const customPageDataRoutes = require("./api/customPageData/customPageData.routes");
 const itemRoutes = require("./api/item/item.routes");
 
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/employees", employeeRoutes);
-app.use("/api/employee-position", employeepositionRoutes);
-// app.use("/api/employee-attendance", employeeAttendanceRoutes);
-app.use("/api/employee-payroll", PayrollRoutes);
-app.use("/api/expenses", expenseRoutes);
-app.use('/api/expense-type', expenseTypeRoutes);
-app.use('/api/cost-centers', cost_centerRoutes)
-app.use('/api/done-by', done_byRoutes)
-app.use('/api/settings', settingsRoutes)
-app.use('/api/roles', roleRoutes)
-app.use('/api/tenants', tenantRoutes)
-app.use("/api/brand", brandRoutes);
-app.use("/api/category", categoryRoutes);
-app.use("/api/customer", customerRoutes);
-app.use("/api/accounts", accountRoutes);
-app.use("/api/partners", partnerRoutes);
-app.use("/api/party", partyRoutes);
-app.use("/api/ledgers", ledgerRoutes);
-app.use("/api/vouchers", voucherRoutes);
-app.use("/api/mode-of-payment", modeofpaymentRoutes);
-app.use("/api/invoice-number", invoiceNumberRoutes);
-app.use("/api/report-field-permissions", reportFieldPermissionsRoutes);
-app.use("/api/transaction-field-permissions", transactionFieldPermissionsRoutes);
-app.use("/api/purchases",purchaseRoutes);
+const router = express.Router();
+
+router.use("/api/auth", authRoutes);
+router.use("/api/users", userRoutes);
+router.use("/api/employees", employeeRoutes);
+router.use("/api/employee-position", employeepositionRoutes);
+// router.use("/api/employee-attendance", employeeAttendanceRoutes);
+router.use("/api/employee-payroll", PayrollRoutes);
+router.use("/api/expenses", expenseRoutes);
+router.use('/api/expense-type', expenseTypeRoutes);
+router.use('/api/cost-centers', cost_centerRoutes)
+router.use('/api/done-by', done_byRoutes)
+router.use('/api/settings', settingsRoutes)
+router.use('/api/roles', roleRoutes)
+router.use('/api/tenants', tenantRoutes)
+router.use("/api/brand", brandRoutes);
+router.use("/api/category", categoryRoutes);
+router.use("/api/customer", customerRoutes);
+router.use("/api/accounts", accountRoutes);
+router.use("/api/partners", partnerRoutes);
+router.use("/api/party", partyRoutes);
+router.use("/api/ledgers", ledgerRoutes);
+router.use("/api/vouchers", voucherRoutes);
+router.use("/api/mode-of-payment", modeofpaymentRoutes);
+router.use("/api/invoice-number", invoiceNumberRoutes);
+router.use("/api/report-field-permissions", reportFieldPermissionsRoutes);
+router.use("/api/transaction-field-permissions", transactionFieldPermissionsRoutes);
+router.use("/api/purchases",purchaseRoutes);
 
 
 
-app.use("/api/sales", salesRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/print-settings", printSettingsRoutes);
-app.use("/api/custom-pages", customPagesRoutes);
-app.use("/api/custom-page-data", customPageDataRoutes);
+router.use("/api/sales", salesRoutes);
+router.use("/api/dashboard", dashboardRoutes);
+router.use("/api/print-settings", printSettingsRoutes);
+router.use("/api/custom-pages", customPagesRoutes);
+router.use("/api/custom-page-data", customPageDataRoutes);
 
-app.use("/api/items", itemRoutes);
+router.use("/api/items", itemRoutes);
 module.exports = router;
 
