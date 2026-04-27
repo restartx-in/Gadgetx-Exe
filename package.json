@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "electron/main.cjs",
   "scripts": {
-    "dev": "concurrently \"cd gadgetx && npm run dev\" \"cd gadgetx-server && npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
+    "dev": "concurrently \"cd gadgetx && npm run dev\" \"cd gadgetx-server && npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
     "migrate": "cd gadgetx-server && npm run migrate",
     "build-frontend": "cd gadgetx && npm run build",
     "build-electron": "electron-builder",
@@ -42,5 +42,16 @@
     "electron": "^41.3.0",
     "electron-builder": "^26.8.1",
     "wait-on": "^9.0.5"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "nodemon": "^3.1.14",
+    "sqlite3": "^6.0.1",
+    "vite": "^8.0.10"
   }
 }

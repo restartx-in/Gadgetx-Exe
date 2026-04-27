@@ -218,13 +218,6 @@
     grid-template-areas:
       "customer top"
       "cart     product";
-
-    &.has-prescription {
-      grid-template-columns: minmax(380px, 1fr) minmax(350px, 1fr) minmax(400px, 1.2fr);
-      grid-template-areas:
-        "customer top top"
-        "cart prescription product";
-    }
   }
 
   .customer-panel {

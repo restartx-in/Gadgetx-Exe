@@ -10,18 +10,12 @@ import DoneByList from "@/apps/user/pages/List/DoneByList";
 import Settings from "@/apps/user/pages/Settings";
 import BrandList from "@/apps/user/pages/List/BrandList";
 import CategoryList from "@/apps/user/pages/List/CategoryList";
-import FrameList from "@/apps/user/pages/List/FrameList"
-import FrameVariantList from "@/apps/user/pages/List/FrameVariantList"
-import LenseList from "@/apps/user/pages/List/LenseList";
-import LenseAddonsList from "@/apps/user/pages/List/LenseAddonsList";
 import PartnerList from "@/apps/user/pages/List/PartnerList"
 import AccountList from "@/apps/user/pages/List/AccountList"
 import LedgerList from "@/apps/user/pages/List/LedgerList"
 import SupplierList from "@/apps/user/pages/List/SupplierList"
 import ModeOfPaymentList from "@/apps/user/pages/List/ModeOfPaymentList"
 import CustomerList from "@/apps/user/pages/List/CustomerList"
-import ServiceList from "@/apps/user/pages/List/ServiceList"
-import PrescriptionList from "@/apps/user/pages/List/PrescriptionList"
 
 import Purchase from "@/apps/user/pages/Transactions/Purchase";
 import PurchaseReport from "@/apps/user/pages/Reports/PurchaseReport";
@@ -43,10 +37,6 @@ const userRoutes = [
   { path: "/brand-list", element: <BrandList /> },
   { path: "/category-list", element: <CategoryList /> },
   { path: "/item-list", element: <ItemList /> },
-  { path: "/frames", element: <FrameList /> },
-  { path: "/frame-variants", element: <FrameVariantList /> },
-  { path: "/lens-list", element: <LenseList /> },
-  { path: "/lens-addons", element: <LenseAddonsList /> },
 
   // { path: "/user-list", element: <UserList /> },
   { path: "/settings", element: <Settings /> },
@@ -56,8 +46,6 @@ const userRoutes = [
   { path: "/mode-of-payment", element: <ModeOfPaymentList /> },
   { path: "/suppliers-list", element: <SupplierList /> },
   { path: "/customer-list", element: <CustomerList /> },
-  { path: "/service-list", element: <ServiceList /> },
-  { path: "/prescription-list", element: <PrescriptionList /> },
 
   { path: "/purchase-report", element: <PurchaseReport /> },
   { path: "/Purchase/:mode", element: <Purchase /> },

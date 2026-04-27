@@ -37,9 +37,7 @@ import MobileActionDropdown from "./components/MobileActionDropdown";
 import PaymentModal from "./components/PaymentModal";
 import HeldSalesModal from "./components/HeldSalesModal";
 import RegisterDetailsModal from "./components/RegisterDetailsModal";
-import PrescriptionModal from "./components/PrescriptionModal";
 import ProductDetailModal from "./components/ProductDetailModal";
-import PrescriptionSection from "./components/PrescriptionSection";
 import HStack from "@/components/HStack";
 
 import { useToast } from "@/context/ToastContext";
@@ -54,7 +52,6 @@ import { useIsMobile } from "@/utils/useIsMobile";
 import { useSaleInvoiceNo } from "@/apps/user/hooks/api/saleInvoiceNo/useSaleInvoiceNo";
 import { TOASTSTATUS, TOASTTYPE } from "@/constants/object/toastType";
 import { CRUDITEM, CRUDTYPE } from "@/constants/object/crud";
-import { usePrescriptions } from "@/apps/user/hooks/api/prescription/usePrescriptions";
 
 import "./style.scss";
 
@@ -83,22 +80,16 @@ const POS = () => {
   const [activeModal, setActiveModal] = useState(null);
   const [heldSales, setHeldSales] = useState([]);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [orderStatus, setOrderStatus] = useState("pending");
-  const [expectedDelivery, setExpectedDelivery] = useState(null);
   const [heldItemIds, setHeldItemIds] = useState(new Set());
   const [isReceiptModalOpen, setReceiptModalOpen] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
   const [isDoneByModalOpen, setIsDoneByModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchType, setSearchType] = useState("bar_code");
   const [searchKey, setSearchKey] = useState("");
   const [isCheckPriceMode, setIsCheckPriceMode] = useState(false);
   const [checkPriceItem, setCheckPriceItem] = useState(null);
-  const [prescriptionModalMode, setPrescriptionModalMode] = useState("add");
-  const [selectedPrescriptionForEdit, setSelectedPrescriptionForEdit] =
-    useState(null);
 
   const focusSearchInput = (delay = 120) => {
     setTimeout(() => {
@@ -115,13 +106,6 @@ const POS = () => {
     return (Array.isArray(itemsData) ? itemsData : itemsData?.data || []).map(
       (v) => ({
         ...v,
-        type:
-          v.type ||
-          (v.category_name?.toLowerCase() === "lens"
-            ? "lens"
-            : v.category_name?.toLowerCase() === "addon"
-              ? "addon"
-              : "frame"),
         selling_price:
           parseFloat(v.selling_price || v.selling_price_with_tax || v.price) ||
           0,
@@ -152,77 +136,14 @@ const POS = () => {
     enabled: activeModal === "register",
   });
 
-  const { data: prescriptionsData = [] } = usePrescriptions(
-    selectedPartyId
-      ? { customer_id: selectedPartyId, sort: "-id" }
-      : { _skip: true },
-    { enabled: !!selectedPartyId },
-  );
+
 
   const selectedCustomerInfo = useMemo(() => {
     if (!customers?.length || !selectedPartyId) return null;
     return customers.find((c) => String(c.id) === String(selectedPartyId));
   }, [customers, selectedPartyId]);
 
-  const myPrescriptionData = useMemo(() => {
-    if (!selectedPartyId || !prescriptionsData?.length) return null;
-    const latest = prescriptionsData[0];
 
-    // Combine prescription data with latest customer info for the modal
-    return {
-      ...latest,
-      // Map customer details for the modal
-      name:
-        latest.customer?.name ||
-        latest.customer_name ||
-        latest.name ||
-        selectedCustomerInfo?.name ||
-        "",
-      phone:
-        latest.customer?.phone ||
-        latest.customer?.mobile ||
-        latest.customer_phone ||
-        latest.customer_mobile ||
-        latest.phone ||
-        latest.mobile ||
-        selectedCustomerInfo?.phone ||
-        selectedCustomerInfo?.mobile ||
-        "",
-      email:
-        latest.customer?.email ||
-        latest.customer_email ||
-        latest.email ||
-        selectedCustomerInfo?.email ||
-        "",
-      address:
-        latest.customer?.address ||
-        latest.customer_address ||
-        latest.address ||
-        selectedCustomerInfo?.address ||
-        "",
-      gender:
-        latest.customer?.gender ||
-        latest.customer_gender ||
-        latest.gender ||
-        selectedCustomerInfo?.gender ||
-        null,
-      age:
-        latest.customer?.age ||
-        latest.customer_age ||
-        latest.age ||
-        selectedCustomerInfo?.age ||
-        "",
-      // Unify note/remarks
-      note: latest.remarks || latest.note || "",
-      // Format dates for input[type=date] (YYYY-MM-DD)
-      prescription_date: latest.prescription_date
-        ? latest.prescription_date.split("T")[0]
-        : "",
-      next_visit_date: latest.next_visit_date
-        ? latest.next_visit_date.split("T")[0]
-        : "",
-    };
-  }, [prescriptionsData, selectedCustomerInfo]);
 
   // Auto-focus barcode search input on load
   useEffect(() => {
@@ -447,51 +368,7 @@ const POS = () => {
   const handleOpenAddCustomerModal = () => setIsCustomerModalOpen(true);
   const handleCloseCustomerModal = () => setIsCustomerModalOpen(false);
 
-  const handleOpenPrescriptionModal = () => {
-    if (myPrescriptionData) {
-      setPrescriptionModalMode("edit");
-      setSelectedPrescriptionForEdit(myPrescriptionData);
-    } else if (selectedCustomerInfo) {
-      setPrescriptionModalMode("add");
-      setSelectedPrescriptionForEdit({
-        name: selectedCustomerInfo.name,
-        phone: selectedCustomerInfo.phone || selectedCustomerInfo.mobile,
-        email: selectedCustomerInfo.email,
-        address: selectedCustomerInfo.address,
-        gender: selectedCustomerInfo.gender,
-        age: selectedCustomerInfo.age,
-        customer_id: selectedCustomerInfo.id,
-      });
-    } else {
-      setPrescriptionModalMode("add");
-      setSelectedPrescriptionForEdit(null);
-    }
-    setIsPrescriptionModalOpen(true);
-  };
 
-  const handleAddNewPrescription = () => {
-    if (selectedCustomerInfo) {
-      setPrescriptionModalMode("add");
-      setSelectedPrescriptionForEdit({
-        name: selectedCustomerInfo.name,
-        phone: selectedCustomerInfo.phone || selectedCustomerInfo.mobile,
-        email: selectedCustomerInfo.email,
-        address: selectedCustomerInfo.address,
-        gender: selectedCustomerInfo.gender,
-        age: selectedCustomerInfo.age,
-        customer_id: selectedCustomerInfo.id,
-      });
-      setIsPrescriptionModalOpen(true);
-    }
-  };
-
-  const handleClosePrescriptionModal = () => setIsPrescriptionModalOpen(false);
-
-  const openEditModal = (data) => {
-    setPrescriptionModalMode("edit");
-    setSelectedPrescriptionForEdit(data);
-    setIsPrescriptionModalOpen(true);
-  };
 
   const handleCustomerCreated = (newCustomer) => {
     if (newCustomer?.id) {
@@ -604,8 +481,6 @@ const POS = () => {
     setSelectedDoneById("");
     setSelectedCostCenterId("");
     setIsCredit(false);
-    setOrderStatus("pending");
-    setExpectedDelivery(null);
     setDiscount(0);
     setDiscountType("Fixed");
     focusSearchInput(80);
@@ -762,21 +637,14 @@ const POS = () => {
   };
 
   const handleFinalizeSale = async (paymentDetails, shouldPrint) => {
-    const actualDeliveryDate =
-      orderStatus === "completed"
-        ? new Date().toISOString()
-        : expectedDelivery
-          ? expectedDelivery.toISOString()
-          : null;
+
     const payload = {
       party_id: selectedPartyId,
       done_by_id: selectedDoneById || null,
       cost_center_id: selectedCostCenterId || null,
-      order_status: orderStatus,
-      expected_delivery: expectedDelivery
-        ? expectedDelivery.toISOString()
-        : null,
-      actual_delivery: actualDeliveryDate,
+      order_status: "completed",
+      expected_delivery: null,
+      actual_delivery: new Date().toISOString(),
       payment_status:
         paymentDetails.status === "paid"
           ? "paid"
@@ -947,30 +815,13 @@ const POS = () => {
                       onChange={(e) => setselectedPartyId(e.target.value)}
                       placeholder="Select or add a customer"
                     />
-                    <button
-                      type="button"
-                      className="add-customer-btn"
-                      onClick={handleOpenPrescriptionModal}
-                      title="Add New Prescription"
-                    >
-                      <FaPlus />
-                    </button>
                   </div>
                 </HStack>
               </div>
 
               {activeMobileView === "products" && (
                 <>
-                  {myPrescriptionData && (
-                    <PrescriptionSection
-                      data={myPrescriptionData}
-                      onEdit={() => openEditModal(myPrescriptionData)}
-                      orderStatus={orderStatus}
-                      setOrderStatus={setOrderStatus}
-                      expectedDelivery={expectedDelivery}
-                      setExpectedDelivery={setExpectedDelivery}
-                    />
-                  )}
+
                   <div className="pos-section product-panel">
                     <div className="filter-bar">
                       <div className="filter-group">
@@ -1061,9 +912,7 @@ const POS = () => {
             </button>
           </>
         ) : (
-          <div
-            className={`pos-page ${myPrescriptionData ? "has-prescription" : ""}`}
-          >
+          <div className="pos-page">
             <div className="pos-section customer-panel">
               <div className="customer-input-container">
                 <DoneByAutoCompleteWithAddOption
@@ -1088,14 +937,6 @@ const POS = () => {
                   onChange={(e) => setselectedPartyId(e.target.value)}
                   placeholder="Walk In Customer"
                 />
-                <button
-                  type="button"
-                  className="add-customer-btn"
-                  onClick={handleOpenPrescriptionModal}
-                  title="Add New Prescription"
-                >
-                  <FaPlus />
-                </button>
               </div>
             </div>
             <div
@@ -1130,12 +971,6 @@ const POS = () => {
                   title="Back (F6 / Alt+←)"
                 >
                   <FiArrowLeft />
-                </button>
-                <button
-                  onClick={() => navigate("/service-report")}
-                  title="Service"
-                >
-                  <FaClipboardList />
                 </button>
                 {/* <button
                   onClick={() => openModal("register")}
@@ -1270,17 +1105,7 @@ const POS = () => {
                 )}
               </div>
             </div>
-            {myPrescriptionData && (
-              <PrescriptionSection
-                data={myPrescriptionData}
-                onEdit={() => openEditModal(myPrescriptionData)}
-                onAddNew={handleAddNewPrescription}
-                orderStatus={orderStatus}
-                setOrderStatus={setOrderStatus}
-                expectedDelivery={expectedDelivery}
-                setExpectedDelivery={setExpectedDelivery}
-              />
-            )}
+
             <div className="pos-section cart-panel">
               <CartTable
                 cart={cart}
@@ -1315,17 +1140,7 @@ const POS = () => {
           handleCloseCustomerModal();
         }}
       />
-      <PrescriptionModal
-        isOpen={isPrescriptionModalOpen}
-        onClose={handleClosePrescriptionModal}
-        mode={prescriptionModalMode}
-        selectedItem={selectedPrescriptionForEdit}
-        onSuccess={(cid) => {
-          // Do not auto-select after creation/edit as per user request
-          // setselectedPartyId(cid);
-        }}
-        onAddNew={handleAddNewPrescription}
-      />
+
       <AddDoneBy
         isOpen={isDoneByModalOpen}
         onClose={handleCloseDoneByModal}

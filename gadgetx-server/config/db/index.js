@@ -19,6 +19,12 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Helper to run queries as promises
 const query = (sql, params = []) => {
   return new Promise((resolve, reject) => {
+    // ── 0. Early bail-out for PostgreSQL $$ function/procedure blocks ──────
+    if (/\$\$[\s\S]*?\$\$/i.test(sql)) {
+      resolve({ rows: [] });
+      return;
+    }
+
     let sqliteSql = sql;
 
     // ── 1. PostgreSQL → SQLite function translations ───────────────────────
@@ -87,8 +93,8 @@ const query = (sql, params = []) => {
     sqliteSql = sqliteSql.replace(/\bTIMESTAMP\s+WITH\s+TIME\s+ZONE\b/gi, "TIMESTAMP");
     sqliteSql = sqliteSql.replace(/\bNOW\s*\(\s*\)/gi, "CURRENT_TIMESTAMP");
     sqliteSql = sqliteSql.replace(/\bgen_random_uuid\s*\(\s*\)/gi, "NULL"); // Placeholder or let app handle it
-    sqliteSql = sqliteSql.replace(/DEFAULT\s+'\{.*?\}'/gi, "DEFAULT ''");
-    sqliteSql = sqliteSql.replace(/DEFAULT\s+'\[.*?\]'/gi, "DEFAULT '[]'");
+    sqliteSql = sqliteSql.replace(/DEFAULT\s+'\{[\s\S]*?\}'/gi, "DEFAULT ''");
+    sqliteSql = sqliteSql.replace(/DEFAULT\s+'\[[\s\S]*?\]'/gi, "DEFAULT '[]'");
 
     // ── 7. Convert $1, $2, … positional params → ? ────────────────────────
     let newParams = [];
@@ -160,7 +166,7 @@ const query = (sql, params = []) => {
             stmtSql = `
               CREATE TRIGGER IF NOT EXISTS ${triggerName} AFTER UPDATE ON ${tableName}
               BEGIN
-                UPDATE ${tableName} SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+                UPDATE ${tableName} SET updated_at = CURRENT_TIMESTAMP WHERE rowid = NEW.rowid;
               END;
             `;
           } else {
