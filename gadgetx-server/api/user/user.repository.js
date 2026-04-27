@@ -5,7 +5,7 @@ class UserRepository {
   
   // ... (countAll, getOrCreateSuperAdminRole are unchanged)
   async countAll(db) {
-    const result = await db.query(`SELECT COUNT(*) FROM "user"`);
+    const result = await db.query(`SELECT COUNT(*) as count FROM "user"`);
     return parseInt(result.rows[0].count, 10);
   }
 
@@ -75,7 +75,7 @@ class UserRepository {
     `;
     const dataResult = await db.query(dataQuery, [...queryParams, limit, offset]);
 
-    const countQuery = `SELECT COUNT(*) FROM "user" u ${whereClause}`;
+    const countQuery = `SELECT COUNT(*) as count FROM "user" u ${whereClause}`;
     const countResult = await db.query(countQuery, queryParams);
     const totalCount = parseInt(countResult.rows[0].count, 10);
 

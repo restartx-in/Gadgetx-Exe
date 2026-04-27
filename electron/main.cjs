@@ -29,8 +29,10 @@ function startServer() {
   serverProcess = fork(serverPath, [], {
     env: { 
       ...process.env, 
-      PORT: 5000,
-      DB_FILE: dbPath
+      PORT: '5000',
+      DB_FILE: dbPath,
+      ACCESS_TOKEN_SECRET: 'access123',
+      REFRESH_TOKEN_SECRET: 'refresh123',
     },
     silent: false
   });

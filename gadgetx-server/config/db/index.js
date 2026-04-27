@@ -1,6 +1,7 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
-require("dotenv").config();
+// NOTE: Do NOT call dotenv.config() here — it is already loaded by server.js
+// In production (Electron), DB_FILE is injected directly via fork() env vars.
 
 const dbPath = process.env.DB_FILE && path.isAbsolute(process.env.DB_FILE)
   ? process.env.DB_FILE
