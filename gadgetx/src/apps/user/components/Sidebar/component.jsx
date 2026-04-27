@@ -214,13 +214,13 @@ const sidebarData = [
   },
 
   // ===== SERVICES =====
-  {
-    to: "/service-list",
-    title: "Service List",
-    label: "Services",
-    Icon: FaReceipt,
-    addPath: "/service-list?action=add",
-  },
+  // {
+  //   to: "/service-list",
+  //   title: "Service List",
+  //   label: "Services",
+  //   Icon: FaReceipt,
+  //   addPath: "/service-list?action=add",
+  // },
   // ===== STAFF MANAGEMENT =====
   {
     category: "Staff",
