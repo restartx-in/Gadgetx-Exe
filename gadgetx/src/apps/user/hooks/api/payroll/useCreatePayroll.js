@@ -18,6 +18,7 @@ export function useCreatePayroll() {
         return [...oldData, response.data];
       });
       queryClient.refetchQueries({ queryKey: ["payroll_paginated"] });
+      queryClient.refetchQueries({ queryKey: ["ledgers_paginated"] });
     },
   });
 }

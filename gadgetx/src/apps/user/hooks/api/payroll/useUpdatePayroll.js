@@ -26,6 +26,7 @@ export function useUpdatePayroll() {
         );
       });
       queryClient.refetchQueries({ queryKey: ["payroll_paginated"] });
+      queryClient.refetchQueries({ queryKey: ["ledgers_paginated"] });
     },
   });
 

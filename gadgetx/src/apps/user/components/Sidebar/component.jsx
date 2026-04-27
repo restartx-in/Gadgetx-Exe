@@ -25,6 +25,7 @@ import {
   MdAccountBalance,
   MdOutlineInventory,
   MdInventory,
+  MdOutlinePointOfSale,
 } from "react-icons/md";
 
 import { CiShop } from "react-icons/ci";
@@ -59,11 +60,18 @@ import { add } from "date-fns";
 const sidebarData = [
   // ===== DASHBOARD =====
   { to: "/", title: "Dashboard", label: "Dashboard", Icon: MdDashboard },
+  // {
+  //   to: "/prescription-list",
+  //   title: "Prescription List",
+  //   label: "Prescriptions",
+  //   Icon: LuFileSpreadsheet,
+  //   addPath: "/prescription-list?action=add",
+  // },
 
   // ===== SALES & BILLING =====
   {
     category: "Sales",
-    icon: <FaCashRegister size={26} />,
+    icon: <MdOutlinePointOfSale size={26} />,
     items: [
       {
         to: "/sale-report",
@@ -105,7 +113,7 @@ const sidebarData = [
   },
   // ===== PATIENT MANAGEMENT =====
   {
-    category: "Customers",
+    category: "Contacts",
     icon: <IoPerson size={26} />,
     items: [
       {
@@ -114,21 +122,6 @@ const sidebarData = [
         label: "Customers",
         Icon: IoPerson,
         addPath: "/customer-list?action=add",
-      },
-    ],
-  },
-
-  // ===== BUSINESS RELATIONS =====
-  {
-    category: "Contacts",
-    icon: <BiSolidUser size={26} />,
-    items: [
-      {
-        to: "/partner-list",
-        title: "Partner List",
-        label: "Partners",
-        Icon: BiSolidUser,
-        addPath: "/partner-list?action=add",
       },
       {
         to: "/suppliers-list",

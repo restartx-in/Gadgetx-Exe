@@ -60,6 +60,17 @@ const formatCurrency = (amount) => {
     : `$ ${number.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+// --- UTILITIES RESTORED FROM ORIGINAL ---
+const formatDate = (dateString) => {
+  if (!dateString) return "-";
+  try {
+    const date = new Date(dateString);
+    return `${String(date.getDate()).padStart(2, "0")}-${String(date.getMonth() + 1).padStart(2, "0")}-${date.getFullYear()}`;
+  } catch (e) {
+    return dateString;
+  }
+};
+
 const CommonPayrollList = ({
   usePayrollHook,
   useDeleteHook,
@@ -67,7 +78,7 @@ const CommonPayrollList = ({
   AddModal,
   DoneByAutoComplete,
   CostCenterAutoComplete,
-  AccountAutoComplete,
+  LedgerAutoComplete,
   TableTopContainer,
   payrollConstant,
 }) => {
@@ -92,7 +103,7 @@ const CommonPayrollList = ({
     done_by_id: searchParams.get("doneById") || "",
     cost_center_id: searchParams.get("costCenterId") || defaultCostCenter,
     employee_name: searchParams.get("employeeName") || "",
-    account_id: searchParams.get("accountId") || "",
+    ledger_id: searchParams.get("ledgerId") || "",
     sort: searchParams.get("sort") || "",
     searchType: searchParams.get("searchType") || "",
     searchKey: searchParams.get("searchKey") || "",
@@ -112,7 +123,7 @@ const CommonPayrollList = ({
     doneById: state.done_by_id,
     costCenterId: state.cost_center_id,
     employeeName: state.employee_name,
-    accountId: state.account_id,
+    ledgerId: state.ledger_id,
     sort: state.sort,
     searchType: state.searchType,
     searchKey: state.searchKey,
@@ -123,9 +134,8 @@ const CommonPayrollList = ({
     setSort(state.sort);
   }, [state]);
 
-
   const { data, isLoading, refetch } = usePayrollHook(state);
-    const { mutateAsync: deletePayroll } = useDeleteHook();
+  const { mutateAsync: deletePayroll } = useDeleteHook();
   const listData = useMemo(() => data?.data || [], [data]);
   const totalPages = data?.page_count || 1;
   const totalItems = data?.count || 0;
@@ -145,7 +155,7 @@ const CommonPayrollList = ({
           prev.delete("action");
           return prev;
         },
-        { replace: true }
+        { replace: true },
       );
     }
   }, [searchParams, setSearchParams, modal.isOpen]);
@@ -162,7 +172,7 @@ const CommonPayrollList = ({
       done_by_id: "",
       cost_center_id: defaultCostCenter,
       employee_name: "",
-      account_id: "",
+      ledger_id: "",
       sort: "",
       searchType: "",
       searchKey: "",
@@ -170,7 +180,7 @@ const CommonPayrollList = ({
     setSort("");
     showToast({
       type: TOASTTYPE.GENARAL,
-      message: "Refreshed.",
+      message: "Report has been refreshed.",
       status: TOASTSTATUS.SUCCESS,
     });
   };
@@ -268,7 +278,7 @@ const CommonPayrollList = ({
                   handleSearch={() => setState({ ...uiState, page: 1 })}
                   searchOptions={[
                     { value: "employee_name", name: "Employee" },
-                    { value: "account_name", name: "Account" },
+                    { value: "ledger_name", name: "Ledger" },
                     { value: "salary", name: "Salary" },
                   ]}
                 />
@@ -333,19 +343,19 @@ const CommonPayrollList = ({
                   {/* Account Filter */}
                   <Th>
                     <ThContainer>
-                      Account
+                      Ledger
                       <ThFilterContainer>
                         <ThSort
                           sort={sort}
                           setSort={setSort}
-                          value="account"
+                          value="ledger"
                           handleSort={(v) => setState({ sort: v, page: 1 })}
                         />
                         <ThSearchOrFilterPopover isSearch={false}>
-                          <AccountAutoComplete
-                            value={state.account_id}
+                          <LedgerAutoComplete
+                            value={state.ledger_id}
                             onChange={(e) =>
-                              setState({ account_id: e.target.value, page: 1 })
+                              setState({ ledger_id: e.target.value, page: 1 })
                             }
                           />
                         </ThSearchOrFilterPopover>
@@ -460,7 +470,7 @@ const CommonPayrollList = ({
                       />
                       <TdDate>{rec.pay_date}</TdDate>
                       <Td>{rec.employee_name}</Td>
-                      <Td>{rec.account_name || "-"}</Td>
+                      <Td>{rec.ledger_name || "-"}</Td>
                       <TdNumeric>{rec.salary}</TdNumeric>
                       <Td>{rec.cost_center_name || "-"}</Td>
                       <Td>{rec.done_by_name || "-"}</Td>
@@ -472,9 +482,7 @@ const CommonPayrollList = ({
                         onView={() =>
                           setModal({ isOpen: true, mode: "view", item: rec })
                         }
-                        onDelete={() =>
-                          deletePayroll(rec.id).then(refetch)
-                        }
+                        onDelete={() => deletePayroll(rec.id).then(refetch)}
                       />
                     </Tr>
                   ))
@@ -594,20 +602,18 @@ const CommonPayrollList = ({
                     title={rec.employee_name}
                     subtitle={
                       <>
-                        <div>Acc: {rec.account_name || "-"}</div>
-                        <div>Date: {rec.pay_date}</div>
+                        <div>Ledger: {rec.ledger_name || "-"}</div>
+                        <div>Date: {formatDate(rec.pay_date)}</div>
                       </>
                     }
-                    amount={formatCurrency(rec.salary)}
+                    amount={rec.salary}
                     onEdit={() =>
                       setModal({ isOpen: true, mode: "edit", item: rec })
                     }
                     onView={() =>
                       setModal({ isOpen: true, mode: "view", item: rec })
                     }
-                    onDelete={() =>
-                      deletePayroll(rec.id).then(refetch)
-                    }
+                    onDelete={() => deletePayroll(rec.id).then(refetch)}
                   />
                 ))}
               </div>

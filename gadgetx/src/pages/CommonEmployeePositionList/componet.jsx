@@ -78,7 +78,7 @@ const EmployeePositionRow = React.memo(
         />
       </Tr>
     );
-  }
+  },
 );
 
 const ListFilter = React.memo(({ ...props }) => {
@@ -167,7 +167,7 @@ const CommonEmployeePositionList = ({
   const [name, setName] = useState(urlName || "");
   const [doneById, setDoneById] = useState(urlDoneById || "");
   const [costCenterId, setCostCenterId] = useState(
-    urlCostCenterId || defaultCostCenter
+    urlCostCenterId || defaultCostCenter,
   );
   const [sort, setSort] = useState(urlSort || "");
   const [searchType, setSearchType] = useState(urlSearchType || "");
@@ -179,7 +179,10 @@ const CommonEmployeePositionList = ({
     cost_center_id: urlCostCenterId || "",
   });
 
-  const [modalState, dispatchModal] = useReducer(modalReducer, initialModalState);
+  const [modalState, dispatchModal] = useReducer(
+    modalReducer,
+    initialModalState,
+  );
   const { selectedItem, mode, isOpen: isOpenModal } = modalState;
 
   const handleSetURLState = useCallback(
@@ -190,14 +193,14 @@ const CommonEmployeePositionList = ({
       }
       setURLState(newParams, { replace: true });
     },
-    [setURLState]
+    [setURLState],
   );
-  
+
   const findItemById = useCallback(
     (id) => list.find((item) => item.id.toString() === id),
-    [list]
+    [list],
   );
-  
+
   // EFFECT: Handles opening/closing modal based on URL
   useEffect(() => {
     const action = searchParams.get("action");
@@ -216,7 +219,7 @@ const CommonEmployeePositionList = ({
       dispatchModal({ type: "CLOSE" });
     }
   }, [searchParams, isOpenModal, findItemById]);
-  
+
   // HANDLER: Closes modal and clears URL
   const handleCloseModal = useCallback(() => {
     setSearchParams({}, { replace: true });
@@ -226,23 +229,29 @@ const CommonEmployeePositionList = ({
   const handleAddClick = useCallback(() => {
     setSearchParams({ action: "add" }, { replace: true });
   }, [setSearchParams]);
-  
+
   // USE HOOK FOR 'add' ACTION
-  useActionFromURL('add', () => {
-      if (!isOpenModal) {
-          dispatchModal({ type: "OPEN", mode: 'add', payload: null });
-      }
+  useActionFromURL("add", () => {
+    if (!isOpenModal) {
+      dispatchModal({ type: "OPEN", mode: "add", payload: null });
+    }
   });
 
   // HANDLER: Opens 'edit' modal and updates URL
-  const handleEditClick = useCallback((item) => {
-    setSearchParams({ action: "edit", id: item.id }, { replace: true });
-  }, [setSearchParams]);
-  
+  const handleEditClick = useCallback(
+    (item) => {
+      setSearchParams({ action: "edit", id: item.id }, { replace: true });
+    },
+    [setSearchParams],
+  );
+
   // HANDLER: Opens 'view' modal and updates URL
-  const handleViewClick = useCallback((item) => {
-    setSearchParams({ action: "view", id: item.id }, { replace: true });
-  }, [setSearchParams]);
+  const handleViewClick = useCallback(
+    (item) => {
+      setSearchParams({ action: "view", id: item.id }, { replace: true });
+    },
+    [setSearchParams],
+  );
 
   useEffect(() => {
     setName(urlName || "");
@@ -280,16 +289,16 @@ const CommonEmployeePositionList = ({
         });
       }
     },
-    [deleteItem, showToast, ENTITY_CRUD_KEY, selectedItem, handleCloseModal]
+    [deleteItem, showToast, ENTITY_CRUD_KEY, selectedItem, handleCloseModal],
   );
-  
+
   // ... (rest of the handlers remain the same)
   const handleSort = useCallback(
     (value) => {
       setSort(value);
       handleSetURLState({ ...urlState, sort: value });
     },
-    [urlState, handleSetURLState]
+    [urlState, handleSetURLState],
   );
 
   const handleSearch = useCallback(() => {
@@ -313,7 +322,7 @@ const CommonEmployeePositionList = ({
       const searchReset = { searchType: "", searchKey: "" };
       handleSetURLState({ ...urlState, ...searchReset, [key]: value });
     },
-    [urlState, handleSetURLState]
+    [urlState, handleSetURLState],
   );
 
   const handleAutocompleteHeaderSearch = useCallback(
@@ -323,7 +332,7 @@ const CommonEmployeePositionList = ({
 
       handleHeaderSearch(key, value);
     },
-    [handleHeaderSearch]
+    [handleHeaderSearch],
   );
 
   const handleHeaderKeyDown = useCallback(
@@ -332,7 +341,7 @@ const CommonEmployeePositionList = ({
         handleHeaderSearch(key, headerFilters[key]);
       }
     },
-    [handleHeaderSearch, headerFilters]
+    [handleHeaderSearch, headerFilters],
   );
 
   const handleFilter = useCallback(() => {
@@ -379,13 +388,13 @@ const CommonEmployeePositionList = ({
     refetch,
     handleSetURLState,
   ]);
-  
+
   const commonRowProps = {
     onEdit: handleEditClick,
     onView: handleViewClick,
     onDelete: handleDelete,
   };
-  
+
   // ... (JSX remains the same, but the logic is now cleaner)
   const searchOptions = [
     { value: "name", name: "Name" },
@@ -407,7 +416,7 @@ const CommonEmployeePositionList = ({
     DoneByAutoCompleteComponent,
     CostCenterAutoCompleteComponent,
   };
-  
+
   return (
     <>
       <ContainerWrapper>
@@ -491,7 +500,7 @@ const CommonEmployeePositionList = ({
                             onSearch={() =>
                               handleHeaderSearch(
                                 "done_by_id",
-                                headerFilters.done_by_id
+                                headerFilters.done_by_id,
                               )
                             }
                           >
@@ -507,7 +516,7 @@ const CommonEmployeePositionList = ({
                               onBlur={() =>
                                 handleHeaderSearch(
                                   "done_by_id",
-                                  headerFilters.done_by_id
+                                  headerFilters.done_by_id,
                                 )
                               }
                               is_edit={false}
@@ -534,7 +543,7 @@ const CommonEmployeePositionList = ({
                             onSearch={() =>
                               handleHeaderSearch(
                                 "cost_center_id",
-                                headerFilters.cost_center_id
+                                headerFilters.cost_center_id,
                               )
                             }
                           >
@@ -550,7 +559,7 @@ const CommonEmployeePositionList = ({
                               onBlur={() =>
                                 handleHeaderSearch(
                                   "cost_center_id",
-                                  headerFilters.cost_center_id
+                                  headerFilters.cost_center_id,
                                 )
                               }
                               is_edit={false}

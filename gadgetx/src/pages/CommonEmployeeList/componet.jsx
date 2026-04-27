@@ -52,13 +52,13 @@ import PayrollButton from "@/apps/user/components/PayrollButton";
 import SettingsBackButton from "@/apps/user/components/SettingsBackButton";
 import PageTitle from "@/components/PageTitle";
 import SubmitButton from "@/components/SubmitButton";
-import AccountAutoCompleteWithAddOptionWithBalance from "@/apps/user/components/AccountAutoCompleteWithAddOptionWithBalance";
+import LedgerAutoCompleteWithAddOptionWithBalance from "@/apps/user/components/LedgerAutoCompleteWithAddOptionWithBalance";
 import DoneByAutoCompleteWithAddOption from "@/apps/user/components/DoneByAutoCompleteWithAddOption";
 import CostCenterAutoCompleteWithAddOption from "@/apps/user/components/CostCenterAutoCompleteWithAddOption";
 import { useToast } from "@/context/ToastContext";
 import { TOASTSTATUS, TOASTTYPE } from "@/constants/object/toastType";
 import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
-
+import "./style.scss";
 
 const stateReducer = (state, newState) => ({ ...state, ...newState });
 
@@ -144,7 +144,7 @@ const CommonEmployeeList = ({
 
   const { data, isLoading, refetch } = useEmployeesHook(state);
   const { data: positions } = usePositionsHook();
-    const { mutateAsync: deleteEmployee } = useDeleteHook();
+  const { mutateAsync: deleteEmployee } = useDeleteHook();
   const listData = useMemo(() => data?.data || [], [data]);
   const totalPages = data?.page_count || 1;
   const totalItems = data?.count || 0;
@@ -196,7 +196,7 @@ const CommonEmployeeList = ({
     setSort("");
     showToast({
       type: TOASTTYPE.GENARAL,
-      message: "Refreshed.",
+      message: "Reports has been refreshed.",
       status: TOASTSTATUS.SUCCESS,
     });
   };
@@ -669,7 +669,7 @@ const BulkPayrollView = ({
   const [employees, setEmployees] = useState([]);
   const [entryData, setEntryData] = useState({});
   const [globalDate, setGlobalDate] = useState(getTodayISO());
-  const [globalAccountId, setGlobalAccountId] = useState("");
+  const [globalLedgerId, setGlobalLedgerId] = useState("");
   const [globalDoneById, setGlobalDoneById] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [globalCostCenterId, setGlobalCostCenterId] = useState(
@@ -704,10 +704,10 @@ const BulkPayrollView = ({
   };
 
   const handleSubmit = async () => {
-    if (!globalAccountId)
+    if (!globalLedgerId)
       return showToast({
         type: TOASTTYPE.GENARAL,
-        message: "Please select an account.",
+        message: "Please select a ledger.",
         status: TOASTSTATUS.ERROR,
       });
     const payload = selectedEmployees
@@ -716,7 +716,7 @@ const BulkPayrollView = ({
         if (sal && String(sal).trim() !== "") {
           return {
             employee_id: Number(id),
-            account_id: Number(globalAccountId),
+            ledger_id: Number(globalLedgerId),
             salary: Number(sal),
             pay_date: globalDate,
             done_by_id: globalDoneById ? Number(globalDoneById) : null,
@@ -778,44 +778,46 @@ const BulkPayrollView = ({
               </span>
             )}
           </div>
-          <Spacer />
-          <div style={{ minWidth: "200px" }}>
-            <AccountAutoCompleteWithAddOptionWithBalance
-              value={globalAccountId}
-              onChange={(e) => setGlobalAccountId(e.target.value)}
-              placeholder="Pay From Account"
-              required
-            />
-          </div>
-          <div
-            style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}
-          >
-            <div style={{ minWidth: "180px" }}>
+          <div className="bulk-entry-controls-group">
+
+            <div className="control-item _cc">
               <CostCenterAutoCompleteWithAddOption
                 value={globalCostCenterId}
                 onChange={(e) => setGlobalCostCenterId(e.target.value)}
                 placeholder="Cost Center"
               />
             </div>
-            <div style={{ minWidth: "180px" }}>
+            <div className="control-item _doneby">
               <DoneByAutoCompleteWithAddOption
                 value={globalDoneById}
                 onChange={(e) => setGlobalDoneById(e.target.value)}
                 placeholder="Done By"
               />
             </div>
-            <DateField
-              label="Pay Date"
-              value={globalDate ? new Date(globalDate) : null}
-              onChange={(d) => setGlobalDate(d?.toISOString().split("T")[0])}
-            />
+            <div className="control-item _date">
+              <DateField
+                value={globalDate ? new Date(globalDate) : null}
+                onChange={(d) => setGlobalDate(d?.toISOString().split("T")[0])}
+              />
+            </div>
+            <div className="control-item _ledger">
+              <LedgerAutoCompleteWithAddOptionWithBalance
+                value={globalLedgerId}
+                onChange={(e) => setGlobalLedgerId(e.target.value)}
+                placeholder="Pay From Ledger"
+                required
+              />
+            </div>
+
+            <div className="control-item _submit">
+              <SubmitButton
+                onClick={handleSubmit}
+                isLoading={isPending}
+                disabled={selectedEmployees.length === 0}
+                type="add"
+              />
+            </div>
           </div>
-          <SubmitButton
-            onClick={handleSubmit}
-            isLoading={isPending}
-            disabled={selectedEmployees.length === 0}
-            type="add"
-          />
         </div>
         <div className="bulk-entry-scroll-container">
           {isLoading ? (
@@ -880,12 +882,12 @@ const PayrollEntryCard = ({
     <div className="employee-entry-card__header">
       <div className="avatar-placeholder">{getInitials(employee.name)}</div>
       <div className="employee-info">
-        <span className="employee-entry-card__name fs16 fw600">
+        <div className="employee-entry-card__name fs14 fw600">
           {employee.name}
-        </span>
-        <span className="employee-entry-card__position fs14 fw400">
+        </div>
+        <div className="employee-entry-card__position fs12 fw400">
           {employee.position}
-        </span>
+        </div>
       </div>
     </div>
     <div
@@ -893,12 +895,11 @@ const PayrollEntryCard = ({
       onClick={(e) => e.stopPropagation()}
     >
       <InputField
-        label="Salary to Pay"
-        className="fs16 fw500"
+        label="Salary"
         type="number"
         value={payroll?.salary || ""}
         onChange={(e) => onSalaryChange(e.target.value)}
-        placeholder="Enter salary"
+        placeholder="Salary"
       />
     </div>
   </div>

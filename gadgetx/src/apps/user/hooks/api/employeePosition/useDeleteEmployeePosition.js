@@ -13,7 +13,7 @@ export function useDeleteEmployeePosition() {
       // queryClient.refetchQueries({ queryKey: ["employee_position"] });
       queryClient.refetchQueries({ queryKey: ["employees"] });
       queryClient.refetchQueries({ queryKey: ["employee_paginated"] });
-      queryClient.setQueriesData({ queryKey: ["employee_position"] }, (oldData) => {
+      queryClient.refetchQueries({ queryKey: ["employee_position"] }, (oldData) => {
         if (!oldData) {
           return [];
         }

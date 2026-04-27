@@ -15,7 +15,7 @@ export function useUpdateEmployeePosition() {
     onSuccess: (updatedEmployeePosition) => {
       queryClient.refetchQueries({ queryKey: ["employee_position",updatedEmployeePosition.id] });
       queryClient.refetchQueries({ queryKey: ["employees"] });
-      queryClient.setQueriesData({ queryKey: ["employee_position"] }, (oldData) => {
+      queryClient.refetchQueries({ queryKey: ["employee_position"] }, (oldData) => {
         if (!oldData) {
           return oldData;
         }

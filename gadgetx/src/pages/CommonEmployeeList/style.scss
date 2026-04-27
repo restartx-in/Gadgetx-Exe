@@ -1,0 +1,223 @@
+// --- START OF FILE style.scss ---
+
+.employee_list {
+  width: 100%;
+  padding: 22px;
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 6px 32px var(--color-neutral-300);
+  box-sizing: border-box;
+  position: relative;
+
+  &-error_message {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-danger);
+  }
+  &-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  &__add_button {
+    margin-left: auto;
+  }
+
+  &-table_container {
+    overflow-x: auto;
+  }
+}
+
+// Style for the new secondary action row in the header
+.page-header-secondary-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+// --- REFINED BULK ENTRY STYLES ---
+
+.bulk-entry-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%; // Make view take full height of its container
+}
+
+.bulk-entry-header {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.bulk-entry-global-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-neutral-200);
+  margin-bottom: 1rem;
+
+  .select-all-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .bulk-entry-controls-group {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    flex: 1;
+    justify-content: flex-end;
+
+    .control-item {
+      min-width: 160px;
+      flex: 1;
+      max-width: 220px;
+
+      &._submit {
+        flex: 0;
+        min-width: auto;
+      }
+      
+      &._ledger {
+        min-width: 200px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .bulk-entry-global-controls {
+    flex-direction: column;
+    align-items: stretch;
+
+    .bulk-entry-controls-group {
+      justify-content: flex-start;
+      
+      .control-item {
+        max-width: none;
+        width: 100%;
+        
+        &._submit {
+          width: 100%;
+          button {
+            width: 100%;
+          }
+        }
+      }
+    }
+  }
+}
+
+.bulk-entry-scroll-container {
+  flex: 1; // This makes the container take up all remaining vertical space
+  overflow-y: auto; // Enables scrolling
+  padding-bottom: 6px;
+}
+
+.bulk-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.employee-entry-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  position: relative;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .avatar-placeholder {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .employee-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__name {
+    font-weight: 600;
+    color: var(--color-text-dark);
+    font-size: 1.1rem;
+  }
+
+  &__position {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-neutral-100);
+
+    .input_field {
+      margin-bottom: 0;
+      
+      label {
+        font-size: 0.75rem;
+        margin-bottom: 2px;
+      }
+
+      input {
+        padding: 6px 10px;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// --- RESPONSIVE ADJUSTMENTS ---
+
+@media (max-width: 900px) {
+  .employee_list {
+    padding: 1px;
+    box-shadow: none;
+    background: transparent;
+  }
+}
+
+@media (max-width: 600px) {
+  .bulk-entry-scroll-container {
+    padding-top: 8px;
+  }
+  .employee_list {
+    padding: 1px;
+  }
+}

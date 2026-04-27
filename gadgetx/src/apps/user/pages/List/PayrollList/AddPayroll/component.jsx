@@ -7,7 +7,7 @@ import useDeletePayroll from "@/apps/user/hooks/api/payroll/useDeletePayroll";
 // Specialized Components
 import EmployeeAutoCompleteWithAddOption from "@/apps/user/components/EmployeeAutoCompleteWithAddOption";
 import CostCenterAutoCompleteWithAddOption from "@/apps/user/components/CostCenterAutoCompleteWithAddOption";
-import AccountAutoCompleteWithAddOptionWithBalance from "@/apps/user/components/AccountAutoCompleteWithAddOptionWithBalance";
+import LedgerAutoCompleteWithAddOptionWithBalance from "@/apps/user/components/LedgerAutoCompleteWithAddOptionWithBalance";
 import DoneByAutoCompleteWithAddOption from "@/apps/user/components/DoneByAutoCompleteWithAddOption";
 
 const AddPayroll = (props) => (
@@ -19,7 +19,7 @@ const AddPayroll = (props) => (
     useDeleteHook={useDeletePayroll}
     // Injected UI Components
     EmployeeComponent={EmployeeAutoCompleteWithAddOption}
-    AccountComponent={AccountAutoCompleteWithAddOptionWithBalance}
+    LedgerComponent={LedgerAutoCompleteWithAddOptionWithBalance}
     CostCenterComponent={CostCenterAutoCompleteWithAddOption}
     DoneByComponent={DoneByAutoCompleteWithAddOption}
   />

@@ -19,6 +19,7 @@ export function useDeletePayroll() {
         return oldData.filter((item) => item.id !== deletedId);
       });
       queryClient.refetchQueries({ queryKey: ["payroll_paginated"] });
+      queryClient.refetchQueries({ queryKey: ["ledgers_paginated"] });
     },
   });
 

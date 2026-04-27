@@ -25,8 +25,8 @@ const payrollSchema = z.object({
   employee_id: z.union([z.string(), z.number()]).refine((val) => !!val, {
     message: "Please select an employee",
   }),
-  account_id: z.union([z.string(), z.number()]).refine((val) => !!val, {
-    message: "Please select a payment account",
+  ledger_id: z.union([z.string(), z.number()]).refine((val) => !!val, {
+    message: "Please select a payment ledger",
   }),
   salary: z.coerce.number().min(0.01, "Salary must be greater than 0"),
   pay_date: z.string().min(1, "Please select a pay date"),
@@ -45,7 +45,7 @@ const CommonAddPayroll = ({
   useUpdateHook,
   useDeleteHook,
   EmployeeComponent,
-  AccountComponent,
+  LedgerComponent,
   CostCenterComponent,
   DoneByComponent,
 }) => {
@@ -61,7 +61,7 @@ const CommonAddPayroll = ({
 
   const defaultValues = {
     employee_id: "",
-    account_id: "",
+    ledger_id: "",
     salary: "",
     pay_date: new Date().toISOString().split("T")[0],
     cost_center_id: null,
@@ -108,7 +108,7 @@ const CommonAddPayroll = ({
       ...data,
       salary: Number(data.salary),
       employee_id: Number(data.employee_id),
-      account_id: Number(data.account_id),
+      ledger_id: Number(data.ledger_id),
     };
 
     try {
@@ -188,12 +188,12 @@ const CommonAddPayroll = ({
             />
 
             <Controller
-              name="account_id"
+              name="ledger_id"
               control={control}
               render={({ field }) => (
-                <AccountComponent
+                <LedgerComponent
                   {...field}
-                  placeholder="Select Account"
+                  placeholder="Select Ledger"
                   disabled={disabled}
                   required
                   debitAmount={watchedSalary}

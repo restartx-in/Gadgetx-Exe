@@ -21,17 +21,17 @@ const DRAFT_KEY = "mop_form_draft";
 
 // 1. Define Zod Schema
 const mopSchema = z.object({
-  name: z.string().min(1, "Mode Name is required"),
+  name: z.string().min(1, "Name is required"),
   done_by_id: z.union([z.string(), z.number()]).optional().nullable(),
   cost_center_id: z.union([z.string(), z.number()]).optional().nullable(),
 });
 
-const CommonModeOfPaymentModal = ({
+const CommonEmployeePositionModal = ({
   useCreateHook,
   useUpdateHook,
   useDeleteHook,
-  DoneBySelectorComponent,
-  CostCenterSelectorComponent,
+  DoneByAutoCompleteComponent,
+  CostCenterAutoCompleteComponent,
   isOpen,
   onClose,
   mode,
@@ -39,7 +39,7 @@ const CommonModeOfPaymentModal = ({
   onItemCreated,
 }) => {
   const showToast = useToast();
-  const ENTITY_NAME = CRUDITEM.MODEOFPAYMENT || "Mode Of Payment";
+  const ENTITY_NAME = CRUDITEM.EMPLOYEE_POSITION || "Employee Position";
   const disabled = mode === "view";
 
   const { mutateAsync: createItem, isLoading: creating } = useCreateHook();
@@ -144,7 +144,7 @@ const CommonModeOfPaymentModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
       <ModalHeader>
-        <Title report={Report.ModeOfPayment || ENTITY_NAME} mode={mode} />
+        <Title report={Report.EmployeePosition} mode={mode} />
       </ModalHeader>
 
       <form onSubmit={handleSubmit(onFormSubmit, handleFormError)}>
@@ -156,20 +156,20 @@ const CommonModeOfPaymentModal = ({
               render={({ field }) => (
                 <InputField
                   {...field}
-                  label="Mode Name"
-                  placeholder="Mode Name (e.g. card, upi, cash)"
+                  label="Position Name"
+                  placeholder="Position Name (e.g. Manager, Developer)"
                   disabled={disabled}
                   required
                 />
               )}
             />
 
-            {DoneBySelectorComponent && (
+            {DoneByAutoCompleteComponent && (
               <Controller
                 name="done_by_id"
                 control={control}
                 render={({ field }) => (
-                  <DoneBySelectorComponent
+                  <DoneByAutoCompleteComponent
                     {...field}
                     placeholder="Select Done By"
                     disabled={disabled}
@@ -178,12 +178,12 @@ const CommonModeOfPaymentModal = ({
               />
             )}
 
-            {CostCenterSelectorComponent && (
+            {CostCenterAutoCompleteComponent && (
               <Controller
                 name="cost_center_id"
                 control={control}
                 render={({ field }) => (
-                  <CostCenterSelectorComponent
+                  <CostCenterAutoCompleteComponent
                     {...field}
                     placeholder="Select Cost Center"
                     disabled={disabled}
@@ -206,7 +206,7 @@ const CommonModeOfPaymentModal = ({
         {mode === "add" && <CancelButton onClick={onClose} />}
         {mode === "edit" && (
           <DeleteTextButton
-            transaction={Transaction.ModeOfPayment || ENTITY_NAME}
+            transaction={Transaction.EmployeePosition || ENTITY_NAME}
             onDelete={handleDelete}
             isLoading={deleting}
           />
@@ -224,4 +224,4 @@ const CommonModeOfPaymentModal = ({
   );
 };
 
-export default CommonModeOfPaymentModal;
+export default CommonEmployeePositionModal;

@@ -34,7 +34,7 @@ const createReportFieldPermissionsTable = require("../../api/reportFieldPermissi
 const createTrasactionLedgerTable = require("../../api/transactionLedger/transactionLedger.table.js");
 const createTransactionFieldPermissionsTable = require("../../api/transactionFieldPermissions/transactionFieldPermissions.table.js");
 const createTransactionTable = require("../../api/transaction/transaction.table.js");
-// const createQueryTable = require("./tables/query.table.js");
+const createQueryTable = require("./tables/query.js");
 const createPrintSettingsTable = require("../../api/printSettings/printSettings.table.js");
 const createVoucherTransactionTable = require("../../api/voucherTransaction/voucherTransaction.table.js");
 const createCustomPagesTable = require("../../api/customPages/customPages.table.js");
@@ -48,7 +48,7 @@ const createTables = async () => {
   try {
     console.log("🚀 Starting database migration...");
 
-    // await createQueryTable(client);
+    await createQueryTable(client);
 
     await createTenantTable(client);
     await createRoleTable(client);
