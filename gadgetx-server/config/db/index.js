@@ -55,11 +55,12 @@ const query = (sql, params = []) => {
       /EXTRACT\s*\(\s*MONTH\s+FROM\s+([^)]+)\)/gi,
       "CAST(strftime('%m', $1) AS INTEGER)"
     );
-    sqliteSql = sqliteSql.replace(
-      /STRING_AGG\s*\(\s*(DISTINCT\s+)?([^,]+?),\s*',\s*'\s*\)/gi,
-      (_, distinct, expr) => `GROUP_CONCAT(${distinct ? 'DISTINCT ' : ''}${expr.trim()})`
-    );
-    sqliteSql = sqliteSql.replace(/\bNULLS\s+(LAST|FIRST)\b/gi, "");
+    sqliteSql = sqliteSql.replace(/\bJSON_AGG\s*\(/gi, "JSON_GROUP_ARRAY(");
+    sqliteSql = sqliteSql.replace(/\bJSON_BUILD_OBJECT\s*\(/gi, "JSON_OBJECT(");
+    
+    // ANY($1) -> IN (SELECT value FROM JSON_EACH(?))
+    // We need to handle this carefully with the parameter mapping
+    sqliteSql = sqliteSql.replace(/\bANY\s*\(\s*\$(\d+)\s*\)/gi, "IN (SELECT value FROM JSON_EACH($$$1))");
 
     // ── 2. ILIKE → LIKE ────────────────────────────────────────────────────
     sqliteSql = sqliteSql.replace(/\bILIKE\b/gi, "LIKE");
@@ -92,7 +93,13 @@ const query = (sql, params = []) => {
     // ── 7. Convert $1, $2, … positional params → ? ────────────────────────
     let newParams = [];
     sqliteSql = sqliteSql.replace(/\$(\d+)/g, (match, p1) => {
-      newParams.push(params[parseInt(p1, 10) - 1]);
+      const idx = parseInt(p1, 10) - 1;
+      let val = params[idx];
+      // Special handling for arrays being passed to IN clause
+      if (Array.isArray(val)) {
+        val = JSON.stringify(val);
+      }
+      newParams.push(val);
       return "?";
     });
 
@@ -169,8 +176,29 @@ const query = (sql, params = []) => {
         const isSelectQuery = stmtSql.trim().toUpperCase().startsWith("SELECT") || stmtSql.trim().toUpperCase().startsWith("WITH");
         if (isSelectQuery) {
           db.all(stmtSql, singleParams, (err, rows) => {
-            if (err) rej(err);
-            else res({ rows });
+            if (err) {
+              console.error("❌ SQLite Query Error:", err.message);
+              console.error("Statement:", stmtSql);
+              rej(err);
+            }
+            else {
+              // Auto-parse JSON strings for Postgres compatibility
+              const parsedRows = rows.map(row => {
+                const newRow = { ...row };
+                for (const key in newRow) {
+                  const val = newRow[key];
+                  if (typeof val === 'string' && (val.startsWith('[') || val.startsWith('{'))) {
+                    try {
+                      newRow[key] = JSON.parse(val);
+                    } catch (e) {
+                      // Not valid JSON, keep as is
+                    }
+                  }
+                }
+                return newRow;
+              });
+              res({ rows: parsedRows });
+            }
           });
         } else {
           db.run(stmtSql, singleParams, function (err) {
@@ -178,6 +206,8 @@ const query = (sql, params = []) => {
               if (err.message.includes("duplicate column name")) {
                 res({ rows: [], lastID: this?.lastID, changes: this?.changes });
               } else {
+                console.error("❌ SQLite Run Error:", err.message);
+                console.error("Statement:", stmtSql);
                 rej(err);
               }
             } else {

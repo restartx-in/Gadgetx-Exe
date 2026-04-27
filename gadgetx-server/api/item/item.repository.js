@@ -180,7 +180,7 @@ class ItemRepository {
                 'type', cf.type,
                 'is_required', cf.is_required,
                 'value', icfv.value
-              )), '[]'::json)
+              )), '[]')
               FROM category_custom_fields cf
               LEFT JOIN item_custom_field_values icfv 
                 ON cf.id = icfv.field_id AND icfv.item_id = i.id
@@ -210,7 +210,7 @@ class ItemRepository {
             'type', cf.type,
             'is_required', cf.is_required,
             'value', icfv.value
-          )), '[]'::json)
+          )), '[]')
           FROM category_custom_fields cf
           LEFT JOIN item_custom_field_values icfv 
             ON cf.id = icfv.field_id AND icfv.item_id = i.id
@@ -245,7 +245,7 @@ class ItemRepository {
             'type', cf.type,
             'is_required', cf.is_required,
             'value', icfv.value
-          )), '[]'::json)
+          )), '[]')
           FROM category_custom_fields cf
           LEFT JOIN item_custom_field_values icfv 
             ON cf.id = icfv.field_id AND icfv.item_id = i.id

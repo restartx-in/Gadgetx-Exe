@@ -19,20 +19,18 @@ class SalesRepository {
                 db.name as done_by_name,      
                 cc.name as cost_center_name,
                 (
-                  SELECT json_agg(sp_agg)
-                  FROM (
-                    SELECT
-                      v.id as voucher_id, -- <<< ADDED VOUCHER ID HERE
-                      v.to_ledger_id as account_id, -- For Sales, money goes TO the account
-                      l.name as account_name,
-                      vt.received_amount as amount,
-                      v.mode_of_payment_id
-                    FROM voucher_transactions vt
-                    JOIN voucher v ON vt.voucher_id = v.id
-                    JOIN ledger l ON v.to_ledger_id = l.id
-                    WHERE vt.invoice_id::integer = s.id 
-                      AND vt.invoice_type = 'SALE'
-                  ) as sp_agg
+                  SELECT json_agg(json_build_object(
+                    'voucher_id', v.id,
+                    'account_id', v.to_ledger_id,
+                    'account_name', l.name,
+                    'amount', vt.received_amount,
+                    'mode_of_payment_id', v.mode_of_payment_id
+                  ))
+                  FROM voucher_transactions vt
+                  JOIN voucher v ON vt.voucher_id = v.id
+                  JOIN ledger l ON v.to_ledger_id = l.id
+                  WHERE vt.invoice_id::integer = s.id 
+                    AND vt.invoice_type = 'SALE'
                 ) as payment_methods
             FROM sales s
             JOIN party p ON s.party_id = p.id 
@@ -262,20 +260,18 @@ class SalesRepository {
               cc.name as cost_center_name,
               COUNT(*) OVER() as total_count,
               (
-                SELECT json_agg(sp_agg)
-                FROM (
-                  SELECT
-                    v.id as voucher_id, -- <<< ADDED VOUCHER ID HERE
-                    v.to_ledger_id as account_id,
-                    l.name as account_name,
-                    vt.received_amount as amount,
-                    v.mode_of_payment_id
-                  FROM voucher_transactions vt
-                  JOIN voucher v ON vt.voucher_id = v.id
-                  JOIN ledger l ON v.to_ledger_id = l.id
-                  WHERE vt.invoice_id::integer = s.id 
-                    AND vt.invoice_type = 'SALE'
-                ) as sp_agg
+                SELECT json_agg(json_build_object(
+                  'voucher_id', v.id,
+                  'account_id', v.to_ledger_id,
+                  'account_name', l.name,
+                  'amount', vt.received_amount,
+                  'mode_of_payment_id', v.mode_of_payment_id
+                ))
+                FROM voucher_transactions vt
+                JOIN voucher v ON vt.voucher_id = v.id
+                JOIN ledger l ON v.to_ledger_id = l.id
+                WHERE vt.invoice_id::integer = s.id 
+                  AND vt.invoice_type = 'SALE'
               ) as payment_methods
           ${fromAndJoins}
           ${whereClause}
@@ -449,39 +445,35 @@ class SalesRepository {
         p.name as party_name,
         p.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
         (
-          SELECT json_agg(si_agg) 
-          FROM (
-            SELECT 
-              si.id, 
-              si.item_id, 
-              i.name as item_name, 
-              si.quantity, 
-              si.unit_price, 
-              si.tax_amount, 
-              si.total_price
-            FROM sale_item si 
-            JOIN item i ON si.item_id = i.id
-            WHERE si.sales_id = s.id
-          ) as si_agg
+          SELECT json_agg(json_build_object(
+            'id', si.id,
+            'item_id', si.item_id,
+            'item_name', i.name,
+            'quantity', si.quantity,
+            'unit_price', si.unit_price,
+            'tax_amount', si.tax_amount,
+            'total_price', si.total_price
+          )) 
+          FROM sale_item si 
+          JOIN item i ON si.item_id = i.id
+          WHERE si.sales_id = s.id
         ) as items,
         (
-          SELECT json_agg(sp_agg)
-          FROM (
-            SELECT
-              v.id as voucher_id, -- <<< ADDED VOUCHER ID HERE
-              v.to_ledger_id as account_id, -- Account money goes TO
-              l.name as account_name,
-              vt.received_amount as amount,
-              v.mode_of_payment_id,
-              v.voucher_no,
-              v.date as payment_date
-            FROM voucher_transactions vt
-            JOIN voucher v ON vt.voucher_id = v.id
-            JOIN ledger l ON v.to_ledger_id = l.id
-            WHERE vt.invoice_id::integer = s.id 
-              AND vt.invoice_type = 'SALE'
-              AND v.tenant_id = $2
-          ) as sp_agg
+          SELECT json_agg(json_build_object(
+            'voucher_id', v.id,
+            'account_id', v.to_ledger_id,
+            'account_name', l.name,
+            'amount', vt.received_amount,
+            'mode_of_payment_id', v.mode_of_payment_id,
+            'voucher_no', v.voucher_no,
+            'payment_date', v.date
+          ))
+          FROM voucher_transactions vt
+          JOIN voucher v ON vt.voucher_id = v.id
+          JOIN ledger l ON v.to_ledger_id = l.id
+          WHERE vt.invoice_id::integer = s.id 
+            AND vt.invoice_type = 'SALE'
+            AND v.tenant_id = $2
         ) as payment_methods,
         (
           SELECT SUM(si.tax_amount) 
