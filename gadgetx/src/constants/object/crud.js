@@ -87,5 +87,4 @@ export const CRUDITEM = Object.freeze({
   TRANSPORT: "Transport",
   Airline: "Airline",
   Sector: "Sector",
-  PRESCRIPTION: "Prescription",
 });

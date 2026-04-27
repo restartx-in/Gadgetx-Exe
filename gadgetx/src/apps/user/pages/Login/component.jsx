@@ -18,7 +18,7 @@ const Login = () => {
     }
   };
 
-  const IMG_URL = "src/assets/login-bg.png";
+  const IMG_URL = "src/assets/login.png";
 
   return (
     <div className="login-page" style={{ backgroundImage: `url(${IMG_URL})` }}>
@@ -26,13 +26,12 @@ const Login = () => {
         <div className="login-page__container">
           {/* Welcome Block */}
           <section className="login-page__welcome">
-            <div className="login-page__brand">OptiVision</div>
+            <div className="login-page__brand"></div>
             <h1 className="login-page__welcome-title">
               Welcome <br /> Back
             </h1>
             <p className="login-page__welcome-text">
-              Precision management and clarity for every frame. Access your
-              professional enterprise suite.
+              Manage your inventory efficiently and stay in control of your business operations.
             </p>
           </section>
 

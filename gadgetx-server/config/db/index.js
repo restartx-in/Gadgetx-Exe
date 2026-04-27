@@ -5,7 +5,7 @@ const path = require("path");
 
 const dbPath = process.env.DB_FILE && path.isAbsolute(process.env.DB_FILE)
   ? process.env.DB_FILE
-  : path.resolve(__dirname, "../../", process.env.DB_FILE || "gadgetx.db");
+  : path.resolve(__dirname, "../../", process.env.DB_FILE || "inventoryx.db");
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error("❌ Failed to connect to SQLite database:", err.message);
@@ -28,6 +28,11 @@ const query = (sql, params = []) => {
     let sqliteSql = sql;
 
     // ── 1. PostgreSQL → SQLite function translations ───────────────────────
+    
+    // ── Strip PostgreSQL type casts (::text, ::integer, etc.) first ───────────
+    sqliteSql = sqliteSql.replace(/([a-zA-Z0-9_.]+)::integer/gi, "CAST($1 AS INTEGER)");
+    sqliteSql = sqliteSql.replace(/([a-zA-Z0-9_.]+)::text/gi, "CAST($1 AS TEXT)");
+    sqliteSql = sqliteSql.replace(/::[a-zA-Z0-9_]+(?:\[\s*\])?/g, ""); // Matches ::type and ::type[]
 
     sqliteSql = sqliteSql.replace(
       /TO_CHAR\s*\(\s*([^,]+?)\s*,\s*'YYYY-MM-DD'\s*\)/gi,
@@ -61,18 +66,24 @@ const query = (sql, params = []) => {
       /EXTRACT\s*\(\s*MONTH\s+FROM\s+([^)]+)\)/gi,
       "CAST(strftime('%m', $1) AS INTEGER)"
     );
-    sqliteSql = sqliteSql.replace(/\bJSON_AGG\s*\(/gi, "JSON_GROUP_ARRAY(");
-    sqliteSql = sqliteSql.replace(/\bJSON_BUILD_OBJECT\s*\(/gi, "JSON_OBJECT(");
+    sqliteSql = sqliteSql.replace(/\bJSON_AGG\b/gi, "JSON_GROUP_ARRAY");
+    sqliteSql = sqliteSql.replace(/\bJSON_BUILD_OBJECT\b/gi, "JSON_OBJECT");
     
-    // ANY($1) -> IN (SELECT value FROM JSON_EACH(?))
-    // We need to handle this carefully with the parameter mapping
-    sqliteSql = sqliteSql.replace(/\bANY\s*\(\s*\$(\d+)\s*\)/gi, "IN (SELECT value FROM JSON_EACH($$$1))");
+    // 1. Handle "val = ANY($1)" or "val = ANY(column)" -> "val IN (SELECT value FROM JSON_EACH(...))"
+    sqliteSql = sqliteSql.replace(/(\$\d+|[a-zA-Z0-9_.]+)\s*=\s*ANY\s*\(([^)]+)\)/gi, "$1 IN (SELECT value FROM JSON_EACH($2))");
+
+    // 2. Handle remaining "ANY($1)" -> "IN (SELECT value FROM JSON_EACH(?))"
+    // This handles cases like "id IN (ANY($1))" or just "ANY($1)" if it's used elsewhere
+    sqliteSql = sqliteSql.replace(/\bANY\s*\(\s*\$(\d+)\s*\)/gi, (match, p1) => {
+      return `IN (SELECT value FROM JSON_EACH($${p1}))`;
+    });
+
+    // ARRAY[1,2,3] -> JSON('[1,2,3]')
+    sqliteSql = sqliteSql.replace(/\bARRAY\s*\[([\s\S]*?)\]/gi, "JSON('[$1]')");
 
     // ── 2. ILIKE → LIKE ────────────────────────────────────────────────────
     sqliteSql = sqliteSql.replace(/\bILIKE\b/gi, "LIKE");
 
-    // ── 3. Strip PostgreSQL type casts (::text, ::integer, etc.) ───────────
-    sqliteSql = sqliteSql.replace(/::[a-zA-Z0-9_]+/g, "");
 
     // ── 4. to_regclass fallback ────────────────────────────────────────────
     sqliteSql = sqliteSql.replace(
@@ -92,8 +103,9 @@ const query = (sql, params = []) => {
     sqliteSql = sqliteSql.replace(/\bJSONB\b/gi, "JSON");
     sqliteSql = sqliteSql.replace(/\bTIMESTAMP\s+WITH\s+TIME\s+ZONE\b/gi, "TIMESTAMP");
     sqliteSql = sqliteSql.replace(/\bNOW\s*\(\s*\)/gi, "CURRENT_TIMESTAMP");
-    sqliteSql = sqliteSql.replace(/\bgen_random_uuid\s*\(\s*\)/gi, "NULL"); // Placeholder or let app handle it
-    sqliteSql = sqliteSql.replace(/DEFAULT\s+'\{[\s\S]*?\}'/gi, "DEFAULT ''");
+    // gen_random_uuid() -> (lower(hex(randomblob(16))))
+    sqliteSql = sqliteSql.replace(/\bgen_random_uuid\s*\(\s*\)/gi, "(lower(hex(randomblob(16))))");
+    sqliteSql = sqliteSql.replace(/DEFAULT\s+'\{[\s\S]*?\}'/gi, "DEFAULT '[]'");
     sqliteSql = sqliteSql.replace(/DEFAULT\s+'\[[\s\S]*?\]'/gi, "DEFAULT '[]'");
 
     // ── 7. Convert $1, $2, … positional params → ? ────────────────────────
@@ -120,8 +132,8 @@ const query = (sql, params = []) => {
       const updateMatch = sqliteSql.match(/UPDATE\s+["']?([a-zA-Z0-9_]+)["']?/i);
       returningTable = insertMatch ? insertMatch[1] : (updateMatch ? updateMatch[1] : null);
       
-      // Strip the RETURNING clause for the initial execution
-      sqliteSql = sqliteSql.replace(/\bRETURNING\b\s+.*$/gi, "").trim();
+      // Strip the RETURNING clause but stop at semicolon or end of string
+      sqliteSql = sqliteSql.replace(/\bRETURNING\b\s+[^;]*/gi, "").trim();
     }
 
     const upperSqlOriginal = sqliteSql.trim().toUpperCase();
@@ -184,7 +196,8 @@ const query = (sql, params = []) => {
           db.all(stmtSql, singleParams, (err, rows) => {
             if (err) {
               console.error("❌ SQLite Query Error:", err.message);
-              console.error("Statement:", stmtSql);
+              console.error("SQL:", stmtSql);
+              console.error("Params:", singleParams);
               rej(err);
             }
             else {
@@ -213,7 +226,8 @@ const query = (sql, params = []) => {
                 res({ rows: [], lastID: this?.lastID, changes: this?.changes });
               } else {
                 console.error("❌ SQLite Run Error:", err.message);
-                console.error("Statement:", stmtSql);
+                console.error("SQL:", stmtSql);
+                console.error("Params:", singleParams);
                 rej(err);
               }
             } else {

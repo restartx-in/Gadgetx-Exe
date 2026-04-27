@@ -2,10 +2,10 @@ class SalesItemRepository {
   async createMany(client, salesId, items, tenantId) {
     const query = `
       INSERT INTO sale_item (
-        tenant_id, sales_id, item_id, prescription_id,
+        tenant_id, sales_id, item_id,
         quantity, unit_price, tax_amount, total_price
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
     `;
 
     for (const item of items) {
@@ -13,7 +13,6 @@ class SalesItemRepository {
         tenantId,
         salesId,
         item.item_id || null,
-        item.prescription_id || null,
         item.quantity || 1,
         item.unit_price || item.item_price || 0,
         item.tax_amount || 0,

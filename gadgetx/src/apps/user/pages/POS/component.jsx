@@ -661,7 +661,6 @@ const POS = () => {
         const itemTaxAmount = round2((itemBase * item.tax) / 100);
         return {
           item_id: item.id,
-          prescription_id: item.prescription_id || null,
           quantity: item.quantity,
           unit_price: item.price,
           tax_amount: itemTaxAmount,

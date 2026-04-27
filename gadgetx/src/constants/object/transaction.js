@@ -43,5 +43,4 @@ export const Transaction = Object.freeze({
   Brokerage: "Brokerage",
   Invoice: "Invoice",
   INVOICE_TEMPLATES: "InvoiceTemplate",
-  Prescription: "Prescription",
 });

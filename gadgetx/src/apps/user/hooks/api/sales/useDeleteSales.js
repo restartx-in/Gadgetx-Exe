@@ -16,10 +16,9 @@ export function useDeleteSales() {
         return oldData.filter((item) => item.id !== deletedId);
       });
       queryClient.invalidateQueries({ queryKey: ["sales_paginated"] });
-      queryClient.refetchQueries({ queryKey: ["sales_paginated"] });
       // queryClient.invalidateQueries({ queryKey: ["sales", "list"] });
       queryClient.invalidateQueries({ queryKey: ["cash_books_paginated"] });
-      queryClient.refetchQueries({ queryKey: ["accounts"] });
+      queryClient.refetchQueries({ queryKey: ["ledgers_paginated"] });
       queryClient.refetchQueries({ queryKey: ["items"] });
       queryClient.refetchQueries({ queryKey: ["items_paginated"] });
       queryClient.refetchQueries({ queryKey: ["vouchers_paginated"] });

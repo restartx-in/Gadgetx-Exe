@@ -115,13 +115,6 @@ const sidebarData = [
         Icon: IoPerson,
         addPath: "/customer-list?action=add",
       },
-      {
-        to: "/prescription-list",
-        title: "Prescription List",
-        label: "Prescriptions",
-        Icon: LuFileSpreadsheet,
-        addPath: "/prescription-list?action=add",
-      },
     ],
   },
 

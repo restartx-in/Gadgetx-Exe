@@ -54,6 +54,7 @@ import { format, isValid } from "date-fns";
 import ExportMenu from "@/components/ExportMenu";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
 import ColumnSelectorModal from "@/components/ColumnSelectorModal";
+import FullScreenButton from "@/components/FullScreenButton";
 import DateFilter from "@/components/DateFilter";
 
 const stateReducer = (state, newState) => ({ ...state, ...newState });
@@ -96,13 +97,9 @@ const SaleRow = React.memo(
       <Tr>
         <TdSL index={index} page={page} pageSize={pageSize} />
         {columns.map((field) => {
-          if (field.value === "order_date")
-            return <TdDate key={field.value}>{sls.order_date}</TdDate>;
-          if (field.value === "expected_delivery")
-            return <TdDate key={field.value}>{sls.expected_delivery}</TdDate>;
-          if (field.value === "actual_delivery")
-            return <TdDate key={field.value}>{sls.actual_delivery}</TdDate>;
-          if (field.value === "party_name")
+          if (field.value === "date")
+            return <TdDate key={field.value}>{sls.date}</TdDate>;
+          if (field.value === "customer")
             return (
               <TdOverflow key={field.value}>
                 {sls.party_name || "N/A"}
@@ -112,19 +109,13 @@ const SaleRow = React.memo(
             return (
               <TdOverflow key={field.value}>{sls.invoice_number}</TdOverflow>
             );
-          if (field.value === "payment_status")
+          if (field.value === "status")
             return (
               <Td key={field.value}>
-                <TextBadge variant="paymentStatus" type={sls.payment_status}>
-                  {sls.payment_status}
+                <TextBadge variant="paymentStatus" type={sls.status}>
+                  {sls.status}
                 </TextBadge>
               </Td>
-            );
-          if (field.value === "order_status")
-            return (
-              <TdOverflow key={field.value}>
-                {sls.order_status || "pending"}
-              </TdOverflow>
             );
           if (field.value === "account")
             return (
@@ -469,7 +460,7 @@ const CommonSaleReport = ({ hooks, components, config }) => {
         const formatted = {
           id: saleDetails.id,
           invoice_number: saleDetails.invoice_number,
-          date: saleDetails.order_date,
+          date: saleDetails.date,
           store: {
             company_name: printSettings.company_name,
             store: printSettings.store_name,
@@ -553,7 +544,7 @@ const CommonSaleReport = ({ hooks, components, config }) => {
         setSelectedSalePayments(
           (sls.payment_methods || []).map((p, i) => ({
             id: i + 1,
-            date: sls.order_date,
+            date: sls.date,
             reference: `Sale #${sls.id}`,
             amount: p.amount || 0,
             customerName: customerNameMap[sls.party_id] || "N/A",
@@ -710,6 +701,7 @@ const CommonSaleReport = ({ hooks, components, config }) => {
               }
               topRight={
                 <>
+                  <FullScreenButton />
                   <RefreshButton onClick={handleRefresh} />
                   <DateFilter
                     value={{
@@ -751,7 +743,7 @@ const CommonSaleReport = ({ hooks, components, config }) => {
                         ].includes(field.value);
                         const isFilterable = [
                           "customer",
-                          "account",
+                          "account",  
                           "done_by",
                           "cost_center",
                         ].includes(field.value);

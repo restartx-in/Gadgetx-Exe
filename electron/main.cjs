@@ -12,14 +12,14 @@ function startServer() {
     : path.join(app.getAppPath(), '..', 'app.asar.unpacked', 'gadgetx-server', 'server.js');
 
   const dbPath = isDev
-    ? path.join(__dirname, '../gadgetx-server/gadgetx.db')
-    : path.join(app.getPath('userData'), 'gadgetx.db');
+    ? path.join(__dirname, '../gadgetx-server/inventoryx.db')
+    : path.join(app.getPath('userData'), 'inventoryx.db');
 
   // Copy DB to userData if it doesn't exist (packaged only)
   if (!isDev) {
     const fs = require('fs');
     // Now looking inside the bundled app path
-    const bundledDbPath = path.join(app.getAppPath(), 'gadgetx-server', 'gadgetx.db');
+    const bundledDbPath = path.join(app.getAppPath(), 'gadgetx-server', 'inventoryx.db');
     
     console.log('Checking for bundled DB at:', bundledDbPath);
     console.log('Target DB path:', dbPath);

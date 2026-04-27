@@ -15,7 +15,6 @@ module.exports = async (client) => {
           tenant_id INTEGER REFERENCES "tenant"(id) ON DELETE CASCADE,
           sales_id INTEGER NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
           item_id INTEGER REFERENCES item(id) ON DELETE SET NULL,
-         prescription_id INTEGER REFERENCES prescription(id) ON DELETE SET NULL,
           quantity INTEGER NOT NULL DEFAULT 1,
           unit_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
           tax_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
@@ -33,10 +32,7 @@ module.exports = async (client) => {
       await client.query(
         "CREATE INDEX idx_sale_item_sales_id ON sale_item(sales_id);",
       );
-      await client.query(
-        "CREATE INDEX idx_sale_item_prescription_id ON sale_item(prescription_id);",
-      );
-      
+
 
       console.log('✅ Indexes for "sale_item" table created.');
     }

@@ -2,80 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  // gap: 16px;
-   &__top-fields {
-    display: grid;
-    // 6 columns on large desktops
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 12px;
-    align-items: flex-end; // Aligns the inputs at the bottom if labels differ
-    background: #fff;
-    // border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    // padding: 16px;
-    // margin-bottom: 8px;
-
-    // Tablet: 3 columns
-    @media (max-width: 1200px) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    // Small Tablet: 2 columns
-    @media (max-width: 768px) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      // padding: 12px;
-    }
-
-    // Mobile Phone: 1 column
-    @media (max-width: 480px) {
-      grid-template-columns: 1fr;
-    }
-
-    // Ensure children components take full width of grid cell
-    > div {
-      width: 100%;
-      min-width: 0;
-      & > div { width: 100% !important; }
-    }
-  }
-
-  &__content-row {
-    display: flex;
-    gap: 16px;
-    margin-top: 8px;
-    flex-direction: row; // Desktop
-
-    @media (max-width: 1024px) {
-      flex-direction: column; // Stack prescription on top of table for mobile/tablet
-    }
-  }
-
-  &__prescription-panel {
-    flex: 0 0 320px; // Fixed width on desktop
-    width: 320px;
-
-    @media (max-width: 1024px) {
-      width: 100%; // Full width on mobile
-      flex: none;
-    }
-  }
-
-  &__order-table {
-    flex: 1;
-    min-width: 0; // Crucial for flex child table to not overflow
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    overflow: hidden;
-
-    // Mobile specific table adjustments
-    @media (max-width: 600px) {
-       .common_table_wrapper {
-         font-size: 13px;
-       }
-    }
-  }
-
+  gap: 16px;
 
   &__header {
     display: flex;
@@ -94,79 +21,15 @@
   &__form-content {
     display: flex;
     flex-direction: column;
-    // gap: 12px;
+    gap: 16px;
     padding: 4px;
     flex: 1;
     min-height: 0;
-    margin-top: 5px;
-  }
-
-  // --- Top fields card ---
-  &__top-fields {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    align-items: start;
-    // background: var(--app-bg, #fff);
-    // border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    // padding: 12px 14px;
-
-    @media (max-width: 900px) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    @media (max-width: 540px) {
-      // grid-template-columns: 1fr;
-      // row-gap: 8px;
-
-      // cancel any column spans on mobile
-      // > div[style*="span"] {
-      //   grid-column: span 1 !important;
-      // }
-    }
-
-    // Force every direct child (field wrapper) to fill its grid cell
-    > div {
-      width: 100%;
-      min-width: 0;
-
-      .date-field-wrapper {
-        width: 100% !important;
-      }
-
-      > div { width: 100%; }
-    }
-  }
-
-  // --- Content row (prescription + table) ---
-  &__content-row {
-    display: flex;
-    gap: 14px;
-    flex: 1;
-    min-height: 0;
-    flex-direction: row;
-
-    @media (max-width: 768px) {
-      flex-direction: column;
-    }
-  }
-
-  // --- Prescription side panel ---
-  &__prescription-panel {
-    flex: 0 0 300px;
-    width: 300px;
-
-    @media (max-width: 768px) {
-      flex: none;
-      width: 100%;
-    }
   }
 
   // --- Table ---
   &__order-table {
-    flex: 1 1 0%;
-    min-width: 0;
+    flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;

@@ -2,7 +2,7 @@ const createTables = require("./migrations/createTables"); // this is your migra
 require("dotenv").config();
 (async () => {
   console.log("-----------------------------------------");
-  console.log(`🚀 Starting Migration to SQLite: ${process.env.DB_FILE || "gadgetx.db"}`);
+  console.log(`🚀 Starting Migration to SQLite: ${process.env.DB_FILE || "inventoryx.db"}`);
   console.log("-----------------------------------------");
   
   await createTables()

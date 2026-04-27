@@ -325,11 +325,6 @@ export const API_ENDPOINTS = {
     PAGINATED: API_BASE_URL + "/lenses/paginated",
     BY_ID: (id) => API_BASE_URL + `/lenses/${id}`,
   },
-  PRESCRIPTIONS: {
-    BASE: API_BASE_URL + "/prescriptions",
-    PAGINATED: API_BASE_URL + "/prescriptions/paginated",
-    BY_ID: (id) => API_BASE_URL + `/prescriptions/${id}`,
-  },
 };
 
 const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 10000;

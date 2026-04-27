@@ -14,22 +14,25 @@ export function useUpdateSales() {
 
       queryClient.invalidateQueries({ queryKey: ["sales_paginated"] });
       if (!isQueued && response.data) {
-        queryClient.setQueriesData({ queryKey: ["sales", "list"] }, (oldData) => {
-          if (!oldData) {
-            return oldData;
-          }
-          return oldData.map((item) =>
-            item.id === response.data.id ? response.data : item,
-          );
-        });
+        queryClient.setQueriesData(
+          { queryKey: ["sales", "list"] },
+          (oldData) => {
+            if (!oldData) {
+              return oldData;
+            }
+            return oldData.map((item) =>
+              item.id === response.data.id ? response.data : item,
+            );
+          },
+        );
       }
       queryClient.invalidateQueries({
-        queryKey: ["sales", "detail", id] ,
+        queryKey: ["sales", "detail", id],
       });
       // queryClient.invalidateQueries({ queryKey: ["sales", "list"] });
       // queryClient.invalidateQueries({ queryKey: ["sales", "detail", id] });
       queryClient.invalidateQueries({ queryKey: ["cash_books_paginated"] });
-      queryClient.refetchQueries({ queryKey: ["accounts"] });
+      queryClient.refetchQueries({ queryKey: ["ledgers_paginated"] });
       queryClient.refetchQueries({ queryKey: ["items"] });
       queryClient.refetchQueries({ queryKey: ["items_paginated"] });
       queryClient.refetchQueries({ queryKey: ["vouchers"] });

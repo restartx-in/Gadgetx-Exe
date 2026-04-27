@@ -17,7 +17,6 @@ import InputField from "@/components/InputField";
 import Button from "@/components/Button";
 import CancelButton from "@/components/CancelButton";
 import SubmitButton from "@/components/SubmitButton";
-import SelectField from "@/components/SelectField";
 import { useIsMobile } from "@/utils/useIsMobile";
 import { onFormError } from "@/utils/formUtils";
 import {
@@ -41,10 +40,6 @@ const saleSchema = z.object({
     .refine((val) => val !== "" && val !== null, "Please select a customer"),
   done_by_id: z.any().optional().nullable(),
   cost_center_id: z.any().optional().nullable(),
-  prescription_id: z.any().optional().nullable(),
-  order_status: z.string().default("pending"),
-  expected_delivery: z.string().optional().nullable(),
-  actual_delivery: z.string().optional().nullable(),
   status: z.string().default("pending"),
   discount: z.coerce.number().min(0).default(0),
   invoice_number: z.any().optional(),
@@ -77,7 +72,6 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
     useTransactionFieldPermissions,
     useUpdateTransactionFieldPermissions,
     useTransactionTableFieldsSettings,
-    usePrescriptions,
   } = hooks;
 
   const {
@@ -93,8 +87,6 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
     ThreeDotActionMenu,
     ViewButtonForReceiptAndPayment,
     ReceiptModal,
-    PrescriptionSection,
-    PrescriptionModal,
   } = components;
 
   const { API_UPLOADS_BASE, buildUploadUrl } = config;
@@ -120,21 +112,12 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [selectedSaleForReceipt, setSelectedSaleForReceipt] = useState(null);
 
-  const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
-  const [prescriptionModalMode, setPrescriptionModalMode] = useState("add");
-  const [selectedPrescriptionForEdit, setSelectedPrescriptionForEdit] =
-    useState(null);
-
   const defaultValues = {
     saleDate: new Date().toISOString(),
     partyId: "",
     orderItems: [],
     done_by_id: "",
     cost_center_id: "",
-    prescription_id: "",
-    order_status: "pending",
-    expected_delivery: null,
-    actual_delivery: null,
     status: "pending",
     discount: 0,
     invoice_number: "",
@@ -150,16 +133,11 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
   const watchedItems = watch("orderItems");
   const watchedDiscount = watch("discount");
   const watchedFormData = watch();
-  const partyId = watchedFormData.partyId;
 
   // ----- Data Fetching -----
   const { data: saleData, isLoading: isFetchingSale } = useSalesById(id);
   const { data: customers = [] } = useCustomers();
   const { data: accounts = [] } = useAccounts();
-  const { data: prescriptionsData = [] } = usePrescriptions(
-    partyId ? { customer_id: partyId, sort: "-id" } : { _skip: true },
-    { enabled: !!partyId },
-  );
   const { data: items = [] } = useItem();
   const { data: modeOfPaymentList = [] } = useModeOfPayments();
   const { mutateAsync: createSale, isPending: isCreating } = useCreateSales();
@@ -181,18 +159,6 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
     useUpdateTransactionFieldPermissions();
 
   const [extraFields, setExtraFields] = useState([]);
-  const watchedStatus = watch("order_status");
-
-  useEffect(() => {
-    if (watchedStatus === "completed") {
-      const currentActual = getValues("actual_delivery");
-      if (!currentActual) {
-        setValue("actual_delivery", new Date().toISOString());
-      }
-    } else {
-      setValue("actual_delivery", null);
-    }
-  }, [watchedStatus]);
 
   useEffect(() => {
     if (isLoadingPermissions) return;
@@ -281,104 +247,6 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
     [itemsSubtotal, watchedDiscount],
   );
 
-  const selectedCustomerInfo = useMemo(() => {
-    if (!customers?.length || !partyId) return null;
-    return customers.find((c) => String(c.id) === String(partyId));
-  }, [customers, partyId]);
-
-  const myPrescriptionData = useMemo(() => {
-    if (!partyId || !prescriptionsData?.length) return null;
-    const latest = prescriptionsData[0];
-    return {
-      ...latest,
-      name:
-        latest.customer?.name ||
-        latest.customer_name ||
-        latest.name ||
-        selectedCustomerInfo?.name ||
-        "",
-      phone:
-        latest.customer?.phone ||
-        latest.customer?.mobile ||
-        latest.customer_phone ||
-        latest.customer_mobile ||
-        latest.phone ||
-        latest.mobile ||
-        selectedCustomerInfo?.phone ||
-        selectedCustomerInfo?.mobile ||
-        "",
-      email:
-        latest.customer?.email ||
-        latest.customer_email ||
-        latest.email ||
-        selectedCustomerInfo?.email ||
-        "",
-      address:
-        latest.customer?.address ||
-        latest.customer_address ||
-        latest.address ||
-        selectedCustomerInfo?.address ||
-        "",
-      gender:
-        latest.customer?.gender ||
-        latest.customer_gender ||
-        latest.gender ||
-        selectedCustomerInfo?.gender ||
-        null,
-      age:
-        latest.customer?.age ||
-        latest.customer_age ||
-        latest.age ||
-        selectedCustomerInfo?.age ||
-        "",
-      note: latest.remarks || latest.note || "",
-      prescription_date: latest.prescription_date
-        ? latest.prescription_date.split("T")[0]
-        : "",
-      next_visit_date: latest.next_visit_date
-        ? latest.next_visit_date.split("T")[0]
-        : "",
-    };
-  }, [prescriptionsData, selectedCustomerInfo, partyId]);
-
-  const handleOpenPrescriptionModal = () => {
-    if (myPrescriptionData) {
-      setPrescriptionModalMode("edit");
-      setSelectedPrescriptionForEdit(myPrescriptionData);
-    } else if (selectedCustomerInfo) {
-      setPrescriptionModalMode("add");
-      setSelectedPrescriptionForEdit({
-        name: selectedCustomerInfo.name,
-        phone: selectedCustomerInfo.phone || selectedCustomerInfo.mobile,
-        email: selectedCustomerInfo.email,
-        address: selectedCustomerInfo.address,
-        gender: selectedCustomerInfo.gender,
-        age: selectedCustomerInfo.age,
-        customer_id: selectedCustomerInfo.id,
-      });
-    } else {
-      setPrescriptionModalMode("add");
-      setSelectedPrescriptionForEdit(null);
-    }
-    setIsPrescriptionModalOpen(true);
-  };
-
-  const handleAddNewPrescription = () => {
-    if (selectedCustomerInfo) {
-      setPrescriptionModalMode("add");
-      setSelectedPrescriptionForEdit({
-        name: selectedCustomerInfo.name,
-        phone: selectedCustomerInfo.phone || selectedCustomerInfo.mobile,
-        email: selectedCustomerInfo.email,
-        address: selectedCustomerInfo.address,
-        gender: selectedCustomerInfo.gender,
-        age: selectedCustomerInfo.age,
-        customer_id: selectedCustomerInfo.id,
-      });
-      setIsPrescriptionModalOpen(true);
-    }
-  };
-
   // ----- Drafts & Loading Existing -----
   useEffect(() => {
     if (mode === "add") {
@@ -414,17 +282,13 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
         };
       });
       reset({
-        saleDate: saleData.order_date,
+        saleDate: saleData.date,
         partyId: saleData.party_id,
         done_by_id: saleData.done_by_id || "",
         cost_center_id: saleData.cost_center_id || "",
-        prescription_id: saleData.items?.[0]?.prescription_id || "",
-        order_status: saleData.order_status || "pending",
-        expected_delivery: saleData.expected_delivery || null,
-        actual_delivery: saleData.actual_delivery || null,
         discount: parseFloat(saleData.discount) || 0,
         orderItems: loadedItems,
-        status: saleData.payment_status || "unpaid",
+        status: saleData.status || "unpaid",
         invoice_number: saleData.invoice_number,
         change_return: parseFloat(saleData.change_return) || 0,
       });
@@ -465,6 +329,14 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
         },
       ]);
     }
+  };
+
+  const handleRemoveItem = (itemIdToRemove) => {
+    const currentItems = getValues("orderItems");
+    const updatedItems = currentItems.filter(
+      (item) => item.id !== itemIdToRemove,
+    );
+    setValue("orderItems", updatedItems);
   };
 
   const getPrintSettingsAndStore = () => {
@@ -534,10 +406,7 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
       party_id: formData.partyId,
       done_by_id: formData.done_by_id || null,
       cost_center_id: formData.cost_center_id || null,
-      order_status: formData.order_status,
-      expected_delivery: formData.expected_delivery || null,
-      actual_delivery: formData.actual_delivery || null,
-      payment_status: paymentData.status,
+      status: paymentData.status,
       paid_amount:
         paymentData.payment_methods?.reduce(
           (a, c) => a + (parseFloat(c.amount) || 0),
@@ -545,7 +414,7 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
         ) || 0,
       change_return: paymentData.change_return || 0,
       discount: formData.discount,
-      order_date: formData.saleDate,
+      date: formData.saleDate,
       invoice_number: id
         ? formData.invoice_number
         : invoiceNoData?.invoice_number,
@@ -553,7 +422,6 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
         item_id: i.id,
         quantity: i.quantity,
         unit_price: i.price,
-        prescription_id: myPrescriptionData?.id || null,
       })),
       payment_methods: paymentData.payment_methods,
       note: paymentData.note,
@@ -584,7 +452,7 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
           id: response?.data?.id || id,
           invoice_number:
             response?.data?.invoice_number || payload.invoice_number,
-          date: payload.order_date,
+          date: payload.date,
           store: getPrintSettingsAndStore(),
           partner: {
             label: "Customer",
@@ -700,8 +568,10 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
         <div className="sale-page__form-container">
           <ScrollContainer>
             <div className="sale-page__form-content">
-              {/* Switch from HStack to this div to enable your CSS Grid */}
-              <div className="sale-page__top-fields">
+              <HStack
+                justifyContent="flex-start"
+                style={{ marginTop: "5px", flexWrap: "wrap" }}
+              >
                 <Controller
                   name="partyId"
                   control={control}
@@ -713,240 +583,178 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
                     />
                   )}
                 />
-
-                <Controller
-                  name="done_by_id"
-                  control={control}
-                  render={({ field }) => (
-                    <DoneByAutoCompleteWithAddOption
-                      {...field}
-                      label="Done By"
-                      placeholder=""
-                      disabled={isViewMode}
-                    />
-                  )}
-                />
-
-                <Controller
-                  name="cost_center_id"
-                  control={control}
-                  render={({ field }) => (
-                    <CostCenterAutoCompleteWithAddOption
-                      {...field}
-                      label="Cost Center"
-                      placeholder=""
-                      disabled={isViewMode}
-                    />
-                  )}
-                />
-
-               
-
-                <Controller
-                  name="expected_delivery"
-                  control={control}
-                  render={({ field }) => (
-                    <DateField
-                      label="Expected Delivery"
-                      value={field.value ? new Date(field.value) : null}
-                      onChange={(date) =>
-                        field.onChange(date ? date.toISOString() : null)
-                      }
-                      disabled={isViewMode}
-                    />
-                  )}
-                />
-
                 <Controller
                   name="saleDate"
                   control={control}
                   render={({ field }) => (
                     <DateField
-                      label="Order Date"
+                      label="Date "
                       value={new Date(field.value)}
                       onChange={(date) => field.onChange(date.toISOString())}
                       disabled={isViewMode}
                     />
                   )}
                 />
-                 <Controller
-                  name="order_status"
-                  control={control}
-                  render={({ field }) => (
-                    <SelectField
-                      {...field}
-                      label="Order Status"
-                      options={[
-                        { label: "Pending", value: "pending" },
-                        { label: "Completed", value: "completed" },
-                      ]}
-                      disabled={isViewMode}
-                    />
-                  )}
-                />
-              </div>
+                <HStack>
+                  <Controller
+                    name="done_by_id"
+                    control={control}
+                    render={({ field }) => (
+                      <DoneByAutoCompleteWithAddOption
+                        {...field}
+                        placeholder="Done By"
+                        disabled={isViewMode}
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="cost_center_id"
+                    control={control}
+                    render={({ field }) => (
+                      <CostCenterAutoCompleteWithAddOption
+                        {...field}
+                        placeholder="Cost Center"
+                        disabled={isViewMode}
+                      />
+                    )}
+                  />
+                </HStack>
+              </HStack>
 
-              <div className="sale-page__content-row">
-                {partyId && (
-                  <div className="sale-page__prescription-panel">
-                    <PrescriptionSection
-                      data={myPrescriptionData}
-                      onEdit={handleOpenPrescriptionModal}
-                      onAddNew={handleAddNewPrescription}
-                    />
-                  </div>
-                )}
-                <div className="sale-page__order-table">
-                  <Table>
-                    <Thead>
-                      <Tr>
-                        <Th style={{ width: "40%", padding: 0 }}>
-                          {!isViewMode ? (
-                            <div className="fs14" style={{ padding: "8px" }}>
-                              <ItemAutoCompleteWithAddOption
-                                style={{ width: "100%" }}
-                                ref={itemSearchRef}
-                                placeholder="Select items..."
-                                onChange={(e) =>
-                                  handleProductSelect(e.target.value)
-                                }
-                              />
+              <div className="sale-page__order-table">
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th style={{ width: "40%", padding: 0 }}>
+                        {!isViewMode ? (
+                          <div className="fs14" style={{ padding: "8px" }}>
+                            <ItemAutoCompleteWithAddOption
+                              style={{ width: "100%" }}
+                              ref={itemSearchRef}
+                              placeholder="Select items..."
+                              onChange={(e) =>
+                                handleProductSelect(e.target.value)
+                              }
+                            />
+                          </div>
+                        ) : (
+                          "PRODUCT"
+                        )}
+                      </Th>
+                      {extraFields
+                        .filter((f) => f.show)
+                        .map((field) => {
+                          if (field.value === "price" && !isMobile)
+                            return <Th key="price">PRICE</Th>;
+                          if (field.value === "stock" && !isMobile)
+                            return <Th key="stock">STOCK</Th>;
+                          if (field.value === "quantity")
+                            return <Th key="quantity">QTY</Th>;
+                          if (field.value === "tax" && !isMobile)
+                            return <Th key="tax">TAX</Th>;
+                          if (field.value === "sub_total")
+                            return <Th key="sub_total">SUBTOTAL</Th>;
+                          return null;
+                        })}
+                      <Th>ACTION</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {itemsWithCalculations.length > 0 ? (
+                      itemsWithCalculations.map((item) => (
+                        <Tr key={item.id}>
+                          <Td>
+                            <div style={{ paddingLeft: "12px" }}>
+                              {item.name}
                             </div>
-                          ) : (
-                            "PRODUCT"
-                          )}
-                        </Th>
-                        {extraFields
-                          .filter((f) => f.show)
-                          .map((field) => {
-                            if (field.value === "price" && !isMobile)
-                              return <Th key="price">PRICE</Th>;
-                            if (field.value === "stock" && !isMobile)
-                              return <Th key="stock">STOCK</Th>;
-                            if (field.value === "quantity")
-                              return <Th key="quantity">QTY</Th>;
-                            if (field.value === "tax" && !isMobile)
-                              return <Th key="tax">TAX</Th>;
-                            if (field.value === "sub_total")
-                              return <Th key="sub_total">SUBTOTAL</Th>;
-                            return null;
-                          })}
-                        <Th>ACTION</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {itemsWithCalculations.length > 0 ? (
-                        itemsWithCalculations.map((item) => (
-                          <Tr key={item.id}>
-                            <Td>
-                              <div style={{ paddingLeft: "12px" }}>
-                                {item.name}
-                              </div>
-                            </Td>
-                            {extraFields
-                              .filter((f) => f.show)
-                              .map((field) => {
-                                if (field.value === "price" && !isMobile)
-                                  return (
-                                    <Td key="price">
-                                      <AmountSymbol>{item.price}</AmountSymbol>
-                                    </Td>
-                                  );
-                                if (field.value === "stock" && !isMobile)
-                                  return (
-                                    <Td key="stock">
-                                      <span className="stock-badge">
-                                        {item.stock}
-                                      </span>
-                                    </Td>
-                                  );
-                                if (field.value === "quantity")
-                                  return (
-                                    <Td key="quantity">
-                                      <QuantitySelector
-                                        initialValue={item.quantity}
-                                        onChange={(q) =>
-                                          setValue(
-                                            "orderItems",
-                                            getValues("orderItems").map((i) =>
-                                              i.id === item.id
-                                                ? { ...i, quantity: q }
-                                                : i,
-                                            ),
-                                          )
-                                        }
-                                        min={1}
-                                        max={item.stock}
-                                        disabled={isViewMode}
-                                      />
-                                    </Td>
-                                  );
-                                if (field.value === "tax" && !isMobile)
-                                  return (
-                                    <Td key="tax">
-                                      <AmountSymbol>
-                                        {item.taxAmount}
-                                      </AmountSymbol>
-                                    </Td>
-                                  );
-                                if (field.value === "sub_total")
-                                  return (
-                                    <Td key="sub_total">
-                                      <AmountSymbol>
-                                        {item.subtotal}
-                                      </AmountSymbol>
-                                    </Td>
-                                  );
-                                return null;
-                              })}
-                            <Td>
-                              {isMobile ? (
-                                <ThreeDotActionMenu
-                                  onView={() => {
-                                    setViewItemId(item.id);
-                                    setIsViewItemModalOpen(true);
-                                  }}
-                                  onDelete={() =>
-                                    setValue(
-                                      "orderItems",
-                                      getValues("orderItems").filter(
-                                        (i) => i.id !== item.id,
-                                      ),
-                                    )
-                                  }
-                                  isViewMode={isViewMode}
-                                />
-                              ) : (
-                                !isViewMode && (
-                                  <button
-                                    type="button"
-                                    className="action-btn delete-btn"
-                                    onClick={() =>
-                                      setValue(
-                                        "orderItems",
-                                        getValues("orderItems").filter(
-                                          (i) => i.id !== item.id,
-                                        ),
-                                      )
-                                    }
-                                  >
-                                    <FaTrash />
-                                  </button>
-                                )
-                              )}
-                            </Td>
-                          </Tr>
-                        ))
-                      ) : (
-                        <TableCaption
-                          item="Products"
-                          noOfCol={extraFields.filter((f) => f.show).length + 2}
-                          message="No products added."
-                        />
-                      )}
-                    </Tbody>
-                  </Table>
-                </div>
+                          </Td>
+                          {extraFields
+                            .filter((f) => f.show)
+                            .map((field) => {
+                              if (field.value === "price" && !isMobile)
+                                return (
+                                  <Td key="price">
+                                    <AmountSymbol>{item.price}</AmountSymbol>
+                                  </Td>
+                                );
+                              if (field.value === "stock" && !isMobile)
+                                return (
+                                  <Td key="stock">
+                                    <span className="stock-badge">
+                                      {item.stock}
+                                    </span>
+                                  </Td>
+                                );
+                              if (field.value === "quantity")
+                                return (
+                                  <Td key="quantity">
+                                    <QuantitySelector
+                                      initialValue={item.quantity}
+                                      onChange={(q) =>
+                                        setValue(
+                                          "orderItems",
+                                          getValues("orderItems").map((i) =>
+                                            i.id === item.id
+                                              ? { ...i, quantity: q }
+                                              : i,
+                                          ),
+                                        )
+                                      }
+                                      min={1}
+                                      max={item.stock}
+                                      disabled={isViewMode}
+                                    />
+                                  </Td>
+                                );
+                              if (field.value === "tax" && !isMobile)
+                                return (
+                                  <Td key="tax">
+                                    <AmountSymbol>
+                                      {item.taxAmount}
+                                    </AmountSymbol>
+                                  </Td>
+                                );
+                              if (field.value === "sub_total")
+                                return (
+                                  <Td key="sub_total">
+                                    <AmountSymbol>{item.subtotal}</AmountSymbol>
+                                  </Td>
+                                );
+                              return null;
+                            })}
+                          <Td>
+                            {isMobile ? (
+                              <ThreeDotActionMenu
+                                onView={() => {
+                                  setViewItemId(item.id);
+                                  setIsViewItemModalOpen(true);
+                                }}
+                                onDelete={() => handleRemoveItem(item.id)}
+                                isViewMode={isViewMode}
+                              />
+                            ) : (
+                              !isViewMode && (
+                                <button
+                                  type="button"
+                                  className="action-btn delete-btn"
+                                  onClick={() => handleRemoveItem(item.id)}
+                                >
+                                  <FaTrash />
+                                </button>
+                              )
+                            )}
+                          </Td>
+                        </Tr>
+                      ))
+                    ) : (
+                      <TableCaption
+                        item="Products"
+                        noOfCol={extraFields.filter((f) => f.show).length + 2}
+                        message="No products added."
+                      />
+                    )}
+                  </Tbody>
+                </Table>
               </div>
             </div>
           </ScrollContainer>
@@ -1071,12 +879,6 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
           accounts={accounts}
           initialPayments={existingPayments}
           mode={mode}
-        />
-        <PrescriptionModal
-          isOpen={isPrescriptionModalOpen}
-          onClose={() => setIsPrescriptionModalOpen(false)}
-          mode={prescriptionModalMode}
-          initialData={selectedPrescriptionForEdit}
         />
         <ItemDetailModal
           isOpen={isViewItemModalOpen}

@@ -11,7 +11,7 @@ import { useModeOfPayments } from "@/apps/user/hooks/api/modeOfPayment/useModeOf
 import { useTransactionTableFieldsSettings } from "@/apps/user/hooks/api/transactionFieldPermissions/useTransactionTableFieldsSettings";
 import { useTransactionFieldPermissions } from "@/apps/user/hooks/api/transactionFieldPermissions/useTransactionFieldPermissions";
 import {useUpdateTransactionFieldPermissions } from "@/apps/user/hooks/api/transactionFieldPermissions/useUpdateTransactionFieldPermissions";
-import { usePrescriptions } from "@/apps/user/hooks/api/prescription/usePrescriptions";
+
 // Components
 import AmountSymbol from "@/apps/user/components/AmountSymbol";
 import IconBackButton from "@/apps/user/components/IconBackButton";
@@ -25,8 +25,6 @@ import PaymentModal from "@/apps/user/pages/POS/components/PaymentModal";
 import ThreeDotActionMenu from "@/apps/user/components/ThreeDotActionMenu";
 import ViewButtonForReceiptAndPayment from "@/apps/user/components/ViewButtonForReceiptAndPayment";
 import ReceiptModal from "@/apps/user/components/ReceiptModal";
-import PrescriptionSaleSection from "@/pages/CommonSale/components/PrescriptionSaleSection";
-import PrescriptionSaleModal from "@/pages/CommonSale/components/PrescriptionSaleModal";
 
 import { API_UPLOADS_BASE, buildUploadUrl } from "@/config/api";
 
@@ -45,7 +43,6 @@ const Sale = () => {
     useTransactionTableFieldsSettings,
     useTransactionFieldPermissions,
     useUpdateTransactionFieldPermissions,
-    usePrescriptions,
   };
 
   const components = {
@@ -61,8 +58,6 @@ const Sale = () => {
     ThreeDotActionMenu,
     ViewButtonForReceiptAndPayment,
     ReceiptModal,
-    PrescriptionSection: PrescriptionSaleSection,
-    PrescriptionModal: PrescriptionSaleModal,
   };
 
   const config = { API_UPLOADS_BASE, buildUploadUrl };

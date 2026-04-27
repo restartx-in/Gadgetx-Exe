@@ -24,7 +24,6 @@ const createSaleReturnTable = require("../../api/saleReturn/saleReturn.table.js"
 const createSalesTable = require("../../api/sales/sales.table.js");
 const createDoneByTable = require("../../api/doneBy/doneBy.table.js");
 const createCostCenterTable = require("../../api/costCenter/costcenter.table.js");
-// const createPrescriptionTable = require("../../api/Prescriptions/prescription.table.js");
 // const createServicesTable = require("../../api/services/services.table.js");
 const createAccountTable = require("../../api/account/account.table.js");
 const createPartnerTable = require("../../api/partner/partner.table.js");
@@ -88,7 +87,6 @@ const createTables = async () => {
     await createPurchaseItemTable(client);
     await createPurchaseReturnTable(client);
     await createSalesTable(client);
-    // await createPrescriptionTable(client);
     await createSaleItemTable(client);
     await createPrintSettingsTable(client);
     await createSaleReturnTable(client);

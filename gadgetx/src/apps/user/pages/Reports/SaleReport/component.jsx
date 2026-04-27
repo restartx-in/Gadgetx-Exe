@@ -13,7 +13,7 @@ import { useReportFieldPermissions } from "@/apps/user/hooks/api/reportFieldPerm
 import { useReportTableFieldsSettings } from "@/apps/user/hooks/api/reportFieldPermissions/useReportTableFieldsSettings";
 import { useUpdateReportFieldPermissions } from "@/apps/user/hooks/api/reportFieldPermissions/useUpdateReportFieldPermissions";
 import { useCreateReportFieldPermissions } from "@/apps/user/hooks/api/reportFieldPermissions/useCreateReportFieldPermissions";
-
+import "./style.scss";
 // Components
 import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import DotMenu from "@/apps/user/components/DotMenu/component";
@@ -29,10 +29,12 @@ import DoneByAutoComplete from "@/apps/user/components/DoneByAutoComplete";
 import CostCenterAutoComplete from "@/apps/user/components/CostCenterAutoComplete";
 import StatusButton from "@/apps/user/components/StatusButton";
 
+// Config/Utils
 import { getSaleMenuItems } from "@/config/menuItems.jsx";
 import { API_UPLOADS_BASE, buildUploadUrl } from "@/config/api";
 import { Report } from "@/constants/object/report";
 
+// Common Report Component
 import CommonSaleReport from "@/pages/CommonSaleReport";
 
 const SaleReport = () => {

@@ -11,13 +11,12 @@ async function fetchPaginatedSales(filters) {
   return res.data || [];
 }
 
-export function useSalesPaginated(filters = {}, options = {}) {
+export function useSalesPaginated(filters = {}) {
   return useQuery({
     queryKey: ["sales_paginated", filters],
     queryFn: () => fetchPaginatedSales(filters),
     gcTime: Infinity,
     staleTime: Infinity,
-    ...options,
   });
 }
 export default useSalesPaginated;
