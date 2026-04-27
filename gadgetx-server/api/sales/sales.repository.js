@@ -18,6 +18,7 @@ class SalesRepository {
                 p.ledger_id as party_ledger_id, -- Fetch Ledger ID
                 db.name as done_by_name,      
                 cc.name as cost_center_name,
+                l.name as ledger_name,
                 (
                   SELECT json_agg(json_build_object(
                     'voucher_id', v.id,
@@ -36,6 +37,7 @@ class SalesRepository {
             JOIN party p ON s.party_id = p.id 
             LEFT JOIN "done_by" db ON s.done_by_id = db.id
             LEFT JOIN "cost_center" cc ON s.cost_center_id = cc.id
+            LEFT JOIN ledger l ON s.ledger_id = l.id
             WHERE s.tenant_id = $1
         `
     const params = [tenantId]
@@ -169,6 +171,7 @@ class SalesRepository {
         JOIN party p ON s.party_id = p.id 
         LEFT JOIN "done_by" db ON s.done_by_id = db.id
         LEFT JOIN "cost_center" cc ON s.cost_center_id = cc.id
+        LEFT JOIN ledger l ON s.ledger_id = l.id
     `
     let whereClause = ` WHERE s.tenant_id = $1 `
     const params = [tenantId]
@@ -258,6 +261,7 @@ class SalesRepository {
               p.ledger_id as party_ledger_id, -- Fetch Ledger ID
               db.name as done_by_name,      
               cc.name as cost_center_name,
+              l.name as ledger_name,
               COUNT(*) OVER() as total_count,
               (
                 SELECT json_agg(json_build_object(
@@ -343,8 +347,8 @@ class SalesRepository {
       const initialStatus = 'unpaid';
 
       const insertSaleQuery = `
-        INSERT INTO sales(tenant_id, party_id, done_by_id, cost_center_id, total_amount, paid_amount, change_return, discount, date, status, note, invoice_number)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        INSERT INTO sales(tenant_id, party_id, done_by_id, cost_center_id, total_amount, paid_amount, change_return, discount, date, status, note, invoice_number, ledger_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING *;
       `
       const saleResult = await client.query(insertSaleQuery, [
@@ -360,6 +364,7 @@ class SalesRepository {
         initialStatus,
         note,
         invoice_number,
+        saleData.ledger_id,
       ])
       const newSale = saleResult.rows[0]
 
@@ -399,8 +404,8 @@ class SalesRepository {
       const updateSaleQuery = `
         UPDATE sales
         SET party_id = $1, total_amount = $2, discount = $3, 
-            date = $4, done_by_id = $5, cost_center_id = $6, note = $7, invoice_number = $8, change_return = $9
-        WHERE id = $10 AND tenant_id = $11
+            date = $4, done_by_id = $5, cost_center_id = $6, note = $7, invoice_number = $8, change_return = $9, ledger_id = $10
+        WHERE id = $11 AND tenant_id = $12
         RETURNING *;
       `
       await client.query(updateSaleQuery, [
@@ -413,6 +418,7 @@ class SalesRepository {
         note,
         invoice_number,
         change_return,
+        saleData.ledger_id,
         id,
         tenantId,
       ])
@@ -444,6 +450,7 @@ class SalesRepository {
         s.*,
         p.name as party_name,
         p.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
+        l.name as ledger_name,
         (
           SELECT json_agg(json_build_object(
             'id', si.id,
@@ -500,6 +507,7 @@ class SalesRepository {
         ) as store
       FROM sales s
       LEFT JOIN party p ON s.party_id = p.id
+      LEFT JOIN ledger l ON s.ledger_id = l.id
       LEFT JOIN print_settings ps ON s.tenant_id = ps.tenant_id
       WHERE s.id = $1 AND s.tenant_id = $2;  
     `

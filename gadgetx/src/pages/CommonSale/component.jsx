@@ -423,6 +423,7 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
         quantity: i.quantity,
         unit_price: i.price,
       })),
+      ledger_id: paymentData.payment_methods?.[0]?.account_id || null,
       payment_methods: paymentData.payment_methods,
       note: paymentData.note,
     };
@@ -504,13 +505,18 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
 
   const handleProcessPayment = () => {
     if (isCredit) {
+      const defaultMOP = modeOfPaymentList?.find(m => m.name.toLowerCase().includes("cash")) || modeOfPaymentList?.[0];
       handleFinalSubmit(
         {
           status: "unpaid",
           paid_amount: 0,
           change_return: 0,
           payment_methods: [
-            { account_id: "credit", amount: 0, mode_of_payment_id: null },
+            { 
+              account_id: defaultMOP?.default_ledger_id || null, 
+              amount: 0, 
+              mode_of_payment_id: defaultMOP?.id || null 
+            },
           ],
           note: "Credit Sale",
         },
