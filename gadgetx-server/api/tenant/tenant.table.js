@@ -1,22 +1,22 @@
 module.exports = async (client) => {
   try {
     const result = await client.query(`
-      SELECT name FROM sqlite_master WHERE type='table' AND name='tenant';
+      SELECT to_regclass('public.tenant') AS table_name;
     `)
 
-    const tableExists = result.rows.length > 0
+    const tableExists = result.rows[0].table_name !== null
 
     if (tableExists) {
       console.log('ℹ️ "tenant" table already exists.')
     } else {
       await client.query(`
         CREATE TABLE tenant (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
-            type VARCHAR(50) NOT NULL CHECK (type IN ('vehicle', 'restaurant', 'fitness', 'garage','gadget')),
+            type VARCHAR(50) NOT NULL DEFAULT 'optical',
             plan VARCHAR(50) NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `)
       console.log('✅ "tenant" table has been created.')

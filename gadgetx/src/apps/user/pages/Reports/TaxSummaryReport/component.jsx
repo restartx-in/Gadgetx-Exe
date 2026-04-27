@@ -1,8 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback, useReducer } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, isValid } from "date-fns";
 
-import useTaxSummaryReport from "@/hooks/api/taxSummaryReport/useTaxSummaryReport";
+import useTaxSummaryReport from "@/apps/user/hooks/api/taxSummaryReport/useTaxSummaryReport";
 import { useIsMobile } from "@/utils/useIsMobile";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
 
@@ -10,11 +16,11 @@ import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
 import TitleContainer from "@/components/TitleContainer";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import DateFilter from "@/components/DateFilter";
 import RefreshButton from "@/components/RefreshButton";
 import Loader from "@/components/Loader";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PageHeader from "@/components/PageHeader";
 import HStack from "@/components/HStack/component.jsx";
 import {
@@ -107,7 +113,8 @@ const TaxSummaryReport = () => {
   // --- Handlers (Memoized & UPDATED setState CALLS) ---
   const handleDateFilterChange = useCallback((newDateValue) => {
     setDateFilter(newDateValue);
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       start_date: newDateValue.startDate || "",
       end_date: newDateValue.endDate || "",
     });
@@ -115,7 +122,8 @@ const TaxSummaryReport = () => {
 
   const handleRefresh = useCallback(() => {
     setDateFilter({ startDate: null, endDate: null, rangeType: "custom" });
-    setState({ // Simplified setState (full reset object)
+    setState({
+      // Simplified setState (full reset object)
       start_date: "",
       end_date: "",
     });
@@ -139,7 +147,7 @@ const TaxSummaryReport = () => {
       isValid(new Date(endDate));
 
     return isDateFilterActive
-      ? `${format(new Date(startDate), "MMM d, yyyy")} → ${format(
+      ? `${format(new Date(startDate), "MMM d, yyyy")} to ${format(
           new Date(endDate),
           "MMM d, yyyy"
         )}`

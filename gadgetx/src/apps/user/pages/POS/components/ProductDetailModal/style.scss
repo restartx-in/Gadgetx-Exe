@@ -1,0 +1,133 @@
+.product-detail-modal {
+  padding: 0.5rem;
+  max-width: 480px;
+
+  &__image {
+    text-align: center;
+    margin-bottom: 1rem;
+
+    img {
+      max-width: 160px;
+      max-height: 160px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+  }
+
+  &__name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+    color: #1f2937;
+    text-align: center;
+  }
+
+  &__desc {
+    font-size: 0.85rem;
+    color: #6b7280;
+    text-align: center;
+    margin: 0 0 1rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+
+    .label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.2rem;
+    }
+
+    .value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #1f2937;
+
+      &.in-stock {
+        color: #10b981;
+      }
+
+      &.low-stock {
+        color: #f59e0b;
+      }
+
+      &.profit {
+        color: #10b981;
+
+        .margin {
+          font-size: 0.8rem;
+          font-weight: 400;
+          color: #6b7280;
+        }
+      }
+    }
+
+    &.highlight {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+
+      .value {
+        color: #2563eb;
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+
+    .btn-add-to-cart {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+      background-color: #3b82f6;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover:not(:disabled) {
+        background-color: #2563eb;
+      }
+
+      &:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn-close {
+      padding: 0.6rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #374151;
+      background-color: #e5e7eb;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: #d1d5db;
+      }
+    }
+  }
+}

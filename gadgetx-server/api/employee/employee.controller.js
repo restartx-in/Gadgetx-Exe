@@ -44,6 +44,9 @@ class EmployeeController {
       const newEmployee = await this.service.create(req.body, req.user, req.db);
       res.status(201).json(newEmployee);
     } catch (error) {
+      if (error.message.includes('already exists')) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
       next(error);
     }
   }
@@ -64,6 +67,9 @@ class EmployeeController {
       }
       res.json(updatedEmployee);
     } catch (error) {
+      if (error.message.includes('already taken')) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
       next(error);
     }
   }

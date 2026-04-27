@@ -1,101 +1,112 @@
-import React, { useState, useEffect, useRef, forwardRef } from 'react';
-import InputAdornment from '@mui/material/InputAdornment';
+import React, { useState, useRef, useEffect, forwardRef } from "react"; // Added forwardRef
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
+import "./style.scss";
 
-// 1. Import Custom Components
-import CustomTextField from '@/components/CustomTextField';
-import CustomScrollbar from '@/components/CustomScrollbar';
-
-import './style.scss';
-
-const Select = forwardRef((
-  {
-    name,
-    value,
-    onChange,
-    options,
-    required = false,
-    disabled = false,
-    className = '',
-    placeholder = '',
-    label,
-    ...rest
-  },
-  ref,
-) => {
+const Select = forwardRef(({
+  name,
+  value,
+  onChange,
+  options = [],
+  label,
+  placeholder = "Select...",
+  disabled = false,
+  required = false,
+  className = "",
+  ...rest
+}, ref) => { 
   const [isOpen, setIsOpen] = useState(false);
+  const [displayValue, setDisplayValue] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef(null);
-  
-  // Note: listRef and the scrolling useEffect are removed 
-  // because CustomScrollbar handles the scrolling via activeIndex.
 
-  // Close dropdown on outside click
+  // Sync display value when the prop value changes
+  useEffect(() => {
+    const selectedOption = options.find((opt) =>
+      typeof opt === "string" ? opt === value : opt.value === value
+    );
+
+    if (selectedOption) {
+      setDisplayValue(
+        typeof selectedOption === "string"
+          ? selectedOption
+          : selectedOption.label
+      );
+    } else {
+      setDisplayValue("");
+    }
+}, [value, options]);
+
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
         setIsOpen(false);
+        setActiveIndex(-1);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  // Highlight selected or first option on open
-  useEffect(() => {
-    if (isOpen) {
-      const currentIndex = options.findIndex((opt) => opt.value === value);
-      setActiveIndex(currentIndex !== -1 ? currentIndex : 0);
-    }
-  }, [isOpen, options, value]);
-
-  const handleOptionClick = (optionValue) => {
-    setIsOpen(false);
-    if (onChange) {
-      const syntheticEvent = {
-        target: { name, value: optionValue },
-      };
-      onChange(syntheticEvent);
+  const handleToggle = () => {
+    if (!disabled) {
+      setIsOpen((prev) => !prev);
     }
   };
-  
-  // Handle keyboard navigation
+
+  const handleSelect = (option) => {
+    const optionValue = typeof option === "string" ? option : option.value;
+
+    const simulatedEvent = {
+      target: {
+        name: name,
+        value: optionValue,
+      },
+    };
+
+    if (onChange) {
+      onChange(simulatedEvent);
+    }
+    setIsOpen(false);
+    setActiveIndex(-1);
+  };
+
   const handleKeyDown = (e) => {
     if (disabled) return;
 
+    if (!isOpen) {
+      if (e.key === "Enter" || e.key === "ArrowDown" || e.key === " ") {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+      return;
+    }
+
+    const itemsCount = options.length;
+
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
-        if (!isOpen) {
-          setIsOpen(true);
-        } else {
-          setActiveIndex((prevIndex) =>
-            prevIndex < options.length - 1 ? prevIndex + 1 : 0
-          );
+        setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActiveIndex(
+          (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
+        );
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (activeIndex >= 0 && activeIndex < options.length) {
+          handleSelect(options[activeIndex]);
         }
         break;
-      case 'ArrowUp':
-        e.preventDefault();
-        if (!isOpen) {
-          setIsOpen(true);
-        } else {
-          setActiveIndex((prevIndex) =>
-            prevIndex > 0 ? prevIndex - 1 : options.length - 1
-          );
-        }
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (isOpen) {
-          if (activeIndex >= 0) {
-            handleOptionClick(options[activeIndex].value);
-          }
-        } else {
-          setIsOpen(true);
-        }
-        break;
-      case 'Escape':
+      case "Escape":
+      case "Tab":
         setIsOpen(false);
         break;
       default:
@@ -103,80 +114,82 @@ const Select = forwardRef((
     }
   };
 
-  const getSelectedLabel = () => {
-    const selectedOption = options.find((opt) => opt.value === value);
-    return selectedOption ? selectedOption.label : '';
-  };
-
   return (
     <div
-      className={`custom_select_wrapperr ${className} ${disabled ? 'disabled' : ''}`}
       ref={wrapperRef}
+      className={`custom-select-box ${className}`}
     >
       <CustomTextField
-        ref={ref}
+        id={name}
+        name={name}
         label={label}
-        value={getSelectedLabel()}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        onKeyDown={handleKeyDown}
+        value={displayValue}
+        inputRef={ref} 
         placeholder={placeholder}
-        disabled={disabled}
         required={required}
-        fullWidth
-        variant="outlined"
+        disabled={disabled}
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
         autoComplete="off"
-        className="custom_select_headerr"
-        InputProps={{
-          readOnly: true, // Prevents typing, acts like a button
-          endAdornment: (
-            <InputAdornment position="end">
-              <span className={`custom_select_chevronn ${isOpen ? 'open' : ''}`}></span>
-            </InputAdornment>
-          ),
-          style: { cursor: disabled ? 'not-allowed' : 'pointer' }
-        }}
+        // Ensure input is read-only so mobile keyboards don't pop up
         inputProps={{
-          style: { cursor: disabled ? 'not-allowed' : 'pointer' }
+          readOnly: true,
+          style: { cursor: disabled ? "default" : "pointer" },
         }}
-        slotProps={{
-            htmlInput: {
-              autoComplete: 'off',
-              ...rest
-            },
-            inputLabel: {
-              required: false // Hides asterisk
-            }
-          }}
+        InputProps={{
+          endAdornment: (
+            <div className={`custom-select-box__chevron ${isOpen ? "open" : ""}`}>
+              <i className="chevron-icon" />
+            </div>
+          ),
+        }}
         {...rest}
       />
 
       {isOpen && (
-        <CustomScrollbar 
-          className="custom_select_listt" 
+        <CustomScrollbar
+          className="custom-select-box__dropdown"
           activeIndex={activeIndex}
           as="ul"
         >
-          {options.map((opt, index) => (
+          {options.length > 0 ? (
+            options.map((opt, index) => {
+              const optionValue = typeof opt === "string" ? opt : opt.value;
+              const optionLabel = typeof opt === "string" ? opt : opt.label;
+              const isSelected = value === optionValue;
+              const isActive = index === activeIndex;
+
+              return (
+                <li
+                  key={optionValue}
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // Prevent text field blur
+                    handleSelect(opt);
+                  }}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  className={`custom-select-box__option ${
+                    isActive ? "active" : ""
+                  } ${isSelected ? "selected" : ""}`}
+                >
+                  <div className="custom-select-box__option-content">
+                    <span style={{ fontWeight: isSelected ? 600 : 400 }}>
+                      {optionLabel}
+                    </span>
+                  </div>
+                </li>
+              );
+            })
+          ) : (
             <li
-              key={opt.value}
-              className={`custom_select_list_itemm ${
-                value === opt.value ? 'selected' : ''
-              } ${index === activeIndex ? 'active' : ''}`}
-              onMouseDown={(e) => {
-                e.preventDefault(); // Prevent focus loss on input
-                handleOptionClick(opt.value);
-              }}
-              onMouseEnter={() => setActiveIndex(index)}
+              className="custom-select-box__option no-data"
             >
-              {opt.label}
+              No options available
             </li>
-          ))}
+          )}
         </CustomScrollbar>
       )}
     </div>
-  );
+);
 });
-
-Select.displayName = 'Select';
 
 export default Select;

@@ -1,17 +1,21 @@
 class TenantRepository {
-
-  async create(db, tenantData) {
-    const { name, type, plan } = tenantData
-    const result = await db.query(
-      `INSERT INTO tenant (name, type, plan)
-       VALUES ($1, $2, $3)`,
-      [name, type, plan]
-    )
-    const tenantId = result.lastID;
-    return this.getById(db, tenantId)
+  constructor(db) {
+    this.db = db
   }
 
-  async getAll(db, filters = {}) {
+  async create(tenantData) {
+    // Default to 'optical' if 'type' is not provided in the request body
+    const { name, type = 'optical', plan } = tenantData
+    const { rows } = await this.db.query(
+      `INSERT INTO tenant (name, type, plan)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [name, type, plan]
+    )
+    return rows[0]
+  }
+
+  async getAll(filters = {}) {
     const { sort, ...otherFilters } = filters
 
     let whereClause = ''
@@ -44,11 +48,11 @@ class TenantRepository {
       ${whereClause}
       ${sortOrder}`
 
-    const { rows } = await db.query(query, params)
+    const { rows } = await this.db.query(query, params)
     return rows
   }
 
-  async getAllWithAdminUser(db, filters = {}) {
+  async getAllWithAdminUser(filters = {}) {
     const { sort, ...otherFilters } = filters
 
     // Start the whereClause with the mandatory role condition
@@ -100,23 +104,23 @@ class TenantRepository {
       ${whereClause}
       ${sortOrder}`
 
-    const { rows } = await db.query(query, params)
+    const { rows } = await this.db.query(query, params)
     return rows
   }
 
-  async getById(db, id) {
-    const { rows } = await db.query('SELECT * FROM tenant WHERE id = $1', [
+  async getById(id) {
+    const { rows } = await this.db.query('SELECT * FROM tenant WHERE id = $1', [
       id,
     ])
     return rows[0]
   }
 
-  async update(db, id, data) {
+  async update(id, data) {
     const fields = Object.keys(data)
     const values = Object.values(data)
 
     if (fields.length === 0) {
-      return this.getById(db, id)
+      return this.getById(id)
     }
 
     const setClause = fields
@@ -126,18 +130,21 @@ class TenantRepository {
     const query = `
       UPDATE tenant
       SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $${fields.length + 1}`
+      WHERE id = $${fields.length + 1}
+      RETURNING *`
+
     const queryValues = [...values, id]
-    await db.query(query, queryValues)
-    return this.getById(db, id)
+
+    const { rows } = await this.db.query(query, queryValues)
+    return rows[0]
   }
 
-  async delete(db, id) {
-    await db.query(
-      'DELETE FROM tenant WHERE id = $1',
+  async delete(id) {
+    const { rows } = await this.db.query(
+      'DELETE FROM tenant WHERE id = $1 RETURNING id',
       [id]
     )
-    return { id }
+    return rows[0]
   }
 }
 

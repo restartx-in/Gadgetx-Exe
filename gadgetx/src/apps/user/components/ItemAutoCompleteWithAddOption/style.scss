@@ -12,7 +12,7 @@ $scrollbar-thumb: #cbd5e1;
     width: 100%;
     
     .MuiOutlinedInput-root {
-      background-color: #fff; /* Fallback to white if var missing */
+      background-color: var(--app-bg, #fff); /* Fallback to white if var missing */
       border-radius: 6px;
 
       fieldset {
@@ -23,8 +23,8 @@ $scrollbar-thumb: #cbd5e1;
 
       /* Focused State */
       &.Mui-focused fieldset {
-        border-color: #1976d2;
-        border-width: 1px;
+        border-color: var(--primary-blue, #1976d2);
+        border-width: 2px;
       }
 
       /* Disabled State */
@@ -94,8 +94,8 @@ $scrollbar-thumb: #cbd5e1;
     transition: background-color var(--transition-fast);
 
     &:hover,
-    &.is-active {
-      background-color: var(--sidbar-Bg);
+    &.active {
+      background-color: var(--sidbar-Bg, #f1f5f9);
     }
     
     &--add {
@@ -129,3 +129,8 @@ $scrollbar-thumb: #cbd5e1;
   }
 }
 
+@media (max-width: 480px) {
+  .iteminput-select {
+    margin-bottom: 12px;
+  }
+}

@@ -1,19 +1,20 @@
+
 import { useEffect, useRef } from 'react'
-import './style.scss' // 👈 styles
+import './style.scss' 
 
 const RangeField = ({
-  label, // Label above the slider
+  label, 
   min = 0,
   max = 1000000,
   minValue,
   maxValue,
   onMinChange,
   onMaxChange,
-  step = 10,
+  step = 1,
+  prefix = '₹', 
 }) => {
   const highlightRef = useRef(null)
 
-  // Prevent crossing
   const handleMinChange = (e) => {
     const value = Math.min(Number(e.target.value), maxValue - step)
     onMinChange(value)
@@ -24,7 +25,6 @@ const RangeField = ({
     onMaxChange(value)
   }
 
-  // Update highlight bar (specific to this RangeField only)
   useEffect(() => {
     if (highlightRef.current) {
       highlightRef.current.style.left = ((minValue - min) / (max - min)) * 100 + '%'
@@ -62,8 +62,8 @@ const RangeField = ({
       </div>
 
       <div className="price-labels-container">
-        <div className="price-label">{minValue}</div>
-        <div className="price-label">{maxValue}</div>
+        <div className="price-label">{prefix}{minValue}</div>
+        <div className="price-label">{prefix}{maxValue}</div>
       </div>
     </div>
   )

@@ -1,13 +1,13 @@
-import { useState, useEffect, forwardRef, useRef, useMemo } from 'react';
-import { usePartners } from '@/hooks/api/partner/usePartners';
-import AddPartner from '@/apps/user/pages/List/PartnerList/components/AddPartner';
-import { HiPencil } from 'react-icons/hi2';
+import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
+import { usePartners } from "@/apps/user/hooks/api/partner/usePartners";
+import AddPartner from "@/apps/user/pages/List/PartnerList/components/AddPartner";
+import { HiPencil } from "react-icons/hi2";
 
 // 1. Import Custom Components
-import CustomTextField from '@/components/CustomTextField';
-import CustomScrollbar from '@/components/CustomScrollbar';
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
 
-import './style.scss';
+import "./style.scss";
 
 const PartnerAutoCompleteWithAddOption = forwardRef(
   (
@@ -15,22 +15,28 @@ const PartnerAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label='Partner',
-      placeholder = 'Select or add a partner',
+      label = "Partner",
+      placeholder = "Select or add a partner",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       filters = {},
       is_edit = true,
       style = {},
     },
-    ref,
+    ref
   ) => {
-    const { data: partners, isLoading, isError, error, refetch } = usePartners(filters);
+    const {
+      data: partners,
+      isLoading,
+      isError,
+      error,
+      refetch,
+    } = usePartners(filters);
     const [partnerOptions, setPartnerOptions] = useState([]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('add');
+    const [modalMode, setModalMode] = useState("add");
     const [selectedPartnerInModal, setSelectedPartnerInModal] = useState(null);
 
     useEffect(() => {
@@ -45,17 +51,17 @@ const PartnerAutoCompleteWithAddOption = forwardRef(
 
     const handleAddNew = (typedValue) => {
       setSelectedPartnerInModal({ name: typedValue });
-      setModalMode('add');
+      setModalMode("add");
       setIsModalOpen(true);
     };
 
     const handleEdit = (option) => {
       const partnerToEdit = partners.find(
-        (partner) => partner.id === option.value,
+        (partner) => partner.id === option.value
       );
       if (partnerToEdit) {
         setSelectedPartnerInModal(partnerToEdit);
-        setModalMode('edit');
+        setModalMode("edit");
         setIsModalOpen(true);
       }
     };
@@ -93,7 +99,7 @@ const PartnerAutoCompleteWithAddOption = forwardRef(
     }
 
     if (isError) {
-      console.error('Failed to load partners:', error);
+      console.error("Failed to load partners:", error);
       return (
         <div className="partnerinput-select">
           <CustomTextField
@@ -136,9 +142,10 @@ const PartnerAutoCompleteWithAddOption = forwardRef(
         />
       </>
     );
-  },
+  }
 );
-PartnerAutoCompleteWithAddOption.displayName = 'PartnerAutoCompleteWithAddOption';
+PartnerAutoCompleteWithAddOption.displayName =
+  "PartnerAutoCompleteWithAddOption";
 
 export default PartnerAutoCompleteWithAddOption;
 
@@ -150,28 +157,28 @@ const PartnerSelectAutocompleteInput = forwardRef(
       onChange,
       options,
       label,
-      placeholder = '',
+      placeholder = "",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       onAddNew,
       onEdit,
       is_edit,
       style = {},
       ...rest
     },
-    ref,
+    ref
   ) => {
     const [showDropdown, setShowDropdown] = useState(false);
-    const [inputValue, setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // REMOVED: dropdownRef and scrolling useEffect
     const hasBeenFocused = useRef(false);
 
     useEffect(() => {
       const selectedOption = options.find((opt) => opt.value === value);
-      setInputValue(selectedOption ? selectedOption.label : '');
+      setInputValue(selectedOption ? selectedOption.label : "");
     }, [value, options]);
 
     const filteredOptions = useMemo(() => {
@@ -179,16 +186,16 @@ const PartnerSelectAutocompleteInput = forwardRef(
         return options;
       }
       return options.filter((opt) =>
-        opt.label.toLowerCase().includes(inputValue.toLowerCase()),
+        opt.label.toLowerCase().includes(inputValue.toLowerCase())
       );
     }, [inputValue, options]);
 
     const exactMatchExists = useMemo(
       () =>
         options.some(
-          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim(),
+          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim()
         ),
-      [inputValue, options],
+      [inputValue, options]
     );
 
     const showAddNewOption = inputValue && !exactMatchExists && onAddNew;
@@ -200,7 +207,7 @@ const PartnerSelectAutocompleteInput = forwardRef(
       setShowDropdown(true);
 
       if (currentInput.length === 0) {
-        onChange({ target: { name, value: '' } });
+        onChange({ target: { name, value: "" } });
       }
     };
 
@@ -240,17 +247,17 @@ const PartnerSelectAutocompleteInput = forwardRef(
       if (itemsCount === 0) return;
 
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           setActiveIndex(
-            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount,
+            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
           );
           break;
-        case 'Enter':
+        case "Enter":
           if (activeIndex < 0) return;
           e.preventDefault();
           if (activeIndex < filteredOptions.length) {
@@ -259,7 +266,7 @@ const PartnerSelectAutocompleteInput = forwardRef(
             handleAddNew();
           }
           break;
-        case 'Escape':
+        case "Escape":
           setShowDropdown(false);
           break;
         default:
@@ -268,9 +275,9 @@ const PartnerSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
+      <div
         // className={`partnerinput-select ${className}`}
-        style={{ ...style, position: 'relative' }}
+        style={{ ...style, position: "relative" }}
       >
         <CustomTextField
           ref={ref}
@@ -308,7 +315,7 @@ const PartnerSelectAutocompleteInput = forwardRef(
                     handleSelectOption(opt);
                   }}
                   className={`partnerinput-select__option ${
-                    index === activeIndex ? 'active' : ''
+                    index === activeIndex ? "active" : ""
                   }`}
                 >
                   <div className="partnerinput-select__option-content">
@@ -328,11 +335,11 @@ const PartnerSelectAutocompleteInput = forwardRef(
             ) : showAddNewOption ? (
               <li
                 onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleAddNew();
+                  e.preventDefault();
+                  handleAddNew();
                 }}
                 className={`partnerinput-select__option partnerinput-select__option--add ${
-                  activeIndex === 0 ? 'active' : ''
+                  activeIndex === 0 ? "active" : ""
                 }`}
               >
                 + Add "{inputValue}"
@@ -342,6 +349,6 @@ const PartnerSelectAutocompleteInput = forwardRef(
         )}
       </div>
     );
-  },
+  }
 );
-PartnerSelectAutocompleteInput.displayName = 'PartnerSelectAutocompleteInput';
+PartnerSelectAutocompleteInput.displayName = "PartnerSelectAutocompleteInput";

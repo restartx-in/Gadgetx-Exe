@@ -118,14 +118,20 @@ class SalesService {
 
     // 5. Create Vouchers for Payments
     if (newSales && validPayments.length > 0) {
-      await this._createVouchersForPayments(newSales, user, validPayments, db);
+      await this._processVouchersForPayments(newSales, user, validPayments, db);
     }
 
-    return this.getById(newSales.id, tenantId, db);
+    const result = await this.getById(newSales.id, tenantId, db);
+    return {
+      status: "success",
+      data: result,
+    };
   }
 
   async update(id, user, saleData, db) {
     const tenantId = user.tenant_id;
+    
+    // 1. Fetch Original Sale (includes existing vouchers/payments)
     const originalSale = await this.repository.getById(db, id, tenantId);
     if (!originalSale) {
       throw new Error("Sale not found or not authorized to update");
@@ -155,14 +161,35 @@ class SalesService {
     );
     const grandTotal = itemsSubtotal - parseFloat(discount);
 
-    const validPayments = payment_methods
+    // 2. Handle Payment Methods (Sync Vouchers)
+    // Filter and map valid payments
+    const validIncomingPayments = payment_methods
       .map((p) => ({
         account_id: p.account_id,
         amount: parseFloat(p.amount) || 0,
         mode_of_payment_id: p.mode_of_payment_id,
+        voucher_id: p.voucher_id, // Ensure ID is passed if it exists
       }))
       .filter((p) => p.amount !== 0 && p.account_id);
 
+    // Collect IDs of incoming vouchers to identify which existing ones should be kept
+    const incomingVoucherIds = new Set(
+        validIncomingPayments
+            .map(p => p.voucher_id)
+            .filter(id => id != null)
+    );
+
+    // Get existing vouchers from the DB record
+    const existingVouchers = originalSale.payment_methods || [];
+
+    // Delete existing vouchers that are NOT in the incoming payload
+    // This solves the issue where editing a payment (without passing ID) or removing it
+    // resulted in duplicate payments or incorrect totals.
+    for (const existingVoucher of existingVouchers) {
+        if (existingVoucher.voucher_id && !incomingVoucherIds.has(existingVoucher.voucher_id)) {
+            await this.voucherService.delete(existingVoucher.voucher_id, user, db);
+        }
+    }
 
     const salePayload = {
       ...saleDetails,
@@ -197,7 +224,7 @@ class SalesService {
       }
     }
 
-    // 1. Update Sale Details
+    // 3. Update Sale Details
     const updatedSales = await this.repository.update(
       db,
       id,
@@ -210,20 +237,25 @@ class SalesService {
       throw new Error("Failed to update the sale.");
     }
 
-    // 2. Adjust Stock
+    // 4. Adjust Stock
     for (const [itemId, quantityChange] of stockAdjustments.entries()) {
       await this.itemRepository.updateStock(db, itemId, quantityChange);
     }
 
-    // 3. Process New Payments
-    if (updatedSales && validPayments.length > 0) {
-       await this._createVouchersForPayments(updatedSales, user, validPayments, db);
+    // 5. Process Create/Update for incoming payments
+    if (updatedSales && validIncomingPayments.length > 0) {
+       await this._processVouchersForPayments(updatedSales, user, validIncomingPayments, db);
     }
 
-    return this.getById(id, tenantId, db);
+    const result = await this.getById(id, tenantId, db);
+    return {
+      status: "success",
+      data: result,
+    };
   }
 
-  async _createVouchersForPayments(sale, user, payment_methods, db) {
+  // Renamed from _createVouchersForPayments to reflect dual purpose (create & update)
+  async _processVouchersForPayments(sale, user, payment_methods, db) {
     if (!sale.party_ledger_id) {
        throw new Error(`The customer '${sale.party_name}' does not have a linked Ledger account.`);
     }
@@ -240,11 +272,12 @@ class SalesService {
         amount: absAmount,
         date: sale.date,
         description: `Payment for Sale Invoice #${sale.invoice_number}`,
-        voucher_no: `VS-${sale.invoice_number}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        // Keep existing number if updating, otherwise generate new one
+        voucher_no: payment.voucher_no || `VS-${sale.invoice_number}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
         
-       voucher_type: isReceipt ? 1 : 0, 
+        voucher_type: isReceipt ? 1 : 0, 
         
-      from_ledger: { ledger_id: isReceipt ? sale.party_ledger_id : payment.account_id }, 
+        from_ledger: { ledger_id: isReceipt ? sale.party_ledger_id : payment.account_id }, 
         to_ledger: { ledger_id: isReceipt ? payment.account_id : sale.party_ledger_id },
         
         cost_center_id: sale.cost_center_id,
@@ -258,7 +291,13 @@ class SalesService {
         }]
       };
 
-      await this.voucherService.create(user, voucherData, db);
+      if (payment.voucher_id) {
+          // UPDATE existing voucher
+          await this.voucherService.update(payment.voucher_id, user, voucherData, db);
+      } else {
+          // CREATE new voucher
+          await this.voucherService.create(user, voucherData, db);
+      }
     }
   }
 
@@ -287,9 +326,23 @@ class SalesService {
     };
   }
 
+  
+  _normalizeImageUrl(url) {
+    if (typeof url !== 'string') return url;
+    if (url.startsWith('//')) url = url.replace(/^\/+/, '/');
+    url = url.replace(/\s/g, '%20');
+    if (url.includes('inventoryx')) url = url.replace(/inventoryx/g, 'inventoryx');
+    return url;
+  }
+
   async getById(id, tenantId, db) {
     const sales = await this.repository.getById(db, id, tenantId);
     if (!sales) throw new Error("Sales not found or not authorized");
+    // Fix //uploads/... from legacy data so images load (browsers treat // as protocol-relative)
+    if (sales.store) {
+      if (sales.store.header_image_url) sales.store.header_image_url = this._normalizeImageUrl(sales.store.header_image_url);
+      if (sales.store.full_header_image_url) sales.store.full_header_image_url = this._normalizeImageUrl(sales.store.full_header_image_url);
+    }
     return sales;
   }
 
@@ -317,10 +370,16 @@ class SalesService {
         );
       }
       await client.query("COMMIT");
-      return deletedSales;
+      return { 
+        status: "success",
+        data: deletedSales,
+      };
     } catch (error) {
       await client.query("ROLLBACK");
-      throw error;
+      return {
+        status: "failed",
+        message: error.message || "Something went wrong",
+      };
     } finally {
       client.release();
     }

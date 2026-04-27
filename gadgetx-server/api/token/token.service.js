@@ -26,20 +26,20 @@ class TokenService {
     });
   }
 
-  async saveRefreshToken(user, refreshToken, db) {
-    return this.tokenRepository.create(db, {
+  async saveRefreshToken(user, refreshToken) {
+    return this.tokenRepository.create({
       user_id: user.id,
       refresh_token: refreshToken,
     });
   }
 
-  async verifyRefreshToken(refreshToken, db) {
+  async verifyRefreshToken(refreshToken) {
     try {
       const payload = jwt.verify(
         refreshToken,
         process.env.REFRESH_TOKEN_SECRET
       );
-      const tokenRecord = await this.tokenRepository.getByToken(db, refreshToken);
+      const tokenRecord = await this.tokenRepository.getByToken(refreshToken);
       if (!tokenRecord) {
         throw new Error("Invalid refresh token");
       }
@@ -49,9 +49,9 @@ class TokenService {
     }
   }
 
-  async refreshTokens(refreshToken, db) {
-    const payload = await this.verifyRefreshToken(refreshToken, db);
-    const user = await this.userRepository.getById(db, payload.id);
+  async refreshTokens(refreshToken) {
+    const payload = await this.verifyRefreshToken(refreshToken);
+    const user = await this.userRepository.getById(payload.id);
     if (!user) {
       throw new Error("User not found");
     }
@@ -59,8 +59,8 @@ class TokenService {
     const newAccessToken = this.generateAccessToken(user);
     const newRefreshToken = this.generateRefreshToken(user);
 
-    await this.tokenRepository.deleteByToken(db, refreshToken);
-    await this.saveRefreshToken(user, newRefreshToken, db);
+    await this.tokenRepository.deleteByToken(refreshToken);
+    await this.saveRefreshToken(user, newRefreshToken);
 
     return {
       accessToken: newAccessToken,
@@ -68,12 +68,12 @@ class TokenService {
     };
   }
 
-  async removeRefreshToken(refreshToken, db) {
-    return this.tokenRepository.deleteByToken(db, refreshToken);
+  async removeRefreshToken(refreshToken) {
+    return this.tokenRepository.deleteByToken(refreshToken);
   }
 
-  async removeAllRefreshTokensForUser(userId, db) {
-    return this.tokenRepository.deleteByUserId(db, userId);
+  async removeAllRefreshTokensForUser(userId) {
+    return this.tokenRepository.deleteByUserId(userId);
   }
 }
 

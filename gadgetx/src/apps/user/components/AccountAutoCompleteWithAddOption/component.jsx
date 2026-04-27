@@ -5,21 +5,25 @@ import {
   useRef,
   useMemo,
   useCallback,
-  lazy,      
-  Suspense,   
-} from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAccounts } from '@/hooks/api/account/useAccounts'
-import { HiPencil } from 'react-icons/hi2'
+  lazy,
+  Suspense,
+} from "react";
+import { useNavigate } from "react-router-dom";
+import { useAccounts } from "@/apps/user/hooks/api/account/useAccounts";
+import { HiPencil } from "react-icons/hi2";
 
-import CustomTextField from '@/components/CustomTextField'
-import CustomScrollbar from '@/components/CustomScrollbar'
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
 
-import './style.scss'
+import "./style.scss";
 
 // 3. Lazy load the components to break Circular Dependency
-const AddAccount = lazy(() => import('@/apps/user/pages/List/AccountList/components/AddAccount'))
-const CashBook = lazy(() => import('@/apps/user/pages/Transactions/CashBook'))
+const AddAccount = lazy(() =>
+  import("@/apps/user/pages/List/AccountList/components/AddAccount")
+);
+const CashBook = lazy(() =>
+  import("@/apps/user/pages/Transactions/CashBook")
+);
 
 const AccountAutoCompleteWithAddOption = forwardRef(
   (
@@ -27,16 +31,16 @@ const AccountAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label = 'Account',
-      placeholder = 'Select an Account',
+      label = "Account",
+      placeholder = "Select an Account",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       filters = {},
       is_edit = true,
       style = {},
     },
-    ref,
+    ref
   ) => {
     const {
       data: accounts,
@@ -44,93 +48,93 @@ const AccountAutoCompleteWithAddOption = forwardRef(
       isError,
       error,
       refetch,
-    } = useAccounts(filters)
-    const [accountOptions, setAccountOptions] = useState([])
-    const navigate = useNavigate()
+    } = useAccounts(filters);
+    const [accountOptions, setAccountOptions] = useState([]);
+    const navigate = useNavigate();
 
     // Account Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [modalMode, setModalMode] = useState('add')
-    const [selectedAccountInModal, setSelectedAccountInModal] = useState(null)
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState("add");
+    const [selectedAccountInModal, setSelectedAccountInModal] = useState(null);
 
     // CashBook Modal State
-    const [isOpenCashBookModal, setIsOpenCashBookModal] = useState(false)
-    const [selectedCashBookEntry, setSelectedCashBookEntry] = useState(null)
-    const [cashBookMode, setCashBookMode] = useState('add')
+    const [isOpenCashBookModal, setIsOpenCashBookModal] = useState(false);
+    const [selectedCashBookEntry, setSelectedCashBookEntry] = useState(null);
+    const [cashBookMode, setCashBookMode] = useState("add");
 
     const handleDepositClick = useCallback((account) => {
-      setIsModalOpen(false)
+      setIsModalOpen(false);
       setSelectedCashBookEntry({
         account_id: account.id,
-        transaction_type: 'deposit',
-      })
-      setCashBookMode('add')
-      setIsOpenCashBookModal(true)
-    }, [])
+        transaction_type: "deposit",
+      });
+      setCashBookMode("add");
+      setIsOpenCashBookModal(true);
+    }, []);
 
     const handleWithdrawalClick = useCallback((account) => {
-      setIsModalOpen(false)
+      setIsModalOpen(false);
       setSelectedCashBookEntry({
         account_id: account.id,
-        transaction_type: 'withdrawal',
-      })
-      setCashBookMode('add')
-      setIsOpenCashBookModal(true)
-    }, [])
+        transaction_type: "withdrawal",
+      });
+      setCashBookMode("add");
+      setIsOpenCashBookModal(true);
+    }, []);
 
     const handleShowTransactions = useCallback(
       (account) => {
-        setIsOpenCashBookModal(false)
-        setIsModalOpen(false)
-        navigate('/cash-book-report', { state: { accountName: account.name } })
+        setIsOpenCashBookModal(false);
+        setIsModalOpen(false);
+        navigate("/cash-book-report", { state: { accountName: account.name } });
       },
-      [navigate],
-    )
+      [navigate]
+    );
 
     useEffect(() => {
       if (accounts) {
         const options = accounts.map((account) => ({
           value: account.id,
           label: account.name,
-        }))
-        setAccountOptions(options)
+        }));
+        setAccountOptions(options);
       }
-    }, [accounts])
+    }, [accounts]);
 
     const handleAddNew = (typedValue) => {
-      setSelectedAccountInModal({ name: typedValue })
-      setModalMode('add')
-      setIsModalOpen(true)
-    }
+      setSelectedAccountInModal({ name: typedValue });
+      setModalMode("add");
+      setIsModalOpen(true);
+    };
 
     const handleEdit = (option) => {
       const accountToEdit = accounts.find(
-        (account) => account.id === option.value,
-      )
+        (account) => account.id === option.value
+      );
       if (accountToEdit) {
-        setSelectedAccountInModal(accountToEdit)
-        setModalMode('edit')
-        setIsModalOpen(true)
+        setSelectedAccountInModal(accountToEdit);
+        setModalMode("edit");
+        setIsModalOpen(true);
       }
-    }
+    };
 
     const handleCloseModal = () => {
-      setIsModalOpen(false)
-      setSelectedAccountInModal(null)
-    }
+      setIsModalOpen(false);
+      setSelectedAccountInModal(null);
+    };
 
     const onAccountCreated = (newAccount) => {
       if (newAccount && newAccount.id) {
-        refetch()
-        onChange({ target: { name, value: newAccount.id } })
-        handleCloseModal()
+        refetch();
+        onChange({ target: { name, value: newAccount.id } });
+        handleCloseModal();
       }
-    }
+    };
 
     const onAccountUpdated = () => {
-      refetch()
-      handleCloseModal()
-    }
+      refetch();
+      handleCloseModal();
+    };
 
     if (isLoading) {
       return (
@@ -143,11 +147,11 @@ const AccountAutoCompleteWithAddOption = forwardRef(
             variant="outlined"
           />
         </div>
-      )
+      );
     }
 
     if (isError) {
-      console.error('Failed to load accounts:', error)
+      console.error("Failed to load accounts:", error);
       return (
         <div className="accountinput-select">
           <CustomTextField
@@ -159,7 +163,7 @@ const AccountAutoCompleteWithAddOption = forwardRef(
             variant="outlined"
           />
         </div>
-      )
+      );
     }
 
     return (
@@ -180,7 +184,7 @@ const AccountAutoCompleteWithAddOption = forwardRef(
           is_edit={is_edit && !disabled}
           style={style}
         />
-        
+
         {/* 4. Wrap lazy components in Suspense */}
         <Suspense fallback={null}>
           {(isModalOpen || isOpenCashBookModal) && (
@@ -198,7 +202,7 @@ const AccountAutoCompleteWithAddOption = forwardRef(
                   onShowTransactions={handleShowTransactions}
                 />
               )}
-              
+
               {isOpenCashBookModal && (
                 <CashBook
                   isOpen={isOpenCashBookModal}
@@ -206,7 +210,7 @@ const AccountAutoCompleteWithAddOption = forwardRef(
                   mode={cashBookMode}
                   selectedEntry={selectedCashBookEntry}
                   onSuccess={() => {
-                     refetch();
+                    refetch();
                   }}
                 />
               )}
@@ -214,11 +218,11 @@ const AccountAutoCompleteWithAddOption = forwardRef(
           )}
         </Suspense>
       </>
-    )
-  },
-)
+    );
+  }
+);
 
-export default AccountAutoCompleteWithAddOption
+export default AccountAutoCompleteWithAddOption;
 
 const AccountSelectAutocompleteInput = forwardRef(
   (
@@ -228,126 +232,124 @@ const AccountSelectAutocompleteInput = forwardRef(
       onChange,
       options,
       label,
-      placeholder = '',
+      placeholder = "",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       onAddNew,
       onEdit,
       is_edit,
       style = {},
       ...rest
     },
-    ref,
+    ref
   ) => {
-    const [showDropdown, setShowDropdown] = useState(false)
-    const [inputValue, setInputValue] = useState('')
-    const [activeIndex, setActiveIndex] = useState(-1)
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [inputValue, setInputValue] = useState("");
+    const [activeIndex, setActiveIndex] = useState(-1);
 
-    const hasBeenFocused = useRef(false)
+    const hasBeenFocused = useRef(false);
 
     useEffect(() => {
-      const selectedOption = options.find((opt) => opt.value === value)
-      setInputValue(selectedOption ? selectedOption.label : '')
-    }, [value, options])
+      const selectedOption = options.find((opt) => opt.value === value);
+      setInputValue(selectedOption ? selectedOption.label : "");
+    }, [value, options]);
 
     const filteredOptions = useMemo(() => {
       if (!inputValue) {
-        return options
+        return options;
       }
       return options.filter((opt) =>
-        opt.label.toLowerCase().includes(inputValue.toLowerCase()),
-      )
-    }, [inputValue, options])
+        opt.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    }, [inputValue, options]);
 
     const exactMatchExists = useMemo(
       () =>
         options.some(
-          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim(),
+          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim()
         ),
-      [inputValue, options],
-    )
+      [inputValue, options]
+    );
 
-    const showAddNewOption = inputValue && !exactMatchExists && onAddNew
+    const showAddNewOption = inputValue && !exactMatchExists && onAddNew;
 
     const handleInputChange = (e) => {
-      const currentInput = e.target.value
-      setInputValue(currentInput)
-      setActiveIndex(-1)
-      setShowDropdown(true)
+      const currentInput = e.target.value;
+      setInputValue(currentInput);
+      setActiveIndex(-1);
+      setShowDropdown(true);
 
       if (currentInput.length === 0) {
-        onChange({ target: { name, value: '' } })
+        onChange({ target: { name, value: "" } });
       }
-    }
+    };
 
     const handleSelectOption = (option) => {
-      onChange({ target: { name, value: option.value } })
-      setInputValue(option.label)
-      setShowDropdown(false)
-    }
+      onChange({ target: { name, value: option.value } });
+      setInputValue(option.label);
+      setShowDropdown(false);
+    };
 
     const handleAddNew = () => {
       if (onAddNew) {
-        onAddNew(inputValue)
+        onAddNew(inputValue);
       }
-      setShowDropdown(false)
-    }
+      setShowDropdown(false);
+    };
 
     const handleEditClick = (e, option) => {
-      e.preventDefault()
-      e.stopPropagation()
+      e.preventDefault();
+      e.stopPropagation();
       if (onEdit) {
-        onEdit(option)
-        setShowDropdown(false)
+        onEdit(option);
+        setShowDropdown(false);
       }
-    }
+    };
 
     const handleFocus = () => {
       if (hasBeenFocused.current) {
-        setShowDropdown(true)
+        setShowDropdown(true);
       }
-      hasBeenFocused.current = true
-    }
+      hasBeenFocused.current = true;
+    };
 
     const handleKeyDown = (e) => {
-      if (disabled || !showDropdown) return
+      if (disabled || !showDropdown) return;
 
-      const itemsCount = filteredOptions.length + (showAddNewOption ? 1 : 0)
-      if (itemsCount === 0) return
+      const itemsCount = filteredOptions.length + (showAddNewOption ? 1 : 0);
+      if (itemsCount === 0) return;
 
       switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault()
-          setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount)
-          break
-        case 'ArrowUp':
-          e.preventDefault()
+        case "ArrowDown":
+          e.preventDefault();
+          setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
           setActiveIndex(
-            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount,
-          )
-          break
-        case 'Enter':
-          if (activeIndex < 0) return
-          e.preventDefault()
+            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
+          );
+          break;
+        case "Enter":
+          if (activeIndex < 0) return;
+          e.preventDefault();
           if (activeIndex < filteredOptions.length) {
-            handleSelectOption(filteredOptions[activeIndex])
+            handleSelectOption(filteredOptions[activeIndex]);
           } else if (showAddNewOption) {
-            handleAddNew()
+            handleAddNew();
           }
-          break
-        case 'Escape':
-          setShowDropdown(false)
-          break
+          break;
+        case "Escape":
+          setShowDropdown(false);
+          break;
         default:
-          break
+          break;
       }
-    }
+    };
 
     return (
-      <div
-        style={{ ...style, position: 'relative' }}
-      >
+      <div style={{ ...style, position: "relative" }}>
         <CustomTextField
           ref={ref}
           id={name}
@@ -358,7 +360,7 @@ const AccountSelectAutocompleteInput = forwardRef(
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
           onClick={() => {
-            setShowDropdown(true)
+            setShowDropdown(true);
           }}
           placeholder={placeholder}
           required={required}
@@ -380,11 +382,11 @@ const AccountSelectAutocompleteInput = forwardRef(
                 <li
                   key={opt.value}
                   onMouseDown={(e) => {
-                    e.preventDefault()
-                    handleSelectOption(opt)
+                    e.preventDefault();
+                    handleSelectOption(opt);
                   }}
                   className={`accountautoinputs-select__option ${
-                    index === activeIndex ? 'active' : ''
+                    index === activeIndex ? "active" : ""
                   }`}
                 >
                   <div className="accountautoinputs-select__option-content">
@@ -404,11 +406,11 @@ const AccountSelectAutocompleteInput = forwardRef(
             ) : showAddNewOption ? (
               <li
                 onMouseDown={(e) => {
-                  e.preventDefault()
-                  handleAddNew()
+                  e.preventDefault();
+                  handleAddNew();
                 }}
                 className={`accountautoinputs-select__option accountautoinputs-select__option--add ${
-                  activeIndex === 0 ? 'active' : ''
+                  activeIndex === 0 ? "active" : ""
                 }`}
               >
                 + Add "{inputValue}"
@@ -417,6 +419,6 @@ const AccountSelectAutocompleteInput = forwardRef(
           </CustomScrollbar>
         )}
       </div>
-    )
-  },
-)
+    );
+  }
+);

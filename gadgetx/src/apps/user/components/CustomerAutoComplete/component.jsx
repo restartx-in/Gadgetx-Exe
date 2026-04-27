@@ -1,14 +1,14 @@
 import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
-import { useCustomers } from "@/hooks/api/customer/useCustomers";
+import { useCustomers } from "@/apps/user/hooks/api/customer/useCustomers";
 // Assuming AddCustomer and HiPencil are not in this file, keeping the structure generic
-// import AddCustomer from "@/apps/user/pages/List/CustomerList/components/AddCustomer"; 
-// import { HiPencil } from "react-icons/hi2"; 
+// import AddCustomer from "@/apps/user/pages/List/CustomerList/components/AddCustomer";
+// import { HiPencil } from "react-icons/hi2";
 
 import CustomTextField from "@/components/CustomTextField";
 import CustomScrollbar from "@/components/CustomScrollbar";
 
 // ASSUMED: A separate style file for customers or combined style file
-import "./style.scss"; 
+import "./style.scss";
 
 /**
  * CustomerAutocomplete
@@ -34,7 +34,7 @@ const CustomerAutocomplete = forwardRef(
   ) => {
     // MODIFIED: Use useCustomers hook
     const {
-      data: customers, 
+      data: customers,
       isLoading,
       isError,
       error,
@@ -45,7 +45,8 @@ const CustomerAutocomplete = forwardRef(
     useEffect(() => {
       if (customers) {
         setOptions(
-          customers.map((customer) => ({ // MODIFIED: Map customers
+          customers.map((customer) => ({
+            // MODIFIED: Map customers
             value: customer.id,
             label: customer.name,
             ledger_id: customer.ledger_id, // Keep ledger_id for consistency
@@ -104,7 +105,8 @@ export default CustomerAutocomplete;
 /* ================= INPUT COMPONENT ======================= */
 /* ========================================================= */
 
-const CustomerAutocompleteInput = forwardRef( // MODIFIED
+const CustomerAutocompleteInput = forwardRef(
+  // MODIFIED
   (
     {
       name,
@@ -146,17 +148,12 @@ const CustomerAutocompleteInput = forwardRef( // MODIFIED
       setShowDropdown(true);
 
       if (!val) {
-        // Pass null when input is cleared
-        onChange(null); 
+        onChange({ target: { value: "" } });
       }
     };
 
     const handleSelect = (option) => {
-      // FIX: Change 'customer_id' to 'party_id' to match the state property in ReceiptAgainstSale
-      onChange({
-        party_id: option.value, // CORRECTED PROPERTY NAME
-        ledger_id: option.ledger_id,
-      });
+      onChange({ target: { value: option.value } });
       setInputValue(option.label);
       setShowDropdown(false);
     };
@@ -233,7 +230,8 @@ const CustomerAutocompleteInput = forwardRef( // MODIFIED
             {filteredOptions.map((opt, index) => (
               <li
                 key={opt.value}
-                className={`customerinput-select__option ${ // MODIFIED: New option class
+                className={`customerinput-select__option ${
+                  // MODIFIED: New option class
                   index === activeIndex ? "active" : ""
                 }`}
                 onMouseDown={(e) => {

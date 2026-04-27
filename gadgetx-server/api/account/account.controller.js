@@ -5,7 +5,11 @@ class AccountController {
 
   async getAll(req, res, next) {
     try {
-      const accounts = await this.service.getAllAccounts(req.user, req.query, req.db);
+      const accounts = await this.service.getAllAccounts(
+        req.user,
+        req.query,
+        req.db,
+      );
       res.json(accounts);
     } catch (error) {
       next(error);
@@ -15,15 +19,25 @@ class AccountController {
   async create(req, res, next) {
     try {
       const newAccount = await this.service.create(req.body, req.user, req.db);
-      res.status(201).json(newAccount);
+
+      // WRAPPED SUCCESS RESPONSE
+      res.status(201).json({ status: "success", data: newAccount });
     } catch (error) {
+      // CATCH SERVICE ERRORS
+      if (error.message.includes("already exists")) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
       next(error);
     }
   }
 
   async getById(req, res, next) {
     try {
-      const account = await this.service.getById(req.params.id, req.user, req.db);
+      const account = await this.service.getById(
+        req.params.id,
+        req.user,
+        req.db,
+      );
       if (!account) {
         return res
           .status(404)
@@ -41,22 +55,32 @@ class AccountController {
         req.params.id,
         req.body,
         req.user,
-        req.db
+        req.db,
       );
+
       if (!updated) {
         return res
           .status(404)
           .json({ message: "Account not found or not authorized" });
       }
-      res.json(updated);
+
+      // WRAPPED SUCCESS RESPONSE
+      res.json({ status: "success", data: updated });
     } catch (error) {
+      if (error.message.includes("already taken")) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
       next(error);
     }
   }
 
   async delete(req, res, next) {
     try {
-      const deleted = await this.service.delete(req.params.id, req.user, req.db);
+      const deleted = await this.service.delete(
+        req.params.id,
+        req.user,
+        req.db,
+      );
       if (!deleted) {
         return res
           .status(404)

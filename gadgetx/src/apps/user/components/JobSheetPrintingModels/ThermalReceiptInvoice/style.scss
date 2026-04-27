@@ -1,5 +1,14 @@
 /* ThermalReceipt.scss */
 
+/* Arabic font for crisp thermal printing */
+@font-face {
+  font-family: 'Amiri';
+  src: url('/fonts/Amiri-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Main Container (Simulating the paper) */
 .thermal-receipt-sheet {
   background: #fff;
@@ -10,6 +19,19 @@
   // font-family: 'Courier New', Courier, monospace; /* Classic Receipt Look */
   color: #000;
   box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+
+  .arabic-label {
+    direction: rtl;
+    font-family: 'Amiri', 'Noto Sans Arabic', 'Tahoma', sans-serif;
+    font-size: 1em;
+    color: #000;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-weight: 400;
+  }
 }
 
 /* --- Header Section --- */

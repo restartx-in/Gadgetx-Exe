@@ -97,7 +97,6 @@ const PopupSearchField = ({
             value={searchType}
             onChange={(e) => {
               setSearchType(e.target.value);
-              // Optional: Focus input when search type changes
               focusInputRef.current?.focus();
             }}
             className="fs14 popup_search_content__select"

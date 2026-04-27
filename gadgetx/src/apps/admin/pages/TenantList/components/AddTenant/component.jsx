@@ -5,16 +5,16 @@ import { useToast } from '@/context/ToastContext'
 import { CRUDTYPE, CRUDITEM } from '@/constants/object/crud'
 import { TOASTTYPE, TOASTSTATUS } from '@/constants/object/toastType'
 import { Transaction } from '@/constants/object/transaction'
-import Title from '@/apps/user/components/Title'
+import Title from '@/components/Title'
 import { Report } from '@/constants/object/report'
-import CancelButton from '@/apps/user/components/CancelButton'
-import SubmitButton from '@/apps/user/components/SubmitButton'
-import DeleteTextButton from '@/apps/user/components/DeleteTextButton'
+import CancelButton from '@/components/CancelButton'
+import SubmitButton from '@/components/SubmitButton'
+import DeleteTextButton from '@/components/DeleteTextButton'
 
 // Updated Hooks
-import useCreateTenant from '@/hooks/api/tenant/useCreateTenant'
-import useUpdateTenant from '@/hooks/api/tenant/useUpdateTenant'
-import useDeleteTenant from '@/hooks/api/tenant/useDeleteTenant'
+import useCreateTenant from '@/apps/user/hooks/api/tenant/useCreateTenant'
+import useUpdateTenant from '@/apps/user/hooks/api/tenant/useUpdateTenant'
+import useDeleteTenant from '@/apps/user/hooks/api/tenant/useDeleteTenant'
 
 import './style.scss'
 
@@ -225,6 +225,7 @@ const AddTenant = ({
             <option value="fitness">Fitness</option>
             <option value="garage">Garage</option>
             <option value="restaurant">Resturant</option>
+            <option value="optical">Optical</option>
           </select>
         </div>
 

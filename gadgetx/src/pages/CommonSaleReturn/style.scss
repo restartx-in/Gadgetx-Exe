@@ -1,0 +1,168 @@
+.sale-return-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  &__form-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  &__form-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  // --- Top Grid ---
+  &__top-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    align-items: flex-end;
+  }
+
+  // --- Table ---
+  &__order-table {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    .common_table_wrapper {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      background-color: #fff;
+      border-radius: 8px;
+    }
+
+    .stock-badge {
+      background-color: #eef2ff;
+      color: #4f46e5;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+    
+    .action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      &.delete-btn {
+        color: #ef4444;
+        &:hover {
+          color: #b91c1c;
+        }
+      }
+    }
+  }
+
+  // --- Bottom Section (Single Row) ---
+  &__bottom-section {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 32px;
+    padding: 6px 16px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 8px;
+
+    @media (max-width: 900px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .bottom-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: #374151;
+
+      // In mobile/tablet, justify space between label and value
+      @media (max-width: 900px) {
+        justify-content: space-between;
+        margin-right: 0 !important; // Override the auto margin on Reason
+      }
+
+      .stat-label {
+        font-weight: 500;
+        color: #6b7280;
+      }
+
+      .stat-value {
+        font-weight: 600;
+        color: #111827;
+        min-width: 60px;
+        text-align: right;
+      }
+
+      .stat-input-wrapper {
+        input {
+          padding: 6px 10px;
+          height: 36px;
+        }
+        // Specific for Reason input width in mobile
+        @media (max-width: 900px) {
+           width: 100% !important;
+        }
+      }
+
+      // Highlight style for the Grand Total
+      &.grand-total {
+        margin-left: 16px;
+        padding-left: 16px;
+        border-left: 1px solid #e5e7eb;
+        
+        .stat-label {
+          color: #111827;
+          font-size: 16px;
+          font-weight: 700;
+        }
+        
+        .stat-value {
+          color: #000000; // Red for Refund/Return
+          font-size: 18px;
+          font-weight: 800;
+        }
+
+        @media (max-width: 900px) {
+          border-left: none;
+          margin-left: 0;
+          padding-left: 0;
+          margin-top: 8px;
+          border-top: 1px solid #e5e7eb;
+          padding-top: 12px;
+        }
+      }
+    }
+  }
+
+  &__actions {
+    flex-shrink: 0;
+    background-color: #ffffff;
+    padding-top: 10px;
+  }
+}

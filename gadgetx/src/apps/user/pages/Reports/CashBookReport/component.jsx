@@ -1,19 +1,26 @@
-import { useEffect, useState, useRef, useMemo, useCallback,useReducer  } from "react";
+import {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react";
 import { useSearchParams } from "react-router-dom"; // UPDATED
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
-import useCashBooksPaginated from "@/hooks/api/cashBook/useCashBooksPaginated";
-import useDeleteCashBook from "@/hooks/api/cashBook/useDeleteCashBook";
-import useAccounts from "@/hooks/api/account/useAccounts";
-import useCostCenterById from "@/hooks/api/costCenter/useCostCenterById";
+import useCashBooksPaginated from "@/apps/user/hooks/api/cashBook/useCashBooksPaginated";
+import useDeleteCashBook from "@/apps/user/hooks/api/cashBook/useDeleteCashBook";
+import useAccounts from "@/apps/user/hooks/api/account/useAccounts";
+import useCostCenterById from "@/apps/user/hooks/api/costCenter/useCostCenterById";
 import { Transaction } from "@/constants/object/transaction";
 import { useIsMobile } from "@/utils/useIsMobile";
 import CashBook from "@/apps/user/pages/Transactions/CashBook";
 import RangeField from "@/components/RangeField";
-import AmountSymbol from "@/components/AmountSymbol";
+import AmountSymbol from "@/apps/user/components/AmountSymbol";
 import AccountAutoComplete from "@/apps/user/components/AccountAutoComplete";
 import DoneByAutoComplete from "@/apps/user/components/DoneByAutoComplete";
 import CostCenterAutoComplete from "@/apps/user/components/CostCenterAutoComplete";
-import useDoneById from "@/hooks/api/doneBy/useDoneById";
+import useDoneById from "@/apps/user/hooks/api/doneBy/useDoneById";
 import {
   Table,
   Thead,
@@ -25,6 +32,7 @@ import {
   TdSL,
   ThSL,
   TdDate,
+  TdOverflow,
   TableCaption,
   ThContainer,
   ThSearchOrFilterPopover,
@@ -49,18 +57,20 @@ import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
 import { TOASTTYPE, TOASTSTATUS } from "@/constants/object/toastType";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
-import ListItem from "@/apps/user/components/ListItem";
+import ListItem from "@/components/ListItem";
 import AccountFilter from "@/apps/user/components/AccountFilter";
 import DateFilter from "@/components/DateFilter";
-import TableTopContainer from "@/components/TableTopContainer";
-import TextBadge from "@/apps/user/components/TextBadge";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
+import TextBadge from "@/components/TextBadge";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExportMenu from "@/components/ExportMenu";
-import DownloadButton from "@/components/DownloadButton";
+import DownloadButton from "@/apps/user/components/DownloadButton";
 import { format, isValid } from "date-fns";
-import { useCashBookExportAndPrint } from "@/hooks/api/exportAndPrint/useCashBookExportAndPrint";
+import { useCashBookExportAndPrint } from "@/apps/user/hooks/api/exportAndPrint/useCashBookExportAndPrint";
 import useSyncURLParams from "@/hooks/useSyncURLParams"; // IMPORTED
+
+
 import "./style.scss";
 
 const transactionTypeOptions = [
@@ -109,7 +119,7 @@ const DoneByCell = ({ id }) => {
 };
 
 const CashBookReport = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const showToast = useToast();
   const isMobile = useIsMobile();
   const searchRef = useRef(null);
@@ -319,121 +329,120 @@ const CashBookReport = () => {
   };
 
   const handleSort = useCallback((value) => {
-  setState({
-    page: 1,
-    sort: value,
-  })
-}, [])
-
+    setState({
+      page: 1,
+      sort: value,
+    });
+  }, []);
 
   const handleSearch = useCallback(() => {
-  setState({
-    page: 1,
-    searchType,
-    searchKey,
-  })
-}, [searchType, searchKey])
+    setState({
+      page: 1,
+      searchType,
+      searchKey,
+    });
+  }, [searchType, searchKey]);
 
-  const handleAccountFilterChange = useCallback((e) => {
-  const selectedId = e.target.value
+  const handleAccountFilterChange = useCallback(
+    (e) => {
+      const selectedId = e.target.value;
 
-  const selectedAccount = accounts.find(
-    (acc) =>
-      String(acc.id) === String(selectedId) ||
-      String(acc.name) === String(selectedId)
-  )
+      const selectedAccount = accounts.find(
+        (acc) =>
+          String(acc.id) === String(selectedId) ||
+          String(acc.name) === String(selectedId)
+      );
 
-  setState({
-    page: 1,
-    account_name: selectedAccount ? selectedAccount.name : '',
-  })
-}, [accounts])
-
+      setState({
+        page: 1,
+        account_name: selectedAccount ? selectedAccount.name : "",
+      });
+    },
+    [accounts]
+  );
 
   const handleFilter = useCallback(() => {
-  let accountNameToSend = accountName
+    let accountNameToSend = accountName;
 
-  const selectedAccount = accounts.find(
-    (acc) => String(acc.id) === String(accountName)
-  )
+    const selectedAccount = accounts.find(
+      (acc) => String(acc.id) === String(accountName)
+    );
 
-  if (selectedAccount) {
-    accountNameToSend = selectedAccount.name
-  }
+    if (selectedAccount) {
+      accountNameToSend = selectedAccount.name;
+    }
 
-  setState({
-    page: 1,
-    transaction_type: transactionType,
-    account_name: accountNameToSend,
-    start_date: startDate,
-    end_date: endDate,
-    min_debit: minDebit,
-    max_debit: maxDebit,
-    min_credit: minCredit,
-    max_credit: maxCredit,
-    done_by_id: doneById,
-    cost_center_id: costCenterId,
-  })
+    setState({
+      page: 1,
+      transaction_type: transactionType,
+      account_name: accountNameToSend,
+      start_date: startDate,
+      end_date: endDate,
+      min_debit: minDebit,
+      max_debit: maxDebit,
+      min_credit: minCredit,
+      max_credit: maxCredit,
+      done_by_id: doneById,
+      cost_center_id: costCenterId,
+    });
 
-  setShowFilter(false)
-}, [
-  transactionType,
-  accountName,
-  startDate,
-  endDate,
-  minDebit,
-  maxDebit,
-  minCredit,
-  maxCredit,
-  doneById,
-  costCenterId,
-  accounts,
-])
-
+    setShowFilter(false);
+  }, [
+    transactionType,
+    accountName,
+    startDate,
+    endDate,
+    minDebit,
+    maxDebit,
+    minCredit,
+    maxCredit,
+    doneById,
+    costCenterId,
+    accounts,
+  ]);
 
   const handleRefresh = useCallback(() => {
-  setTransactionType('')
-  setAccountName('')
-  setStartDate('')
-  setEndDate('')
-  setMinDebit('')
-  setMaxDebit('')
-  setMinCredit('')
-  setMaxCredit('')
-  setDoneById('')
-  if (!isDisableCostCenter) setCostCenterId('')
-  setSearchKey('')
-  setSearchType('')
-  setSort('')
-  setDateFilter({ startDate: '', endDate: '', rangeType: 'custom' })
+    setTransactionType("");
+    setAccountName("");
+    setStartDate("");
+    setEndDate("");
+    setMinDebit("");
+    setMaxDebit("");
+    setMinCredit("");
+    setMaxCredit("");
+    setDoneById("");
+    if (!isDisableCostCenter) setCostCenterId("");
+    setSearchKey("");
+    setSearchType("");
+    setSort("");
+    setDateFilter({ startDate: "", endDate: "", rangeType: "custom" });
 
-  setState({
-    page: 1,
-    page_size: 10,
-    transaction_type: '',
-    account_name: '',
-    start_date: '',
-    end_date: '',
-    min_debit: '',
-    max_debit: '',
-    min_credit: '',
-    max_credit: '',
-    done_by_id: '',
-    cost_center_id: defaltCostCenter,
-    sort: '',
-    searchType: '',
-    searchKey: '',
-  })
-}, [defaltCostCenter, isDisableCostCenter])
+    setState({
+      page: 1,
+      page_size: 10,
+      transaction_type: "",
+      account_name: "",
+      start_date: "",
+      end_date: "",
+      min_debit: "",
+      max_debit: "",
+      min_credit: "",
+      max_credit: "",
+      done_by_id: "",
+      cost_center_id: defaltCostCenter,
+      sort: "",
+      searchType: "",
+      searchKey: "",
+    });
+  }, [defaltCostCenter, isDisableCostCenter]);
 
   const handlePageLimitSelect = useCallback((value) => {
-  setState({ page_size: value, page: 1 })
-}, [])
+    setState({ page_size: value, page: 1 });
+  }, []);
 
-const handlePageChange = useCallback((value) => {
-  setState({ page: value })
-}, [])
-
+  const handlePageChange = useCallback((value) => {
+    setState({ page: value });
+  }, []);
 
   const handleDownload = useCallback(async () => {
     setIsDownloading(true);
@@ -534,11 +543,19 @@ const handlePageChange = useCallback((value) => {
     [isDisableCostCenter]
   );
 
+  useEffect(() => {
+    if (searchParams.get("action") === "add" && !isOpenCashBookModal) {
+      setMode("add");
+      setSelectedEntry(null);
+      setIsOpenCashBookModal(true);
+    }
+  }, [searchParams, isOpenCashBookModal]);
   const handleAddClick = useCallback(() => {
-    setMode("add");
-    setSelectedEntry(null);
-    setIsOpenCashBookModal(true);
-  }, []);
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("action", "add");
+    // The useEffect above will catch this change and open the modal
+    setSearchParams(newSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleEditClick = useCallback((entry) => {
     setSelectedEntry(entry);
@@ -610,7 +627,7 @@ const handlePageChange = useCallback((value) => {
   const dateSubtitle = useMemo(
     () =>
       isDateFilterActive
-        ? `${format(new Date(dfStartDate), "MMM d, yyyy")} → ${format(
+        ? `${format(new Date(dfStartDate), "MMM d, yyyy")} to ${format(
             new Date(dfEndDate),
             "MMM d, yyyy"
           )}`
@@ -638,7 +655,7 @@ const handlePageChange = useCallback((value) => {
               subtitle={dateSubtitle}
             />
             <TableTopContainer
-              isMargin={true}
+              //isMargin={true}
               summary={
                 <>
                   <AccountTotalDisplay
@@ -660,6 +677,7 @@ const handlePageChange = useCallback((value) => {
               }
               mainActions={
                 <>
+
                   <DateFilter
                     value={dateFilter}
                     onChange={handleDateFilterChange}
@@ -865,14 +883,14 @@ const handlePageChange = useCallback((value) => {
                             pageSize={state.page_size}
                           />
                           <TdDate>{entry.created_at}</TdDate>
-                          <Td>{entry.account_name}</Td>
-                          <Td>
+                          <TdOverflow>{entry.account_name}</TdOverflow>
+                          <TdOverflow>
                             {" "}
                             <DoneByCell id={entry.done_by_id} />
-                          </Td>
-                          <Td>
+                          </TdOverflow>
+                          <TdOverflow>
                             <CostCenterCell id={entry.cost_center_id} />
-                          </Td>
+                          </TdOverflow>
                           <Td>
                             {entry.transaction_type && (
                               <TextBadge
@@ -883,7 +901,7 @@ const handlePageChange = useCallback((value) => {
                               </TextBadge>
                             )}
                           </Td>
-                          <Td>{descriptionContent}</Td>
+                          <TdOverflow>{descriptionContent}</TdOverflow>
                           <TdNumeric isDebit={true}>{entry.debit}</TdNumeric>
                           <TdNumeric isDebit={false}>{entry.credit}</TdNumeric>
                         </Tr>
@@ -1042,7 +1060,7 @@ const handlePageChange = useCallback((value) => {
         onClose={() => setIsOpenCashBookModal(false)}
         mode={mode}
         selectedEntry={selectedEntry}
-        onSuccess={refetch}
+        onSuccess={()=>{}}
       />
     </>
   );

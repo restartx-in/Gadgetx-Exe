@@ -2,7 +2,7 @@ import './style.scss' // Import ThSe SCSS file
 
 const ThS = ({ children }) => {
   return (
-    <th className="table-header-cell fs14 fw800">
+    <th className="table-header-cell fs14 fw500">
       {' '}
       {/* Apply main class to th */}
       <div className="table-header-cell__content">

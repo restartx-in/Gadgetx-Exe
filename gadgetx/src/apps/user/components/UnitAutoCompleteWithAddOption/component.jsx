@@ -1,5 +1,5 @@
 import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
-import { useUnits } from "@/hooks/api/unitType/useUnits";
+import { useUnits } from "@/apps/user/hooks/api/unitType/useUnits";
 import { HiPencil } from "react-icons/hi2";
 import AddUnit from "@/apps/user/pages/List/UnitTypeList/components/AddUnit";
 
@@ -14,7 +14,7 @@ const UnitAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label="Unit",
+      label = "Unit",
       placeholder = "Select or add a unit",
       required = false,
       disabled = false,
@@ -168,7 +168,7 @@ const UnitSelectAutocompleteInput = forwardRef(
     const [showDropdown, setShowDropdown] = useState(false);
     const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // REMOVED: dropdownRef and scrolling useEffect
     const hasBeenFocused = useRef(false);
 
@@ -269,9 +269,9 @@ const UnitSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
+      <div
         // className={`unitinput-select ${className}`}
-        style={{ ...style, position: 'relative' }}
+        style={{ ...style, position: "relative" }}
       >
         <CustomTextField
           ref={ref}

@@ -8,6 +8,7 @@ import {
   Image,
   Font,
 } from "@react-pdf/renderer";
+import { API_UPLOADS_BASE, API_BASE_URL, buildUploadUrl, isInvalidImageUrl } from "@/config/api";
 
 // Register a standard font if needed, otherwise Helvetica is default
 Font.register({
@@ -29,6 +30,28 @@ const formatCurrency = (amount) => {
     maximumFractionDigits: 2,
   });
 };
+
+
+// Helper to get proxy URL for PDF generation (fixes CORS)
+const getProxyUrl = (url) => {
+  if (!url) return null;
+  // If it's already a local/proxy URL, just ensure gadgetx
+  if (url.startsWith('/api/') || url.includes(API_BASE_URL)) {
+    return url.replace(/\/gadgets\//g, "/gadgetx/");
+  }
+
+  // If it's a direct upload URL, try to parse and convert to proxy
+  const match = url.match(/\/(\d+)\/print\/(image|qr)\/([^/]+)$/);
+  if (match) {
+    const [, tenantId, type, filename] = match;
+    return `${API_BASE_URL}/print/${type}/${tenantId}/${filename}`;
+  }
+
+  // Fallback
+  const u = buildUploadUrl(API_UPLOADS_BASE, url);
+  return u ? u.replace(/\/gadgets\//g, "/gadgetx/") : null;
+};
+
 
 const styles = StyleSheet.create({
   page: {
@@ -255,8 +278,8 @@ const ReceiptPDF = ({ transactionData, barcodeImage }) => {
         <View style={styles.header}>
           {/* Company Info */}
           <View style={styles.logoSection}>
-            {store?.full_header_image_url && (
-              <Image src={store.full_header_image_url} style={styles.logo} />
+            {store?.full_header_image_url && !isInvalidImageUrl(store.full_header_image_url) && (
+              <Image src={getProxyUrl(store.full_header_image_url)} style={styles.logo} />
             )}
             <Text style={styles.companyName}>{store?.company_name}</Text>
             <Text style={styles.companyInfo}>{store?.address}</Text>
@@ -337,10 +360,10 @@ const ReceiptPDF = ({ transactionData, barcodeImage }) => {
             </View>
 
             {/* QR Code if exists */}
-            {store?.full_qr_image_url && (
-               <View style={styles.qrContainer}>
-                 <Image src={store.full_qr_image_url} style={styles.qrImage} />
-               </View>
+            {store?.full_qr_image_url && !isInvalidImageUrl(store.full_qr_image_url) && (
+              <View style={styles.qrContainer}>
+                <Image src={getProxyUrl(store.full_qr_image_url)} style={styles.qrImage} />
+              </View>
             )}
           </View>
 
@@ -377,17 +400,17 @@ const ReceiptPDF = ({ transactionData, barcodeImage }) => {
               <Text style={styles.grandTotalValue}>{formatCurrency(grandTotal)}</Text>
             </View>
             
-            <View style={{marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#eee'}}>
+            <View style={{ marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#eee' }}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Paid Amount:</Text>
+                <Text style={styles.summaryValue}>{formatCurrency(numericPaid)}</Text>
+              </View>
+              {balance > 0.01 && (
                 <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Paid Amount:</Text>
-                    <Text style={styles.summaryValue}>{formatCurrency(numericPaid)}</Text>
+                  <Text style={[styles.summaryLabel, { color: '#d00', fontWeight: 'bold' }]}>Balance Due:</Text>
+                  <Text style={[styles.summaryValue, { color: '#d00' }]}>{formatCurrency(balance)}</Text>
                 </View>
-                {balance > 0.01 && (
-                     <View style={styles.summaryRow}>
-                        <Text style={[styles.summaryLabel, {color: '#d00', fontWeight:'bold'}]}>Balance Due:</Text>
-                        <Text style={[styles.summaryValue, {color: '#d00'}]}>{formatCurrency(balance)}</Text>
-                    </View>
-                )}
+              )}
             </View>
           </View>
         </View>

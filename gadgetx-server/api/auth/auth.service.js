@@ -1,28 +1,28 @@
 class AuthService {
-  constructor(userRepository, tokenService, tenantService) {
+  constructor(userRepository, tokenService) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
-    this.tenantService = tenantService; 
   }
 
-  // ADDED: db param
-  async registerUser({ username, password, tenant_id, role_id }, db) {
+  async registerUser({ username, password, tenant_id, role_id }) {
     if (!username || !password) {
       const error = new Error("Username and password are required");
       error.statusCode = 400;
       throw error;
     }
 
-    // Pass db to repo
-    const existingUser = await this.userRepository.getByName(db, username);
+    const existingUser = await this.userRepository.getByName(username);
     if (existingUser) {
       const error = new Error("Username already exists");
       error.statusCode = 409;
       throw error;
     }
 
-    // Pass db to repo
-    return this.userRepository.create(db, {
+    // The logic to create a super admin if role_id is null is now correctly
+    // handled by the UserRepository. We just pass the data along.
+    //
+    // CRITICAL FIX: The key must be 'username', not 'name'.
+    return this.userRepository.create({
       username,
       password,
       tenant_id: tenant_id || null,
@@ -30,43 +30,20 @@ class AuthService {
     });
   }
 
-  // ADDED: db param
-  async signup(data, db) {
-    // Pass db to repo
-    const existingUser = await this.userRepository.getByName(db, data.username);
-    if (existingUser) {
-      const error = new Error("Username already exists");
-      error.statusCode = 409;
-      throw error;
-    }
-
-    // Pass db to tenantService
-    const newTenant = await this.tenantService.create(data, db);
-    
-    return {
-      message: "Tenant and Admin User created successfully",
-      tenant: newTenant,
-      username: data.username 
-    };
-  }
-
-  // ADDED: db param
-  async login({ username, password }, db) {
+  async login({ username, password }) {
     if (!username || !password) {
       const error = new Error("Username and password are required");
       error.statusCode = 400;
       throw error;
     }
 
-    // Pass db to repo
-    const user = await this.userRepository.getByName(db, username);
+    const user = await this.userRepository.getByName(username);
     if (!user || !user.active) {
       const error = new Error("Invalid credentials or inactive user");
       error.statusCode = 401;
       throw error;
     }
 
-    // No db needed for comparePasswords usually
     const isMatch = await this.userRepository.comparePasswords(
       password,
       user.password
@@ -80,9 +57,8 @@ class AuthService {
     const accessToken = this.tokenService.generateAccessToken(user);
     const refreshToken = this.tokenService.generateRefreshToken(user);
 
-    // Pass db to tokenService
-    await this.tokenService.removeAllRefreshTokensForUser(user.id, db);
-    await this.tokenService.saveRefreshToken(user, refreshToken, db);
+    await this.tokenService.removeAllRefreshTokensForUser(user.id);
+    await this.tokenService.saveRefreshToken(user, refreshToken);
 
     return { accessToken, refreshToken, user };
   }

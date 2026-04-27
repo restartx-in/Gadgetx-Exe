@@ -1,3 +1,4 @@
+// components/CustomScrollbar/CustomScrollbar.jsx
 import React, { useRef, useEffect } from "react";
 import "./style.scss"; // Import the styles created above
 

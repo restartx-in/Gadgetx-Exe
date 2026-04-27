@@ -1,34 +1,34 @@
-import React, { useState, forwardRef, useEffect } from 'react'; 
+import React, { useState, forwardRef, useEffect } from "react";
 // Replaced standard TextField with CustomTextField
-import CustomTextField from '@/components/CustomTextField';
-import './style.scss'; 
+import CustomTextField from "@/components/CustomTextField";
+import "./style.scss";
 
 const PhoneNoField = forwardRef(
   (
     {
       name,
-      value = '',
+      value = "",
       onChange,
-      label="Phone Number",
-      placeholder = '',
+      label = "Phone Number",
+      placeholder = "",
       required = false,
       disabled = false,
       ...rest
     },
-    ref,
+    ref
   ) => {
-    const [errorMessage, setErrorMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
       if (disabled) {
-        setErrorMessage('');
+        setErrorMessage("");
       }
     }, [disabled]);
 
     const handleInputChange = (event) => {
       let newValue = event.target.value;
       // Allow only digits
-      newValue = newValue.replace(/\D/g, '');
+      newValue = newValue.replace(/\D/g, "");
 
       if (newValue.length > 10) {
         newValue = newValue.slice(0, 10);
@@ -40,18 +40,18 @@ const PhoneNoField = forwardRef(
 
       // Validate length (only show error if value exists but is incomplete)
       if (newValue && newValue.length !== 10) {
-        setErrorMessage('Please enter exactly 10 digits.');
+        setErrorMessage("Please enter exactly 10 digits.");
       } else {
-        setErrorMessage('');
+        setErrorMessage("");
       }
     };
 
     return (
-      <div className={`custom-phone-input ${disabled ? 'disabled' : ''}`}>
+      <div className={`custom-phone-input ${disabled ? "disabled" : ""}`}>
         <CustomTextField
           label={label}
           inputRef={ref}
-          id={name || 'mobilephone'}
+          id={name || "mobilephone"}
           name={name}
           value={value}
           placeholder={placeholder}
@@ -65,16 +65,16 @@ const PhoneNoField = forwardRef(
           className="custom-phone-input__field"
           slotProps={{
             htmlInput: {
-              autoComplete: 'off',
-              ...rest
+              autoComplete: "off",
+              ...rest,
             },
             inputLabel: {
-              required: false // Hides asterisk
-            }
+              required: false, // Hides asterisk
+            },
           }}
           {...rest}
         />
-        
+
         {!disabled && errorMessage && (
           <div className="custom-phone-input__error-message">
             <span>!</span>
@@ -83,9 +83,9 @@ const PhoneNoField = forwardRef(
         )}
       </div>
     );
-  },
+  }
 );
 
-PhoneNoField.displayName = 'PhoneNoField';
+PhoneNoField.displayName = "PhoneNoField";
 
 export default PhoneNoField;

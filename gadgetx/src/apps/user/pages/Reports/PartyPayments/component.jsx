@@ -8,7 +8,7 @@ import ScrollContainer from "@/components/ScrollContainer";
 import PageHeader from "@/components/PageHeader";
 import HStack from "@/components/HStack";
 import TitleContainer from "@/components/TitleContainer";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PartyAutoComplete from "@/apps/user/components/PartyAutoComplete";
 import {
   Table,
@@ -24,8 +24,8 @@ import {
 import Loader from "@/components/Loader";
 import RefreshButton from "@/components/RefreshButton";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
-import { useParties } from "@/hooks/api/party/useParties";
-import { usePartyPaymentDetails } from "@/hooks/api/partySummary/usePartyPaymentDetails";
+import { useParties } from "@/apps/user/hooks/api/party/useParties";
+import { usePartyPaymentDetails } from "@/apps/user/hooks/api/partySummary/usePartyPaymentDetails";
 import DateFilter from "@/components/DateFilter";
 
 // --- Reducer for Centralized State Management ---
@@ -185,9 +185,16 @@ const PartyPayments = () => {
   }, []);
 
   const handlePartyChange = useCallback(
-    (e) => {
+    (selectedParty) => {
+      if (!selectedParty) {
+        setState({
+          party_id: null,
+          party_name: null,
+        });
+        return;
+      }
       const party = allParties?.find(
-        (p) => String(p.id) === String(e.target.value)
+        (p) => String(p.id) === String(selectedParty.party_id)
       );
       setState({
         party_id: party?.id || null,
@@ -216,7 +223,7 @@ const PartyPayments = () => {
       isValid(parseISO(start_date)) &&
       isValid(parseISO(end_date));
     const dateRange = isDateValid
-      ? `${format(parseISO(start_date), "d MMM yyyy")} → ${format(
+      ? `${format(parseISO(start_date), "d MMM yyyy")} to ${format(
           parseISO(end_date),
           "d MMM yyyy"
         )}`

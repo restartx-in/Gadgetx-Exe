@@ -1,7 +1,6 @@
 .table_header {
-  background-color: var( --color-hover );
-&:hover {
-  background-color: var();
+  background-color: var(--app-bg);
+  &:hover {
+    background-color: var();
+  }
 }
-}
-

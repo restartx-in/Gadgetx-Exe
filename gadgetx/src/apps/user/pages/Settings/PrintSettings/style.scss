@@ -102,6 +102,113 @@
   background-color: #f9f9f9; /* Contrast for transparent logos */
 }
 
+.print-settings__advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.print-settings__preview-note {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.print-settings__preview-stage {
+  border: 1px dashed #c9c9c9;
+  border-radius: 8px;
+  background: #f8f9fb;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.print-settings__receipt-preview {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  color: #000;
+}
+
+.print-settings__receipt-company {
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.print-settings__receipt-line {
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.print-settings__receipt-separator {
+  border-top: 1px dashed #000;
+  margin: 7px 0;
+}
+
+.print-settings__receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.print-settings__receipt-head {
+  border-bottom: 1px solid #000;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.print-settings__receipt-total {
+  border-top: 2px double #000;
+  margin-top: 5px;
+  padding-top: 4px;
+}
+
+.print-settings__receipt-barcode-wrap {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.print-settings__mock-barcode {
+  width: 92%;
+  max-width: 260px;
+  border: 1px solid #000;
+  background-image: repeating-linear-gradient(
+    to right,
+    #000 0,
+    #000 2px,
+    #fff 2px,
+    #fff 4px,
+    #000 4px,
+    #000 5px,
+    #fff 5px,
+    #fff 7px
+  );
+}
+
+.print-settings__receipt-barcode-label {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.print-settings__receipt-barcode-label--bottom {
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .print-settings__advanced-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Animation */
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }

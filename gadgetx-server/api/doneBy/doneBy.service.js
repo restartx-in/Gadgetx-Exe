@@ -1,7 +1,7 @@
 class DoneByService {
   constructor(doneByRepository, tenantRepository) { 
     this.doneByRepository = doneByRepository;
-    this.tenantRepository = tenantRepository; 
+    this.tenantRepository = tenantRepository;
   }
 
   async getAll(user, query = {}, db) { 
@@ -12,10 +12,8 @@ class DoneByService {
         error.statusCode = 400;
         throw error;
       }
-      // Pass db
       return await this.doneByRepository.getAllByTenantId(db, tenant_id);
     } else {
-      // Pass db
       return await this.doneByRepository.getAllByTenantId(db, user.tenant_id);
     }
   }
@@ -28,7 +26,6 @@ class DoneByService {
         error.statusCode = 400;
         throw error;
       }
-      // Pass db
       const tenantExists = await this.tenantRepository.getById(db, data.tenant_id);
       if (!tenantExists) {
           const error = new Error(`Tenant with ID ${data.tenant_id} not found.`);
@@ -40,27 +37,35 @@ class DoneByService {
       tenantIdForNewEntry = user.tenant_id;
     }
     const dataToSave = { ...data, tenant_id: tenantIdForNewEntry };
-    // Pass db
-    return await this.doneByRepository.create(db, dataToSave);
+    data = await this.doneByRepository.create(db, dataToSave);
+    return {
+      status: 'success',
+      data,
+    };
   }
 
   async getById(id, user, db) { 
     const tenantId = user.role === 'super_admin' ? null : user.tenant_id;
-    // Pass db
     return await this.doneByRepository.getById(db, id, tenantId);
   }
 
   async update(id, data, user, db) { 
     const { tenant_id, ...updateData } = data; 
     const tenantIdToUpdate = user.role === 'super_admin' ? null : user.tenant_id;
-    // Pass db
-    return await this.doneByRepository.update(db, id, tenantIdToUpdate, updateData);
+    const result = await this.doneByRepository.update(db, id, tenantIdToUpdate, updateData);
+    return {
+      status: 'success',
+      data: result,
+    };
   }
 
   async delete(id, user, db) { 
     const tenantIdToDelete = user.role === 'super_admin' ? null : user.tenant_id;
-    // Pass db
-    return await this.doneByRepository.delete(db, id, tenantIdToDelete);
+    const data = await this.doneByRepository.delete(db, id, tenantIdToDelete);
+    return {
+      status: 'success',
+      data,
+    };
   }
 }
 

@@ -1,18 +1,12 @@
-import {
-  useState,
-  useEffect,
-  forwardRef,
-  useRef,
-  useMemo,
-} from 'react'
-import { HiPencil } from 'react-icons/hi2'
-import { useModeOfPayments } from '@/hooks/api/modeOfPayment/useModeOfPayments'
-import AddModeOfPayment from '@/apps/user/pages/List/ModeOfPaymentList/components/AddModeOfPayment'
+import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
+import { HiPencil } from "react-icons/hi2";
+import { useModeOfPayments } from "@/apps/user/hooks/api/modeOfPayment/useModeOfPayments";
+import AddModeOfPayment from "@/apps/user/pages/List/ModeOfPaymentList/components/AddModeOfPayment";
 
-import CustomTextField from '@/components/CustomTextField'
-import CustomScrollbar from '@/components/CustomScrollbar'
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
 
-import './style.scss'
+import "./style.scss";
 
 const ModeOfPaymentAutoCompleteWithAddOption = forwardRef(
   (
@@ -20,24 +14,24 @@ const ModeOfPaymentAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label='Mode of Payment',
-      placeholder = 'Select Mode',
+      label = "Mode of Payment",
+      placeholder = "Select Mode",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       is_edit = true,
-      style = {}
+      style = {},
     },
-    ref,
+    ref
   ) => {
     // 1. Fetch MOPs
-    const { data: mops, isLoading, isError } = useModeOfPayments()
-    const [options, setOptions] = useState([])
+    const { data: mops, isLoading, isError } = useModeOfPayments();
+    const [options, setOptions] = useState([]);
 
     // 2. Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [modalMode, setModalMode] = useState('add')
-    const [selectedMOP, setSelectedMOP] = useState(null)
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState("add");
+    const [selectedMOP, setSelectedMOP] = useState(null);
 
     // 3. Sync data to options
     useEffect(() => {
@@ -46,28 +40,28 @@ const ModeOfPaymentAutoCompleteWithAddOption = forwardRef(
           value: mop.id,
           label: mop.name,
           original: mop,
-        }))
-        setOptions(mappedOptions)
+        }));
+        setOptions(mappedOptions);
       }
-    }, [mops])
+    }, [mops]);
 
     // 4. Handlers
     const handleAddNew = (typedValue) => {
-      setSelectedMOP({ name: typedValue })
-      setModalMode('add')
-      setIsModalOpen(true)
-    }
+      setSelectedMOP({ name: typedValue });
+      setModalMode("add");
+      setIsModalOpen(true);
+    };
 
     const handleEdit = (option) => {
-      setSelectedMOP(option.original)
-      setModalMode('edit')
-      setIsModalOpen(true)
-    }
+      setSelectedMOP(option.original);
+      setModalMode("edit");
+      setIsModalOpen(true);
+    };
 
     const handleCloseModal = () => {
-      setIsModalOpen(false)
-      setSelectedMOP(null)
-    }
+      setIsModalOpen(false);
+      setSelectedMOP(null);
+    };
 
     // Callback when a new MOP is created successfully
     const handleMOPCreated = (newMOP) => {
@@ -76,9 +70,8 @@ const ModeOfPaymentAutoCompleteWithAddOption = forwardRef(
           name,
           value: newMOP.id,
         },
-      })
-      
-    }
+      });
+    };
 
     if (isLoading) {
       return (
@@ -91,13 +84,13 @@ const ModeOfPaymentAutoCompleteWithAddOption = forwardRef(
             variant="outlined"
           />
         </div>
-      )
+      );
     }
 
     if (isError) {
       return (
         <div className="mop-autocomplete-select">
-           <CustomTextField
+          <CustomTextField
             label={label}
             placeholder="Error loading data"
             disabled
@@ -106,7 +99,7 @@ const ModeOfPaymentAutoCompleteWithAddOption = forwardRef(
             variant="outlined"
           />
         </div>
-      )
+      );
     }
 
     return (
@@ -135,11 +128,11 @@ const ModeOfPaymentAutoCompleteWithAddOption = forwardRef(
           onMOPCreated={handleMOPCreated}
         />
       </>
-    )
-  },
-)
+    );
+  }
+);
 
-export default ModeOfPaymentAutoCompleteWithAddOption
+export default ModeOfPaymentAutoCompleteWithAddOption;
 
 // Internal Input Component
 const MOPSelectAutocompleteInput = forwardRef(
@@ -150,118 +143,118 @@ const MOPSelectAutocompleteInput = forwardRef(
       onChange,
       options,
       label,
-      placeholder = '',
+      placeholder = "",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       onAddNew,
       onEdit,
       is_edit,
       style = {},
       ...rest
     },
-    ref,
+    ref
   ) => {
-    const [showDropdown, setShowDropdown] = useState(false)
-    const [inputValue, setInputValue] = useState('')
-    const [activeIndex, setActiveIndex] = useState(-1)
-    
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [inputValue, setInputValue] = useState("");
+    const [activeIndex, setActiveIndex] = useState(-1);
+
     // Removed: dropdownRef and scrolling useEffect (handled by CustomScrollbar)
-    const hasBeenFocused = useRef(false)
+    const hasBeenFocused = useRef(false);
 
     // Sync input text with selected value
     useEffect(() => {
-      const selectedOption = options.find((opt) => opt.value == value)
-      setInputValue(selectedOption ? selectedOption.label : '')
-    }, [value, options])
+      const selectedOption = options.find((opt) => opt.value == value);
+      setInputValue(selectedOption ? selectedOption.label : "");
+    }, [value, options]);
 
     const filteredOptions = useMemo(() => {
-      if (!inputValue) return options
+      if (!inputValue) return options;
       return options.filter((opt) =>
-        opt.label.toLowerCase().includes(inputValue.toLowerCase()),
-      )
-    }, [inputValue, options])
+        opt.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    }, [inputValue, options]);
 
     const exactMatchExists = useMemo(
       () =>
         options.some(
-          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim(),
+          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim()
         ),
-      [inputValue, options],
-    )
+      [inputValue, options]
+    );
 
-    const showAddNewOption = inputValue && !exactMatchExists && onAddNew
+    const showAddNewOption = inputValue && !exactMatchExists && onAddNew;
 
     const handleInputChange = (e) => {
-      const currentInput = e.target.value
-      setInputValue(currentInput)
-      setActiveIndex(-1)
-      setShowDropdown(true)
+      const currentInput = e.target.value;
+      setInputValue(currentInput);
+      setActiveIndex(-1);
+      setShowDropdown(true);
 
       if (currentInput.length === 0) {
-        onChange({ target: { name, value: '' } })
+        onChange({ target: { name, value: "" } });
       }
-    }
+    };
 
     const handleSelectOption = (option) => {
-      onChange({ target: { name, value: option.value } })
-      setInputValue(option.label)
-      setShowDropdown(false)
-    }
+      onChange({ target: { name, value: option.value } });
+      setInputValue(option.label);
+      setShowDropdown(false);
+    };
 
     const handleAddNew = () => {
-      if (onAddNew) onAddNew(inputValue)
-      setShowDropdown(false)
-    }
+      if (onAddNew) onAddNew(inputValue);
+      setShowDropdown(false);
+    };
 
     const handleEditClick = (e, option) => {
-      e.preventDefault()
-      e.stopPropagation()
+      e.preventDefault();
+      e.stopPropagation();
       if (onEdit) {
-        onEdit(option)
-        setShowDropdown(false)
+        onEdit(option);
+        setShowDropdown(false);
       }
-    }
+    };
 
     const handleFocus = () => {
-      setShowDropdown(true)
-    }
+      setShowDropdown(true);
+    };
 
     const handleKeyDown = (e) => {
-      if (!showDropdown) return
-      const itemsCount = filteredOptions.length + (showAddNewOption ? 1 : 0)
-      if (itemsCount === 0) return
+      if (!showDropdown) return;
+      const itemsCount = filteredOptions.length + (showAddNewOption ? 1 : 0);
+      if (itemsCount === 0) return;
 
       switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault()
-          setActiveIndex((prev) => (prev + 1) % itemsCount)
-          break
-        case 'ArrowUp':
-          e.preventDefault()
-          setActiveIndex((prev) => (prev - 1 + itemsCount) % itemsCount)
-          break
-        case 'Enter':
-          e.preventDefault()
-          if (activeIndex < 0) return
+        case "ArrowDown":
+          e.preventDefault();
+          setActiveIndex((prev) => (prev + 1) % itemsCount);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setActiveIndex((prev) => (prev - 1 + itemsCount) % itemsCount);
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (activeIndex < 0) return;
           if (activeIndex < filteredOptions.length) {
-            handleSelectOption(filteredOptions[activeIndex])
+            handleSelectOption(filteredOptions[activeIndex]);
           } else if (showAddNewOption) {
-            handleAddNew()
+            handleAddNew();
           }
-          break
-        case 'Escape':
-          setShowDropdown(false)
-          break
+          break;
+        case "Escape":
+          setShowDropdown(false);
+          break;
         default:
-          break
+          break;
       }
-    }
+    };
 
     return (
-      <div 
+      <div
         // className={`mop-autocomplete-select ${className}`}
-        style={{ ...style, position: 'relative' }}
+        style={{ ...style, position: "relative" }}
       >
         <CustomTextField
           ref={ref}
@@ -280,7 +273,7 @@ const MOPSelectAutocompleteInput = forwardRef(
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
           {...rest}
         />
-        
+
         {showDropdown && (
           <CustomScrollbar
             className="mop-autocomplete-select__dropdown"
@@ -292,11 +285,11 @@ const MOPSelectAutocompleteInput = forwardRef(
                 <li
                   key={opt.value}
                   onMouseDown={(e) => {
-                    e.preventDefault()
-                    handleSelectOption(opt)
+                    e.preventDefault();
+                    handleSelectOption(opt);
                   }}
                   className={`mop-autocomplete-select__option ${
-                    index === activeIndex ? 'active' : ''
+                    index === activeIndex ? "active" : ""
                   }`}
                 >
                   <div className="mop-autocomplete-select__option-content">
@@ -316,11 +309,11 @@ const MOPSelectAutocompleteInput = forwardRef(
             ) : showAddNewOption ? (
               <li
                 onMouseDown={(e) => {
-                  e.preventDefault()
-                  handleAddNew()
+                  e.preventDefault();
+                  handleAddNew();
                 }}
                 className={`mop-autocomplete-select__option mop-autocomplete-select__option--add ${
-                  activeIndex === 0 ? 'active' : ''
+                  activeIndex === 0 ? "active" : ""
                 }`}
               >
                 + Add "{inputValue}"
@@ -333,6 +326,6 @@ const MOPSelectAutocompleteInput = forwardRef(
           </CustomScrollbar>
         )}
       </div>
-    )
-  },
-)
+    );
+  }
+);

@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import React, { forwardRef } from "react";
 import TextField from "@mui/material/TextField";
 
 const CustomTextField = forwardRef(({ sx = {}, ...props }, ref) => {
@@ -7,43 +7,42 @@ const CustomTextField = forwardRef(({ sx = {}, ...props }, ref) => {
       inputRef={ref}
       variant="outlined"
       fullWidth
+      // Merge default custom styles with any sx passed via props
       sx={{
-        backgroundColor: "var(--app-bg)",  
-        borderRadius: "8px",  
-        "& .MuiOutlinedInput-root": {
+          backgroundColor: "var(--app-bg)", // background
+          borderRadius: "8px", // border-radius
+          "& .MuiOutlinedInput-root": {
+                height: "40px", // your fixed height
+                borderRadius: "8px",
+                paddingTop: "0 !important",
+                paddingBottom: "0 !important",
+                display: "flex",
+                alignItems: "center", // centers input text
 
-          height: "40px",  
-          borderRadius: "8px",
-          paddingTop: "0 !important",
-          paddingBottom: "0 !important",
-          display: "flex",
-          alignItems: "center",  
-          fontSize: "14px",  
-
-
+          "&:hover fieldset": {
+            border: "solid 1px var(--text-field-active-color)", // remove hover border
+          },
+          fontSize: "14px", // input text font style
           "& fieldset": {
-            border: "solid 1px var( --border-color)", 
             borderRadius: "8px",
           },
-          "&:hover fieldset": {
-            border: "solid 1px var( --border-color)",  
-          },
-          "&.Mui-focused fieldset": {
-            border: "solid 1px var(--text-field-active-color)",
-          },
           "& input::placeholder": {
-            color: "black", 
-            fontStyle: "italic",  
+            color: "black", // placeholder color
+            fontStyle: "italic", // placeholder style
           },
         },
-        
+
+     
+
+        // ⭐ Center label INSIDE field (not floating)
         "& .MuiInputLabel-root": {
           top: "50%",
-          transform: "translateY(-50%)",  
+          transform: "translateY(-50%)", // center vertically
           marginLeft: "14px",
           pointerEvents: "none",
         },
 
+        // ⭐ When label floats on focus or typed
         "& .MuiInputLabel-shrink": {
           top: 0,
           transform: "translateY(-50%) scale(0.75)",
@@ -52,7 +51,7 @@ const CustomTextField = forwardRef(({ sx = {}, ...props }, ref) => {
       }}
       slotProps={{
         inputLabel: {
-          required: false,  
+          required: false, // Hides asterisk visually even if required prop is true
         },
       }}
       {...props}

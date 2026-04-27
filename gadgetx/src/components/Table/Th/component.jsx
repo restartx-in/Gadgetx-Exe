@@ -1,11 +1,13 @@
-import './style.scss'
+import './style.scss';  
 
-const Th = ({ children  }) => {
+const Th = ({ children }) => {
   return (
-    <th className="table_header_cell fs14 fw600">
-      <div className="table_header_cell-content">{children}</div>
+    <th className="table-header-cell fs18 fw500"> 
+      <div className="table-header-cell__content">  
+        {children}
+      </div>
     </th>
-  )
-}
+  );
+};
 
-export default Th
+export default Th;

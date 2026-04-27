@@ -1,39 +1,38 @@
-const express = require('express')
-const router = express.Router()
-const validateToken = require('../../middlewares/validateToken')
+const express = require("express");
+const router = express.Router();
+const validateToken = require("../../middlewares/validateToken");
 
-const DoneByRepository = require('./doneBy.repository')
-const TenantRepository = require('../tenant/tenant.repository')
-const DoneByService = require('./doneBy.service')
-const DoneByController = require('./doneBy.controller')
-const DoneByValidator = require('./doneBy.validator')
+const DoneByRepository = require("./doneBy.repository");
+const TenantRepository = require("../tenant/tenant.repository");
+const DoneByService = require("./doneBy.service");
+const DoneByController = require("./doneBy.controller");
+const DoneByValidator = require("./doneBy.validator");
 
-// Init Repositories without DB injection
-const doneByRepository = new DoneByRepository()
-const tenantRepository = new TenantRepository()
+const doneByRepository = new DoneByRepository();  
+const tenantRepository = new TenantRepository();  
 
 // Init Service with dependencies
-const doneByService = new DoneByService(doneByRepository, tenantRepository)
-const doneByController = new DoneByController(doneByService)
-const doneByValidator = new DoneByValidator()
+const doneByService = new DoneByService(doneByRepository, tenantRepository);
+const doneByController = new DoneByController(doneByService);
+const doneByValidator = new DoneByValidator();
 
-router.use(validateToken)
+router.use(validateToken);
 
 router
-  .route('/')
+  .route("/")
   .get(doneByController.getAll.bind(doneByController))
   .post(
     doneByValidator.createValidator.bind(doneByValidator),
     doneByController.create.bind(doneByController)
-  )
+  );
 
 router
-  .route('/:id')
+  .route("/:id")
   .get(doneByController.getById.bind(doneByController))
   .put(
-    doneByValidator.updateValidator.bind(doneByValidator), 
+    doneByValidator.updateValidator.bind(doneByValidator),
     doneByController.update.bind(doneByController)
   )
-  .delete(doneByController.delete.bind(doneByController))
+  .delete(doneByController.delete.bind(doneByController));
 
-module.exports = router
+module.exports = router;

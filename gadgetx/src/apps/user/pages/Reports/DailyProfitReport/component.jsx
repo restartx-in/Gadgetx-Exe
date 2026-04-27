@@ -7,18 +7,18 @@ import React, {
 } from "react";
 import { format, isValid } from "date-fns";
 
-import useDailyProfitReport from "@/hooks/api/dailyProfitReport/useDailyProfitReport";
+import useDailyProfitReport from "@/apps/user/hooks/api/dailyProfitReport/useDailyProfitReport";
 import { useIsMobile } from "@/utils/useIsMobile";
 
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
 import TitleContainer from "@/components/TitleContainer";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import DateFilter from "@/components/DateFilter";
 import RefreshButton from "@/components/RefreshButton";
 import Loader from "@/components/Loader";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PageHeader from "@/components/PageHeader";
 import HStack from "@/components/HStack/component.jsx";
 import {
@@ -35,7 +35,7 @@ const stateReducer = (state, newState) => ({ ...state, ...newState });
 
 const DailyProfitReport = () => {
   const isMobile = useIsMobile();
-  
+
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
     endDate: null,
@@ -76,7 +76,7 @@ const DailyProfitReport = () => {
       isValid(new Date(endDate));
 
     return isDateFilterActive
-      ? `${format(new Date(startDate), "MMM d, yyyy")} → ${format(
+      ? `${format(new Date(startDate), "MMM d, yyyy")} to ${format(
           new Date(endDate),
           "MMM d, yyyy"
         )}`
@@ -84,25 +84,28 @@ const DailyProfitReport = () => {
   }, [dateFilter]);
 
   const { breakdown, financials } = reportData || {};
-  const hasData = useMemo(() => financials && breakdown, [financials, breakdown]);
+  const hasData = useMemo(
+    () => financials && breakdown,
+    [financials, breakdown]
+  );
 
   return (
     <ContainerWrapper>
       {!isMobile ? (
         <>
-            <PageTitleWithBackButton
-              title="Daily Profit Report"
-              subtitle={dateSubtitle}
-            />
+          <PageTitleWithBackButton
+            title="Daily Profit Report"
+            subtitle={dateSubtitle}
+          />
           <TableTopContainer
-          isMargin={true}
+            //isMargin={true}
             mainActions={
               <>
-              <DateFilter
-                value={dateFilter}
-                onChange={handleDateFilterChange}
-              />
-              <RefreshButton onClick={handleRefresh} isLoading={isFetching} />
+                <DateFilter
+                  value={dateFilter}
+                  onChange={handleDateFilterChange}
+                />
+                <RefreshButton onClick={handleRefresh} isLoading={isFetching} />
               </>
             }
           />

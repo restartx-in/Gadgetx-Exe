@@ -19,6 +19,9 @@ class ModeOfPaymentController {
             const newModeOfPayment = await this.service.create(req.user, req.body, req.db);
             res.status(201).json(newModeOfPayment);
         } catch (error) {
+            if (error.message.includes('already exists')) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
             next(error);
         }
     }
@@ -45,6 +48,9 @@ class ModeOfPaymentController {
             }
             res.json(updatedModeOfPayment);
         } catch (error) {
+            if (error.message.includes('already taken')) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
             next(error);
         }
     }

@@ -35,7 +35,7 @@ class TransactionRepository {
         -----------------------------
         
         tld.account_name_from_ledger as account_name
-      FROM "transaction" t
+      FROM transaction t
       JOIN TransactionLedgerDetails tld ON t.id = tld.transaction_id
       
       -- Join Expenses & Expense Type
@@ -53,7 +53,6 @@ class TransactionRepository {
       LEFT JOIN partnership pt ON t.reference_id = pt.id AND t.transaction_type = 'partnership'
       
       -- Join Job Sheets & Party
-      LEFT JOIN job_sheets js ON t.reference_id = js.job_id AND t.transaction_type = 'service'
       LEFT JOIN party p_js ON js.party_id = p_js.id
       
       LEFT JOIN cost_center cc ON t.cost_center_id = cc.id
@@ -73,7 +72,7 @@ class TransactionRepository {
 
     const { rows } = await client.query(
       `
-      INSERT INTO "transaction" 
+      INSERT INTO transaction 
       (tenant_id, transaction_type, reference_id, description, cost_center_id, done_by_id)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
@@ -88,6 +87,17 @@ class TransactionRepository {
       ]
     );
     return rows[0];
+  }
+
+    async getRecentByTenantId(db, tenantId, limit = 5) {
+    const query = `
+      ${this._buildSelectQuery()}
+      WHERE t.tenant_id = $1
+      ORDER BY t.created_at DESC
+      LIMIT $2
+    `;
+    const { rows } = await db.query(query, [tenantId, limit]);
+    return rows;
   }
 
   async getById(db, id, tenantId) {
@@ -109,8 +119,8 @@ class TransactionRepository {
     const filterConfig = {
       transaction_type: { operator: "ILIKE", column: "transaction_type" },
       description: { operator: "ILIKE", column: "description" },
-      start_date: { operator: ">=", column: "DATE(created_at)" },
-      end_date: { operator: "<=", column: "DATE(created_at)" },
+      start_date: { operator: ">=", column: "created_at::date" },
+      end_date: { operator: "<=", column: "created_at::date" },
       min_debit: { operator: ">=", column: "debit" },
       max_debit: { operator: "<=", column: "debit" },
       min_credit: { operator: ">=", column: "credit" },
@@ -192,7 +202,7 @@ class TransactionRepository {
           et.name as expense_category,
           
           tld.account_name_from_ledger as account_name
-        FROM "transaction" t
+        FROM transaction t
         JOIN TransactionLedgerDetails tld ON t.id = tld.transaction_id
         
         LEFT JOIN expenses e ON t.reference_id = e.id AND t.transaction_type = 'expense'
@@ -204,7 +214,6 @@ class TransactionRepository {
         LEFT JOIN purchase p ON t.reference_id = p.id AND t.transaction_type = 'purchase'
         LEFT JOIN partnership pt ON t.reference_id = pt.id AND t.transaction_type = 'partnership'
         
-        LEFT JOIN job_sheets js ON t.reference_id = js.job_id AND t.transaction_type = 'service'
         LEFT JOIN party p_js ON js.party_id = p_js.id
         
         LEFT JOIN cost_center cc ON t.cost_center_id = cc.id
@@ -232,8 +241,8 @@ class TransactionRepository {
     const filterConfig = {
       transaction_type: { operator: "ILIKE", column: "transaction_type" },
       description: { operator: "ILIKE", column: "description" },
-      start_date: { operator: ">=", column: "DATE(created_at)" },
-      end_date: { operator: "<=", column: "DATE(created_at)" },
+      start_date: { operator: ">=", column: "created_at::date" },
+      end_date: { operator: "<=", column: "created_at::date" },
       min_debit: { operator: ">=", column: "debit" },
       max_debit: { operator: "<=", column: "debit" },
       min_credit: { operator: ">=", column: "credit" },
@@ -308,7 +317,7 @@ class TransactionRepository {
           et.name as expense_category,
 
           tld.account_name_from_ledger as account_name
-        FROM "transaction" t
+        FROM transaction t
         JOIN TransactionLedgerDetails tld ON t.id = tld.transaction_id
         
         LEFT JOIN expenses e ON t.reference_id = e.id AND t.transaction_type = 'expense'
@@ -320,7 +329,6 @@ class TransactionRepository {
         LEFT JOIN purchase p ON t.reference_id = p.id AND t.transaction_type = 'purchase'
         LEFT JOIN partnership pt ON t.reference_id = pt.id AND t.transaction_type = 'partnership'
         
-        LEFT JOIN job_sheets js ON t.reference_id = js.job_id AND t.transaction_type = 'service'
         LEFT JOIN party p_js ON js.party_id = p_js.id
         
         LEFT JOIN cost_center cc ON t.cost_center_id = cc.id
@@ -349,7 +357,7 @@ class TransactionRepository {
 
   async findByReference(client, tenantId, transactionType, referenceId) {
     const { rows } = await client.query(
-      `SELECT id FROM "transaction" WHERE tenant_id = $1 AND transaction_type = $2 AND reference_id = $3`,
+      `SELECT id FROM transaction WHERE tenant_id = $1 AND transaction_type = $2 AND reference_id = $3`,
       [tenantId, transactionType, referenceId]
     );
     return rows[0];
@@ -357,7 +365,7 @@ class TransactionRepository {
 
   async deleteTransactionById(client, id, tenantId) {
     const { rows } = await client.query(
-      `DELETE FROM "transaction" WHERE id = $1 AND tenant_id = $2 RETURNING id`,
+      "DELETE FROM transaction WHERE id = $1 AND tenant_id = $2 RETURNING id",
       [id, tenantId]
     );
     return rows[0];
@@ -367,7 +375,7 @@ class TransactionRepository {
     const { description, cost_center_id } = data;
     const { rows } = await client.query(
       `
-      UPDATE "transaction"
+      UPDATE transaction
       SET description = $1, cost_center_id = $2
       WHERE id = $3 AND tenant_id = $4
       RETURNING *

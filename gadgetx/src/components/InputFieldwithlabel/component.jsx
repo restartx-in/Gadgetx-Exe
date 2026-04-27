@@ -1,5 +1,5 @@
-import React from 'react'
-import './style.scss' // <-- changed to style.scss
+import React from 'react';
+import './style.scss'; // <-- changed to style.scss
 
 // Changed the component name to PascalCase
 const InputFieldWithLabel = React.forwardRef(
@@ -16,15 +16,11 @@ const InputFieldWithLabel = React.forwardRef(
       disabled = false,
       ...rest
     },
-    ref
+    ref,
   ) => {
     return (
-      <div className={`input_field_with_label ${wrapperClassName} `}>
-        {label && (
-          <label htmlFor={id} className="input_field_with_label-label fs14">
-            {label}
-          </label>
-        )}
+      <div className={`input_field_with_label ${wrapperClassName}`}>
+        {label && <label htmlFor={id} className="input_field_with_label-label">{label}</label>}
         <input
           id={id}
           name={id}
@@ -35,12 +31,12 @@ const InputFieldWithLabel = React.forwardRef(
           type={type}
           required={required}
           disabled={disabled}
-          className={`input_field_with_label-input fs14`}
+          className={`input_field_with_label-input`}
           {...rest}
         />
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-export default InputFieldWithLabel
+export default InputFieldWithLabel;

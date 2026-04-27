@@ -1,9 +1,8 @@
 import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
-import { useItem } from "@/hooks/api/item/useItem";
-import AddItem from "@/apps/user/pages/List/ItemList/components/AddItem";
 import { HiPencil } from "react-icons/hi2";
+import { useItem } from "@/apps/user/hooks/api/item/useItem";
+import AddItem from "@/apps/user/pages/List/ItemList/components/AddItem";
 
-// 1. Import Custom Components
 import CustomTextField from "@/components/CustomTextField";
 import CustomScrollbar from "@/components/CustomScrollbar";
 
@@ -15,14 +14,14 @@ const ItemAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label="Select Item",
+      label = "Item",
       placeholder = "Select or add an item",
       required = false,
       disabled = false,
       className = "",
       filters = {},
       is_edit = true,
-      style = {}
+      style = {},
     },
     ref
   ) => {
@@ -33,8 +32,8 @@ const ItemAutoCompleteWithAddOption = forwardRef(
       error,
       refetch,
     } = useItem(filters);
-    const [itemOptions, setItemOptions] = useState([]);
 
+    const [itemOptions, setItemOptions] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState("add");
     const [selectedItemInModal, setSelectedItemInModal] = useState(null);
@@ -44,6 +43,7 @@ const ItemAutoCompleteWithAddOption = forwardRef(
         const options = items.map((item) => ({
           value: item.id,
           label: item.name,
+          original: item,
         }));
         setItemOptions(options);
       }
@@ -73,8 +73,10 @@ const ItemAutoCompleteWithAddOption = forwardRef(
       if (newItem && newItem.id) {
         refetch();
         onChange({ target: { name, value: newItem.id } });
+        handleCloseModal();
+      } else {
+        handleCloseModal();
       }
-      handleCloseModal();
     };
 
     const handleItemUpdated = () => {
@@ -85,7 +87,7 @@ const ItemAutoCompleteWithAddOption = forwardRef(
     if (isLoading) {
       return (
         <div className="iteminput-select">
-          <CustomTextField 
+          <CustomTextField
             label={label}
             placeholder="Loading items..."
             disabled
@@ -100,7 +102,7 @@ const ItemAutoCompleteWithAddOption = forwardRef(
       console.error("Failed to load items:", error);
       return (
         <div className="iteminput-select">
-          <CustomTextField 
+          <CustomTextField
             label={label}
             placeholder="Error loading items"
             disabled
@@ -142,8 +144,8 @@ const ItemAutoCompleteWithAddOption = forwardRef(
     );
   }
 );
-ItemAutoCompleteWithAddOption.displayName = "ItemAutoCompleteWithAddOption";
 
+ItemAutoCompleteWithAddOption.displayName = "ItemAutoCompleteWithAddOption";
 export default ItemAutoCompleteWithAddOption;
 
 const ItemSelectAutocompleteInput = forwardRef(
@@ -169,8 +171,7 @@ const ItemSelectAutocompleteInput = forwardRef(
     const [showDropdown, setShowDropdown] = useState(false);
     const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
-    // REMOVED: dropdownRef and scrolling useEffect
+
     const hasBeenFocused = useRef(false);
 
     useEffect(() => {
@@ -209,25 +210,21 @@ const ItemSelectAutocompleteInput = forwardRef(
     };
 
     const handleSelectOption = (option) => {
-      onChange({ target: { name, value: option.value } });
+      onChange({ target: { name, value: option.value, item: option.original } });
       setInputValue(option.label);
       setShowDropdown(false);
     };
 
     const handleAddNew = () => {
-      if (onAddNew) {
-        onAddNew(inputValue);
-      }
+      if (onAddNew) onAddNew(inputValue);
       setShowDropdown(false);
     };
 
     const handleEditClick = (e, option) => {
       e.preventDefault();
       e.stopPropagation();
-      if (onEdit) {
-        onEdit(option);
-        setShowDropdown(false);
-      }
+      if (onEdit) onEdit(option);
+      setShowDropdown(false);
     };
 
     const handleFocus = () => {
@@ -272,11 +269,11 @@ const ItemSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
+      <div
         className={`iteminput-select ${className}`}
-        style={{ ...style, position: 'relative' }}
+        style={{ ...style, position: "relative" }}
       >
-        <CustomTextField 
+        <CustomTextField
           ref={ref}
           id={name}
           name={name}
@@ -296,7 +293,7 @@ const ItemSelectAutocompleteInput = forwardRef(
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
           {...rest}
         />
-        
+
         {showDropdown && (
           <CustomScrollbar
             className="iteminput-select__dropdown"
@@ -348,4 +345,5 @@ const ItemSelectAutocompleteInput = forwardRef(
     );
   }
 );
+
 ItemSelectAutocompleteInput.displayName = "ItemSelectAutocompleteInput";

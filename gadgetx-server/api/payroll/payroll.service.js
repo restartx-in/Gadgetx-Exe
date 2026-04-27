@@ -101,15 +101,20 @@ class PayrollService {
       );
 
       await client.query("COMMIT");
-      // Use db or client for read
-      return this.repository.getById(
-        db,
-        newPayroll.id,
-        user.role === "super_admin" ? null : user.tenant_id
-      );
+      // return this.repository.getById(
+      //   db,
+      //   newPayroll.id,
+      //   user.role === "super_admin" ? null : user.tenant_id
+      // );
+      return {
+        status: "success",
+        data:newPayroll};
     } catch (error) {
       await client.query("ROLLBACK");
-      throw error;
+      return {
+        status: "failed",
+        message: error.message || "Something went wrong",
+      };
     } finally {
       client.release();
     }
@@ -162,10 +167,16 @@ class PayrollService {
       }
 
       await client.query("COMMIT");
-      return newPayrolls;
+      return {
+        status: "success",
+        data: newPayrolls,
+      };
     } catch (error) {
       await client.query("ROLLBACK");
-      throw error;
+      return {
+        status: "failed",
+        message: error.message || "Something went wrong",
+      }
     } finally {
       client.release();
     }
@@ -180,7 +191,6 @@ class PayrollService {
       const { tenant_id, ...updateData } = payrollData;
       const tenantIdToUpdate = user.role === "super_admin" ? null : user.tenant_id;
 
-      // 1. Update Payroll (Pass client)
       const updatedPayroll = await this.repository.update(
         client,
         id,
@@ -192,7 +202,6 @@ class PayrollService {
         throw new Error("Payroll record not found or not authorized to update");
       }
 
-      // 2. Update Transaction (Pass client)
       await this.transactionService.updateByReference(
         {
           tenant_id: updatedPayroll.tenant_id,
@@ -207,10 +216,17 @@ class PayrollService {
       );
 
       await client.query("COMMIT");
-      return this.repository.getById(db, id, tenantIdToUpdate);
+      return{
+        status: "success",
+        data: updatedPayroll,
+      }
+      // return this.repository.getById(db, id, tenantIdToUpdate);
     } catch (error) {
       await client.query("ROLLBACK");
-      throw error;
+      return {
+        status: "failed",
+        message: error.message || "Something went wrong",
+      }
     } finally {
       client.release();
     }
@@ -241,10 +257,16 @@ class PayrollService {
       const deletedPayroll = await this.repository.delete(client, id, tenantIdToDelete);
 
       await client.query("COMMIT");
-      return deletedPayroll;
+      return {
+        status: "success",
+        data: deletedPayroll};
     } catch (error) {
       await client.query("ROLLBACK");
-      throw error;
+      
+      return{
+        status: "failed",
+        message: error.message || "Something went wrong",
+      }
     } finally {
       client.release();
     }

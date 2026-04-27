@@ -1,11 +1,12 @@
-import './style.scss'
-import AmountSymbol from '@/components/AmountSymbol'
-import CancelButton from '@/apps/user/components/CancelButton'
-import SubmitButton from '@/apps/user/components/SubmitButton'
-import React, { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { useReactToPrint } from 'react-to-print'
-import { API_FILES as server } from '@/config/api'
+import "./style.scss";
+import AmountSymbol from "@/apps/user/components/AmountSymbol";
+import CancelButton from "@/components/CancelButton";
+import SubmitButton from "@/components/SubmitButton";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useReactToPrint } from "react-to-print";
+import { API_UPLOADS_BASE, buildUploadUrl } from "@/config/api";
+import Barcode from "react-barcode";
 
 const PrintableInvoice = React.forwardRef(({ invoiceData }, ref) => (
   <div ref={ref} className="invoice-modal__body">
@@ -25,13 +26,13 @@ const PrintableInvoice = React.forwardRef(({ invoiceData }, ref) => (
 
     <div className="invoice-modal__meta-details">
       <p>
-        Date:{' '}
+        Date:{" "}
         {(() => {
-          const d = new Date(invoiceData?.date)
-          const day = String(d.getDate()).padStart(2, '0')
-          const month = String(d.getMonth() + 1).padStart(2, '0')
-          const year = d.getFullYear()
-          return `${day}-${month}-${year}`
+          const d = new Date(invoiceData?.date);
+          const day = String(d.getDate()).padStart(2, "0");
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const year = d.getFullYear();
+          return `${day}-${month}-${year}`;
         })()}
       </p>
       <p>Store: {invoiceData?.store.store}</p>
@@ -41,16 +42,30 @@ const PrintableInvoice = React.forwardRef(({ invoiceData }, ref) => (
       <p>Invoice No: {invoiceData?.invoiceNo}</p>
     </div>
 
+    {invoiceData?.invoiceNo && (
+      <div className="invoice-modal__barcode">
+        <Barcode
+          value={invoiceData.invoiceNo}
+          width={1.5}
+          height={50}
+          fontSize={11}
+          displayValue={true}
+          margin={0}
+        />
+      </div>
+    )}
+
     <div className="invoice-modal__items-list">
       {invoiceData?.items?.map((item, index) => (
         <div key={index} className="invoice-modal__item">
           <div
             className="invoice-modal__item-line"
             style={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-            }}>
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
             <span className="invoice-modal__item-name">{item.name}</span>
             <AmountSymbol>
               {(item.quantity * item.price).toFixed(2)}
@@ -91,66 +106,63 @@ const PrintableInvoice = React.forwardRef(({ invoiceData }, ref) => (
       <p>Thanks for your order!</p>
     </div>
   </div>
-))
+));
 
 const InvoiceModal = ({ isOpen, onClose, invoiceData }) => {
-  const printRef = useRef()
+  const printRef = useRef();
 
   // ✅ react-to-print v3+ fix
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: 'Sales Report',
-  })
+    documentTitle: "Sales Report",
+  });
 
-  const [data, setData] = useState(null)
+  const [data, setData] = useState(null);
 
   useEffect(() => {
-    
     if (isOpen && invoiceData) {
-       const test = localStorage.getItem('PRINT_SETTINGS')
-      const printSettingsString = JSON.parse(test)
+      const raw = localStorage.getItem("PRINT_SETTINGS");
+      const printSettingsString = raw ? JSON.parse(raw) : null;
 
       if (printSettingsString) {
-        let settings =printSettingsString
-
-        if (settings.header_image_url) {
-          const serverBase = server.endsWith('/') ? server.slice(0, -1) : server
-          const imagePath = settings.header_image_url.startsWith('/')
-            ? settings.header_image_url
-            : `/${settings.header_image_url}`
-          settings.header_image_url = `${serverBase}${imagePath}`
-        }
-      setData({
-        ...invoiceData,
-        store: settings,
-      })
-    } else if (invoiceData) {
-      setData(invoiceData)
+        const settings = { ...printSettingsString };
+        const fullHeader = buildUploadUrl(
+          API_UPLOADS_BASE,
+          settings.header_image_proxy_path || settings.header_image_url,
+        );
+        if (fullHeader) settings.header_image_url = fullHeader;
+        setData({
+          ...invoiceData,
+          store: settings,
+        });
+      } else if (invoiceData) {
+        setData(invoiceData);
+      }
     }
-    }
-  }, [invoiceData, isOpen])
+  }, [invoiceData, isOpen]);
 
-  if (!isOpen || data === null) return null
+  if (!isOpen || data === null) return null;
 
   return createPortal(
-    <div className="custom-modal__overlay">
-      <div className="custom-modal__container">
+    <div className="gadgetx_custom-modal__overlay">
+      <div className="gadgetx_custom-modal__container">
         <PrintableInvoice ref={printRef} invoiceData={data} />
 
         <div
           style={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '16px',
-          }}>
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "16px",
+          }}
+        >
           <CancelButton onClick={onClose} />
           <SubmitButton label="Print" onClick={handlePrint} />
         </div>
       </div>
     </div>,
-    document.body
-  )
-}
+    document.body,
+  );
+};
 
-export default InvoiceModal
+export default InvoiceModal;

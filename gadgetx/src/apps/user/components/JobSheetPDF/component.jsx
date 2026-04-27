@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
+import { API_UPLOADS_BASE, API_BASE_URL, buildUploadUrl, isInvalidImageUrl } from "@/config/api";
 
 // --- Currency Formatting ---
 const formatCurrency = (amount) => {
@@ -17,6 +18,27 @@ const formatCurrency = (amount) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+};
+
+
+// Helper to get proxy URL for PDF generation (fixes CORS)
+const getProxyUrl = (url) => {
+  if (!url) return null;
+  // If it's already a local/proxy URL, just ensure gadgetx
+  if (url.startsWith('/api/') || url.includes(API_BASE_URL)) {
+    return url.replace(/\/gadgets\//g, "/gadgetx/");
+  }
+
+  // If it's a direct upload URL, try to parse and convert to proxy
+  const match = url.match(/\/(\d+)\/print\/(image|qr)\/([^/]+)$/);
+  if (match) {
+    const [, tenantId, type, filename] = match;
+    return `${API_BASE_URL}/print/${type}/${tenantId}/${filename}`;
+  }
+
+  // Fallback
+  const u = buildUploadUrl(API_UPLOADS_BASE, url);
+  return u ? u.replace(/\/gadgets\//g, "/gadgetx/") : null;
 };
 
 // --- Styles ---
@@ -117,11 +139,11 @@ const JobSheetPDF = ({ jobSheetData, barcodeImage }) => {
     <Document>
       <Page size={[226.77, 595.28]} style={styles.page}>
         {/* Header */}
-        {jobSheetData.store?.full_header_image_url && (
+        {jobSheetData.store?.full_header_image_url && !isInvalidImageUrl(jobSheetData.store.full_header_image_url) && (
           <View style={styles.headerImage}>
             <Image
               style={styles.storeLogo}
-              src={jobSheetData.store.full_header_image_url}
+              src={getProxyUrl(jobSheetData.store.full_header_image_url)}
             />
           </View>
         )}

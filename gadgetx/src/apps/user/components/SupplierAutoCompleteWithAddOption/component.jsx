@@ -1,6 +1,6 @@
 import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
 import { HiPencil } from "react-icons/hi2";
-import { useSuppliers } from "@/hooks/api/supplier/useSuppliers";
+import { useSuppliers } from "@/apps/user/hooks/api/supplier/useSuppliers";
 import AddSupplier from "@/apps/user/pages/List/SupplierList/components/AddSupplier";
 
 import CustomTextField from "@/components/CustomTextField";
@@ -14,7 +14,7 @@ const SupplierAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label="Supplier",
+      label = "Supplier",
       placeholder = "Select or add a supplier",
       required = false,
       disabled = false,
@@ -144,7 +144,8 @@ const SupplierAutoCompleteWithAddOption = forwardRef(
     );
   }
 );
-SupplierAutoCompleteWithAddOption.displayName = "SupplierAutoCompleteWithAddOption";
+SupplierAutoCompleteWithAddOption.displayName =
+  "SupplierAutoCompleteWithAddOption";
 
 export default SupplierAutoCompleteWithAddOption;
 
@@ -171,7 +172,7 @@ const SupplierSelectAutocompleteInput = forwardRef(
     const [showDropdown, setShowDropdown] = useState(false);
     const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // REMOVED: dropdownRef and scrolling useEffect
     const hasBeenFocused = useRef(false);
 
@@ -270,9 +271,9 @@ const SupplierSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
+      <div
         // className={`supplierinput-select ${className}`}
-        style={{ ...style, position: 'relative' }}
+        style={{ ...style, position: "relative" }}
       >
         <CustomTextField
           ref={ref}

@@ -1,0 +1,210 @@
+// style.scss
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --bg-main: #ffffff;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --radius: 8px;
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.custom-page-builder {
+  padding: 0px;
+  background: var(--bg-main);
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-main);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .5rem;
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0;
+    }
+  }
+
+  &__card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  &__form {
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+    }
+  }
+
+  .user-assignment {
+    margin-bottom: 2rem;
+    
+    label.section-label {
+      display: block;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .users-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem;
+      padding: 1rem;
+      background: #f1f5f9;
+      border-radius: var(--radius);
+      max-height: 200px;
+      overflow-y: auto;
+
+      .user-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: background 0.2s;
+
+        &:hover { background: #e2e8f0; }
+        input { cursor: pointer; }
+      }
+    }
+  }
+
+  &__columns {
+    h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        // background: var(--border);
+      }
+    }
+
+    .column-row {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 80px 1.5fr auto;
+      align-items: end;
+      gap: 1rem;
+      padding: .5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: .5rem;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: #cbd5e1;
+      }
+
+      &.is-fk {
+        border-left: 4px solid var(--primary);
+        background: #f0f7ff;
+      }
+
+      .fk-toggle-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: var(--text-muted);
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1.5rem;
+
+    .add-col-btn {
+      background: #fff;
+      color: var(--primary);
+      border: 1px dashed var(--primary);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      transition: all 0.2s;
+      &:hover { background: #eff6ff; }
+    }
+
+    .form-submit-group {
+      display: flex;
+      gap: 12px;
+    }
+  }
+
+  &__list {
+    margin-top: 3rem;
+    
+    h3 {
+      margin-bottom: 1.5rem;
+      font-size: 1.25rem;
+    }
+
+    .table-container {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+  }
+}
+
+// UI Overrides for components
+.submit-btns {
+  background: var(--primary) !important;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { background: var(--primary-hover) !important; }
+}

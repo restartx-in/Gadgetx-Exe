@@ -1,16 +1,16 @@
 import React, { useMemo, useCallback, useReducer } from "react";
 import { format, isValid, parseISO } from "date-fns";
-import usePeriodicProfitReport from "@/hooks/api/periodicProfitReport/usePeriodicProfitReport";
+import usePeriodicProfitReport from "@/apps/user/hooks/api/periodicProfitReport/usePeriodicProfitReport";
 import { useIsMobile } from "@/utils/useIsMobile";
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
 import TitleContainer from "@/components/TitleContainer";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import DateFilter from "@/components/DateFilter";
 import RefreshButton from "@/components/RefreshButton";
 import Loader from "@/components/Loader";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PageHeader from "@/components/PageHeader";
 import HStack from "@/components/HStack/component.jsx";
 import {
@@ -76,7 +76,7 @@ const PeriodicProfitReport = () => {
       isValid(parseISO(endDate));
 
     return isDateFilterActive
-      ? `${format(parseISO(startDate), "MMM d, yyyy")} → ${format(
+      ? `${format(parseISO(startDate), "MMM d, yyyy")} to ${format(
           parseISO(endDate),
           "MMM d, yyyy"
         )}`
@@ -95,7 +95,7 @@ const PeriodicProfitReport = () => {
             subtitle={dateSubtitle}
           />
           <TableTopContainer
-            isMargin={true}
+            //isMargin={true}
             mainActions={
               <>
                 <DateFilter

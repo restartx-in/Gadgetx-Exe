@@ -1,13 +1,20 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback, useReducer } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useDoneBys } from "@/hooks/api/doneBy/useDoneBys";
-import { useCostCenters } from "@/hooks/api/costCenter/useCostCenters";
+import { useDoneBys } from "@/apps/user/hooks/api/doneBy/useDoneBys";
+import { useCostCenters } from "@/apps/user/hooks/api/costCenter/useCostCenters";
 import { useIsMobile } from "@/utils/useIsMobile";
-import useRegisterSessionsPaginated from "@/hooks/api/registerSession/useRegisterSessionsPaginated";
-import useCurrentRegisterSession from "@/hooks/api/registerSession/useCurrentRegisterSession";
+import useRegisterSessionsPaginated from "@/apps/user/hooks/api/registerSession/useRegisterSessionsPaginated";
+import useCurrentRegisterSession from "@/apps/user/hooks/api/registerSession/useCurrentRegisterSession";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
 
-import CloseRegisterModal from "@/apps/user/pages/POS/components/CloseRegisterModal"; 
+import CloseRegisterModal from "@/apps/user/pages/POS/components/CloseRegisterModal";
 
 import {
   Table,
@@ -29,7 +36,7 @@ import AddButton from "@/components/AddButton";
 import DateField from "@/components/DateField";
 import HStack from "@/components/HStack/component.jsx";
 import VStack from "@/components/VStack";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import RefreshButton from "@/components/RefreshButton";
 import TableFooter from "@/components/TableFooter";
@@ -38,11 +45,11 @@ import Loader from "@/components/Loader";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
 import SelectField from "@/components/SelectField";
-import DotMenu from "@/components/DotMenu/component";
+import DotMenu from "@/apps/user/components/DotMenu/component";
 import DoneByAutoComplete from "@/apps/user/components/DoneByAutoComplete";
 import CostCenterAutoComplete from "@/apps/user/components/CostCenterAutoComplete";
-import TextBadge from "@/apps/user/components/TextBadge";
-import ListItem from "@/apps/user/components/ListItem/component";
+import TextBadge from "@/components/TextBadge";
+import ListItem from "@/components/ListItem/component";
 import PageHeader from "@/components/PageHeader";
 import Spacer from "@/components/Spacer";
 
@@ -51,7 +58,6 @@ import "./style.scss";
 // REDUCER FUNCTION: Handles merging of state updates
 const stateReducer = (state, newState) => ({ ...state, ...newState });
 
-
 // Utility for date formatting
 const formatDateTime = (dateString) => {
   if (!dateString) return "Running...";
@@ -59,87 +65,102 @@ const formatDateTime = (dateString) => {
 };
 
 // Extracted Row Component
-const RegisterSessionRow = React.memo(({ session, index, page, pageSize, doneByNameMap, costCenterNameMap, handlers }) => {
-  const menuItems = useMemo(() => {
-    const items = [{ label: "View Details", onClick: () => handlers.onView(session.id) }];
-    if (session.status === 'open') {
-      items.push({ 
-          label: "Close Session", 
+const RegisterSessionRow = React.memo(
+  ({
+    session,
+    index,
+    page,
+    pageSize,
+    doneByNameMap,
+    costCenterNameMap,
+    handlers,
+  }) => {
+    const menuItems = useMemo(() => {
+      const items = [
+        { label: "View Details", onClick: () => handlers.onView(session.id) },
+      ];
+      if (session.status === "open") {
+        items.push({
+          label: "Close Session",
           onClick: () => handlers.onClose(session.id),
-          color: "red" 
-      });
-    }
-    return items;
-  }, [session.id, session.status, handlers]);
+          color: "red",
+        });
+      }
+      return items;
+    }, [session.id, session.status, handlers]);
 
-  return (
-    <Tr key={session.id}>
-      <TdSL index={index} page={page} pageSize={pageSize} />
-      <Td>{formatDateTime(session.opened_at)}</Td>
-      <Td>{doneByNameMap[session.done_by_id] || "N/A"}</Td>
-      <Td>{costCenterNameMap[session.cost_center_id] || "N/A"}</Td>
-      <Td>
-        <TextBadge variant="paymentStatus" type={session.status === 'open' ? 'Partial' : 'Paid'}>
-          {session.status.toUpperCase()}
-        </TextBadge>
-      </Td>
-      <Td>{formatDateTime(session.closed_at)}</Td>
-      <Td>
-        <DotMenu items={menuItems} />
-      </Td>
-    </Tr>
-  );
-});
+    return (
+      <Tr key={session.id}>
+        <TdSL index={index} page={page} pageSize={pageSize} />
+        <Td>{formatDateTime(session.opened_at)}</Td>
+        <Td>{doneByNameMap[session.done_by_id] || "N/A"}</Td>
+        <Td>{costCenterNameMap[session.cost_center_id] || "N/A"}</Td>
+        <Td>
+          <TextBadge
+            variant="paymentStatus"
+            type={session.status === "open" ? "Partial" : "Paid"}
+          >
+            {session.status.toUpperCase()}
+          </TextBadge>
+        </Td>
+        <Td>{formatDateTime(session.closed_at)}</Td>
+        <Td>
+          <DotMenu items={menuItems} />
+        </Td>
+      </Tr>
+    );
+  }
+);
 
 // Extracted Mobile Card Component
-const MobileRegisterSessionCard = React.memo(({ session, doneByNameMap, costCenterNameMap, handlers }) => {
-  const menuItems = useMemo(() => {
-    const items = [{ label: "View Details", onClick: () => handlers.onView(session.id) }];
-    if (session.status === 'open') {
-      items.push({ 
-          label: "Close Session", 
+const MobileRegisterSessionCard = React.memo(
+  ({ session, doneByNameMap, costCenterNameMap, handlers }) => {
+    const menuItems = useMemo(() => {
+      const items = [
+        { label: "View Details", onClick: () => handlers.onView(session.id) },
+      ];
+      if (session.status === "open") {
+        items.push({
+          label: "Close Session",
           onClick: () => handlers.onClose(session.id),
-          color: "red" 
-      });
-    }
-    return items;
-  }, [session.id, session.status, handlers]);
-
-  return (
-    <ListItem
-      title={`Opened: ${formatDateTime(session.opened_at)}`}
-      subtitle={
-        <>
-          <div className="list-item-status-wrapper">
-            <TextBadge
-              variant="paymentStatus"
-              type={session.status === 'open' ? 'Partial' : 'Paid'}
-            >
-              {session.status.toUpperCase()}
-            </TextBadge>
-          </div>
-          <div>
-            Done By: {doneByNameMap[session.done_by_id] || "N/A"}
-          </div>
-          {session.cost_center_id && (
-            <div>
-              Cost Center: {costCenterNameMap[session.cost_center_id]}
-            </div>
-          )}
-          <div>
-            Closed: {formatDateTime(session.closed_at)}
-          </div>
-        </>
+          color: "red",
+        });
       }
-      actions={<DotMenu items={menuItems} />}
-    />
-  );
-});
+      return items;
+    }, [session.id, session.status, handlers]);
+
+    return (
+      <ListItem
+        title={`Opened: ${formatDateTime(session.opened_at)}`}
+        subtitle={
+          <>
+            <div className="list-item-status-wrapper">
+              <TextBadge
+                variant="paymentStatus"
+                type={session.status === "open" ? "Partial" : "Paid"}
+              >
+                {session.status.toUpperCase()}
+              </TextBadge>
+            </div>
+            <div>Done By: {doneByNameMap[session.done_by_id] || "N/A"}</div>
+            {session.cost_center_id && (
+              <div>
+                Cost Center: {costCenterNameMap[session.cost_center_id]}
+              </div>
+            )}
+            <div>Closed: {formatDateTime(session.closed_at)}</div>
+          </>
+        }
+        actions={<DotMenu items={menuItems} />}
+      />
+    );
+  }
+);
 
 const RegisterSessionReport = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // UI States for filter inputs (Local State - Remain useState)
   const [doneById, setDoneById] = useState("");
@@ -147,12 +168,13 @@ const RegisterSessionReport = () => {
   const [status, setStatus] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  
+
   // Other Component States
   const [showFilter, setShowFilter] = useState(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
-  const [selectedSessionIdToClose, setSelectedSessionIdToClose] = useState(null);
-  
+  const [selectedSessionIdToClose, setSelectedSessionIdToClose] =
+    useState(null);
+
   // --- 1. Centralized state object initialized from URL using useReducer (UPDATED) ---
   const [state, setState] = useReducer(stateReducer, {
     page: parseInt(searchParams.get("page")) || 1,
@@ -177,8 +199,13 @@ const RegisterSessionReport = () => {
     endDate: state.end_date,
   });
 
-  const { data, isLoading, refetch, isRefetching } = useRegisterSessionsPaginated(state);
-  const { data: currentSession, refetch: refetchCurrent } = useCurrentRegisterSession();
+  const { data, isLoading, refetch, isRefetching } =
+    useRegisterSessionsPaginated(state);
+  const {
+    data: currentSession,
+    refetch: refetchCurrent,
+    isLoading: isCurrentSessionLoading,
+  } = useCurrentRegisterSession();
   const { data: doneByList = [] } = useDoneBys();
   const { data: costCenterList = [] } = useCostCenters();
 
@@ -215,10 +242,13 @@ const RegisterSessionReport = () => {
     [costCenterList]
   );
 
-  const statusOptions = useMemo(() => [
-    { value: "open", label: "Open" },
-    { value: "closed", label: "Closed" },
-  ], []);
+  const statusOptions = useMemo(
+    () => [
+      { value: "open", label: "Open" },
+      { value: "closed", label: "Closed" },
+    ],
+    []
+  );
 
   // --- Handlers (Memoized) - UPDATED setState CALLS ---
 
@@ -227,7 +257,8 @@ const RegisterSessionReport = () => {
   }, []);
 
   const handleFilter = useCallback(() => {
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       done_by_id: doneById,
       cost_center_id: costCenterId,
       status: status,
@@ -245,9 +276,10 @@ const RegisterSessionReport = () => {
     setStatus("");
     setStartDate("");
     setEndDate("");
-    
+
     // Reset main state
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       done_by_id: "",
       cost_center_id: "",
       status: "",
@@ -259,21 +291,53 @@ const RegisterSessionReport = () => {
     });
   }, []);
 
-  const handlePageLimitSelect = useCallback((value) =>
-    setState({ page_size: value, page: 1 }), []); // Simplified setState
-    
-  const handlePageChange = useCallback((value) => 
-    setState({ page: value }), []); // Simplified setState
+  const handlePageLimitSelect = useCallback(
+    (value) => setState({ page_size: value, page: 1 }),
+    []
+  ); // Simplified setState
 
-  const handleOpenRegister = useCallback(() => {
-    if (currentSession && currentSession.session) {
-      // Logic to handle closing the currently open session
-      setSelectedSessionIdToClose(currentSession.session.id);
-      setIsCloseModalOpen(true);
-    } else {
-      navigate(`/pos`); 
+  const handlePageChange = useCallback(
+    (value) => setState({ page: value }),
+    []
+  ); // Simplified setState
+
+  useEffect(() => {
+    // Check for the specific action from your sidebar's addPath
+    if (searchParams.get("action") === "open-register") {
+      // Don't do anything until we know if a session is open or not
+      if (isCurrentSessionLoading) {
+        return;
+      }
+
+      // IMPORTANT: Immediately remove the parameter from the URL to prevent this from running again.
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("action");
+      setSearchParams(newSearchParams, { replace: true });
+
+      // Now, run the exact same logic as your button's click handler
+      if (currentSession && currentSession.session) {
+        setSelectedSessionIdToClose(currentSession.session.id);
+        setIsCloseModalOpen(true);
+      } else {
+        navigate(`/pos`);
+      }
     }
-  }, [currentSession, navigate]);
+  }, [
+    searchParams,
+    setSearchParams,
+    currentSession,
+    isCurrentSessionLoading,
+    navigate,
+  ]);
+
+  // 4. UPDATE the button's click handler to ONLY change the URL
+  const handleOpenRegister = useCallback(() => {
+    // This function will now simply set the URL parameter.
+    // The useEffect we just added will see this change and execute the logic.
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("action", "open-register");
+    setSearchParams(newSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleCloseSession = useCallback((id) => {
     setSelectedSessionIdToClose(id);
@@ -287,14 +351,19 @@ const RegisterSessionReport = () => {
     refetchCurrent();
   }, [refetch, refetchCurrent]);
 
-  const handleViewSession = useCallback((id) => navigate(`/register-session/view/${id}`), [navigate]);
+  const handleViewSession = useCallback(
+    (id) => navigate(`/register-session/view/${id}`),
+    [navigate]
+  );
 
   // Handlers object for rows/cards
-  const rowHandlers = useMemo(() => ({
-    onView: handleViewSession,
-    onClose: handleCloseSession
-  }), [handleViewSession, handleCloseSession]);
-
+  const rowHandlers = useMemo(
+    () => ({
+      onView: handleViewSession,
+      onClose: handleCloseSession,
+    }),
+    [handleViewSession, handleCloseSession]
+  );
 
   const filterProps = {
     showFilter,
@@ -317,16 +386,18 @@ const RegisterSessionReport = () => {
     <ContainerWrapper>
       {!isMobile ? (
         <>
-            <PageTitleWithBackButton title="Register Sessions" />
+          <PageTitleWithBackButton title="Register Sessions" />
           <TableTopContainer
-          isMargin={true}
+            //isMargin={true}
             mainActions={
               <>
-              <ListFilter {...filterProps} />
-              <RefreshButton onClick={handleRefresh} />
-              <AddButton onClick={handleOpenRegister}>
-                {currentSession?.session ? "Close Current Session" : "Open Register"}
-              </AddButton>
+                <ListFilter {...filterProps} />
+                <RefreshButton onClick={handleRefresh} />
+                <AddButton onClick={handleOpenRegister}>
+                  {currentSession?.session
+                    ? "Close Current Session"
+                    : "Open Register"}
+                </AddButton>
               </>
             }
           />
@@ -360,12 +431,19 @@ const RegisterSessionReport = () => {
                             setSort={handleSort}
                             value="done_by_id"
                           />
-                          <ThSearchOrFilterPopover isSearch={false} popoverWidth={220}>
+                          <ThSearchOrFilterPopover
+                            isSearch={false}
+                            popoverWidth={220}
+                          >
                             <DoneByAutoComplete
                               placeholder="Select User"
                               value={state.done_by_id}
-                              onChange={(e) =>
-                                setState({ done_by_id: e.target.value, page: 1 }) // Simplified setState
+                              onChange={
+                                (e) =>
+                                  setState({
+                                    done_by_id: e.target.value,
+                                    page: 1,
+                                  }) // Simplified setState
                               }
                               is_edit={false}
                             />
@@ -377,12 +455,19 @@ const RegisterSessionReport = () => {
                       <ThContainer>
                         Cost Center
                         <ThFilterContainer>
-                          <ThSearchOrFilterPopover isSearch={false} popoverWidth={220}>
+                          <ThSearchOrFilterPopover
+                            isSearch={false}
+                            popoverWidth={220}
+                          >
                             <CostCenterAutoComplete
                               placeholder="Select Cost Center"
                               value={state.cost_center_id}
-                              onChange={(e) =>
-                                setState({ cost_center_id: e.target.value, page: 1 }) // Simplified setState
+                              onChange={
+                                (e) =>
+                                  setState({
+                                    cost_center_id: e.target.value,
+                                    page: 1,
+                                  }) // Simplified setState
                               }
                               is_edit={false}
                             />
@@ -398,7 +483,7 @@ const RegisterSessionReport = () => {
                 <Tbody>
                   {listData.length > 0 ? (
                     listData.map((session, index) => (
-                      <RegisterSessionRow 
+                      <RegisterSessionRow
                         key={session.id}
                         session={session}
                         index={index}
@@ -436,7 +521,9 @@ const RegisterSessionReport = () => {
               </HStack>
               <div className="sale_report__add_button">
                 <AddButton fullWidth onClick={handleOpenRegister}>
-                  {currentSession?.session ? "Close Current Session" : "Open Register"}
+                  {currentSession?.session
+                    ? "Close Current Session"
+                    : "Open Register"}
                 </AddButton>
               </div>
             </PageHeader>
@@ -449,7 +536,7 @@ const RegisterSessionReport = () => {
               ) : (
                 <div>
                   {listData.map((session) => (
-                    <MobileRegisterSessionCard 
+                    <MobileRegisterSessionCard
                       key={session.id}
                       session={session}
                       doneByNameMap={doneByNameMap}
@@ -475,14 +562,13 @@ const RegisterSessionReport = () => {
         </>
       )}
 
-      <CloseRegisterModal 
+      <CloseRegisterModal
         isOpen={isCloseModalOpen}
         sessionId={selectedSessionIdToClose}
         onClose={() => setIsCloseModalOpen(false)}
         onKeepOpen={() => setIsCloseModalOpen(false)}
         onRegisterClosed={handleRegisterClosedSuccess}
       />
-
     </ContainerWrapper>
   );
 };
@@ -508,7 +594,11 @@ const ListFilter = React.memo(({ ...props }) => {
 
   const isMobile = useIsMobile();
   return (
-    <PopUpFilter isOpen={showFilter} setIsOpen={setShowFilter} onApply={handleFilter}>
+    <PopUpFilter
+      isOpen={showFilter}
+      setIsOpen={setShowFilter}
+      onApply={handleFilter}
+    >
       <VStack spacing={4}>
         <DoneByAutoComplete
           placeholder="Done By"
@@ -530,13 +620,37 @@ const ListFilter = React.memo(({ ...props }) => {
         />
         {isMobile ? (
           <>
-            <DateField label="Start Date" value={startDate ? new Date(startDate) : null} onChange={(date) => setStartDate(date?.toISOString().split("T")[0] || "")} />
-            <DateField label="End Date" value={endDate ? new Date(endDate) : null} onChange={(date) => setEndDate(date?.toISOString().split("T")[0] || "")} />
+            <DateField
+              label="Start Date"
+              value={startDate ? new Date(startDate) : null}
+              onChange={(date) =>
+                setStartDate(date?.toISOString().split("T")[0] || "")
+              }
+            />
+            <DateField
+              label="End Date"
+              value={endDate ? new Date(endDate) : null}
+              onChange={(date) =>
+                setEndDate(date?.toISOString().split("T")[0] || "")
+              }
+            />
           </>
         ) : (
           <HStack>
-            <DateField label="Start Date" value={startDate ? new Date(startDate) : null} onChange={(date) => setStartDate(date?.toISOString().split("T")[0] || "")} />
-            <DateField label="End Date" value={endDate ? new Date(endDate) : null} onChange={(date) => setEndDate(date?.toISOString().split("T")[0] || "")} />
+            <DateField
+              label="Start Date"
+              value={startDate ? new Date(startDate) : null}
+              onChange={(date) =>
+                setStartDate(date?.toISOString().split("T")[0] || "")
+              }
+            />
+            <DateField
+              label="End Date"
+              value={endDate ? new Date(endDate) : null}
+              onChange={(date) =>
+                setEndDate(date?.toISOString().split("T")[0] || "")
+              }
+            />
           </HStack>
         )}
       </VStack>

@@ -1,100 +1,87 @@
-import { NavLink } from 'react-router-dom'
-import './style.scss'
-import { useSettings } from '@/context/AdminSettingsContext'
-import { defaultSidebarLabels } from '@/constants/adminSidebarLabels'
-import AdminSidebarLink from './components/AdminSidebarLink'
+import { useState, useRef, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { RiLogoutBoxRLine, RiFileList3Line, RiDashboardLine } from "react-icons/ri";
+import { IoSettingsSharp } from "react-icons/io5";
+import { MdOutlineBusiness } from "react-icons/md";
+import { TbReportSearch } from "react-icons/tb";
 
-function parseJwt(token) {
-  try {
-    return JSON.parse(atob(token.split('.')[1]))
-  } catch (e) {
-    return e
-  }
-}
+import { useIsMobile } from "@/utils/useIsMobile";
+import AdminSidebarLink from "./components/AdminSidebarLink";
+import { defaultSidebarLabels } from "@/constants/adminSidebarLabels";
+import "./style.scss";
 
-const Sidebar = ({ open, onClose }) => {
-  let username = 'User'
-  const token = localStorage.getItem('access_token')
-  if (token) {
-    const payload = parseJwt(token)
-    if (payload && payload.username) {
-      username = payload.username
-    }
-  }
+const Sidebar = ({ isCollapsed, onToggleCollapse, isOpenOnMobile, onCloseOnMobile }) => {
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const location = useLocation();
 
-  const settingsContext = useSettings()
-  const loading = settingsContext?.loading || false
-  const companyName = 'AccountX'
-  const sidebarLabels = defaultSidebarLabels
+  const sidebarLabels = defaultSidebarLabels;
 
-  const mainNavLinks = [
-    { to: '/admin/dashboard', label: sidebarLabels.Dashboard },
-    { to: '/admin/tenant', label: 'Tenant' },
-  ]
+  const adminSidebarData = [
+    { to: "/admin/dashboard", label: sidebarLabels.Dashboard, Icon: RiDashboardLine },
+    { to: "/admin/tenant", label: "Tenant", Icon: MdOutlineBusiness },
+    { to: "/admin/custom-pages", label: "Custom Pages", Icon: RiFileList3Line },
+    { to: "/admin/reports", label: sidebarLabels.reports, Icon: TbReportSearch },
+    { to: "/admin/settings", label: sidebarLabels.settings, Icon: IoSettingsSharp },
+  ];
 
-  const secondaryNavLinks = [
-    { to: '/admin/reports', label: sidebarLabels.reports },
-    { to: '/admin/settings', label: sidebarLabels.settings },
-  ]
+  const handleLogout = () => {
+    localStorage.clear();
+    queryClient.clear();
+    navigate("/login");
+  };
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 900
-  const showSidebar = open === undefined ? true : open
+  const handleLinkClick = () => {
+    if (isMobile && onCloseOnMobile) onCloseOnMobile();
+  };
 
-  if (loading) {
-    return (
-      <aside
-        className={`admin_sidebar${isMobile ? ' sidebar-mobile' : ''}${
-          showSidebar ? ' open' : ''
-        }`}>
-        <div className="admin_sidebar__header">
-          <h1 className="admin_sidebar__header-title">Loading...</h1>
-        </div>
-      </aside>
-    )
-  }
+  const showLabels = isMobile || !isCollapsed;
+
+  const renderNavItems = (items) => {
+    return items.map((item) => (
+      <li key={item.to}>
+        <AdminSidebarLink
+          to={item.to}
+          label={item.label}
+          icon={<item.Icon size={26} />}
+          showLabel={showLabels}
+          onClick={handleLinkClick}
+        />
+      </li>
+    ));
+  };
 
   return (
     <>
-      {isMobile && showSidebar && (
-        <div className="admin_sidebar-backdrop box-shadow" onClick={onClose} />
+      {isMobile && isOpenOnMobile && (
+        <div className="admin_sidebar-backdrop box-shadow" onClick={onCloseOnMobile} />
       )}
       <aside
-        className={`admin_sidebar${
-          isMobile ? ' sidebar-mobile box-shadow' : ''
-        }${showSidebar ? ' open' : ''}`}
-        style={
-          isMobile && !showSidebar ? { transform: 'translateX(-100%)' } : {}
-        }>
-        <div className="admin_sidebar__header">
-          <h1
-            className="admin_sidebar__header-title fs24"
-            style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {companyName}
-          </h1>
-          {isMobile && (
-            <button
-              className="admin_sidebar-close-btn fs26"
-              onClick={onClose}
-              aria-label="Close sidebar">
-              ×
-            </button>
+        className={`admin-sidebar ${
+          !isMobile && isCollapsed ? "collapsed" : ""
+        } ${isMobile && isOpenOnMobile ? "mobile-open" : ""}`}
+      >
+        <nav className="admin-sidebar__nav fs16 fw600">
+          <ul>{renderNavItems(adminSidebarData)}</ul>
+        </nav>
+
+        <div
+          className="admin-sidebar__logout fs16 fw600"
+          onClick={handleLogout}
+          title="Logout"
+        >
+          <span className="admin-sidebar__logout-icon">
+            <RiLogoutBoxRLine size={26} />
+          </span>
+          {showLabels && (
+            <span className="admin-sidebar__logout-label">Logout</span>
           )}
         </div>
-        <nav className="admin_sidebar__nav">
-          <ul className="admin_sidebar__nav-list">
-            {mainNavLinks.map((link) => (
-              <AdminSidebarLink key={link.to} {...link} />
-            ))}
-          </ul>
-          <ul className="admin_sidebar__nav-list">
-            {secondaryNavLinks.map((link) => (
-              <AdminSidebarLink key={link.to} {...link} />
-            ))}
-          </ul>
-        </nav>
       </aside>
     </>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;

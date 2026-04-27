@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import useCreateItem from "@/hooks/api/item/useCreateItem";
-import useUpdateItem from "@/hooks/api/item/useUpdateItem";
-import useFetchPrintSettings from "@/hooks/api/printSettings/useFetchPrintSettings";
-import useDeleteItem from "@/hooks/api/item/useDeleteItem";
+import useCreateItem from "@/apps/user/hooks/api/item/useCreateItem";
+import useUpdateItem from "@/apps/user/hooks/api/item/useUpdateItem";
+import useFetchPrintSettings from "@/apps/user/hooks/api/printSettings/useFetchPrintSettings";
+import useDeleteItem from "@/apps/user/hooks/api/item/useDeleteItem";
 import { Transaction } from "@/constants/object/transaction";
-import { API_FILES } from "@/config/api";
+import { API_UPLOADS_BASE, buildUploadUrl } from "@/config/api";
 
 import InputField from "@/components/InputField";
 import { Modal, ModalHeader, ModalFooter, ModalBody } from "@/components/Modal";
@@ -12,19 +12,18 @@ import { useToast } from "@/context/ToastContext";
 import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
 import { TOASTSTATUS, TOASTTYPE } from "@/constants/object/toastType";
 import TextArea from "@/components/TextArea";
-import Title from "@/apps/user/components/Title";
+import Title from "@/components/Title";
 import { Report } from "@/constants/object/report";
-import CancelButton from "@/apps/user/components/CancelButton";
-import SubmitButton from "@/apps/user/components/SubmitButton";
-import DeleteTextButton from "@/apps/user/components/DeleteTextButton";
+import CancelButton from "@/components/CancelButton";
+import SubmitButton from "@/components/SubmitButton";
+import DeleteTextButton from "@/components/DeleteTextButton";
 import SupplierAutoCompleteWithAddOption from "@/apps/user/components/SupplierAutoCompleteWithAddOption";
 import CategoryAutoCompleteWithAddOption from "@/apps/user/components/CategoryAutoCompleteWithAddOption";
 import BrandAutoCompleteWithAddOption from "@/apps/user/components/BrandAutoCompleteWithAddOption";
-import UnitAutoCompleteWithAddOption from "@/apps/user/components/UnitAutoCompleteWithAddOption";
 import DoneByAutoCompleteWithAddOption from "@/apps/user/components/DoneByAutoCompleteWithAddOption";
 import CostCenterAutoCompleteWithAddOption from "@/apps/user/components/CostCenterAutoCompleteWithAddOption";
 import JsBarcode from "jsbarcode";
-import PrintBarcodeButton from "@/components/PrintBarcodeButton";
+import PrintBarcodeButton from "@/apps/user/components/PrintBarcodeButton";
 
 import "./style.scss";
 
@@ -75,7 +74,6 @@ const AddItem = ({ isOpen, onClose, mode, selectedItem, onItemCreated }) => {
   const categoryRef = useRef(null);
   const skuRef = useRef(null);
   const brandRef = useRef(null);
-  const unitRef = useRef(null);
   const barcodeRef = useRef(null);
   const stockQuantityRef = useRef(null);
   const purchasePriceRef = useRef(null);
@@ -91,7 +89,6 @@ const AddItem = ({ isOpen, onClose, mode, selectedItem, onItemCreated }) => {
     category_id: "",
     sku: "",
     brand_id: "",
-    unit_id: "",
     bar_code: "",
     stock_quantity: "",
     purchase_price: "",
@@ -102,6 +99,7 @@ const AddItem = ({ isOpen, onClose, mode, selectedItem, onItemCreated }) => {
     image: "",
     done_by_id: "",
     cost_center_id: "",
+    ItemCustomFields: [],
   };
 
   const [form, setForm] = useState({ ...defaultForm });
@@ -127,9 +125,10 @@ const AddItem = ({ isOpen, onClose, mode, selectedItem, onItemCreated }) => {
       if (mode === "edit" || mode === "view") {
         setForm({ ...defaultForm, ...selectedItem });
         if (selectedItem?.image) {
-          // setImagePreview(`${API_FILES}/uploads/${selectedItem.image}`);
-         setImagePreview(`${API_FILES}/${selectedItem.image}`);
-
+          const fullImageUrl = buildUploadUrl(API_UPLOADS_BASE, selectedItem.image);
+          if (fullImageUrl) {
+            setImagePreview(`${fullImageUrl}?t=${new Date().getTime()}`);
+          }
         }
       } else {
         const savedForm = localStorage.getItem("item_form");
@@ -172,8 +171,36 @@ const AddItem = ({ isOpen, onClose, mode, selectedItem, onItemCreated }) => {
     }
   };
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value, category } = e.target;
+    console.log("handleChange - name:", name, "value:", value, "category:", category);
+    if (name === "category_id") {
+      if (category) {
+        // When category changes, set ItemCustomFields based on category_custom_fields
+        const newCustomFields = (category.custom_fields || []).map(cf => ({
+          field_id: cf.id,
+          label: cf.label,
+          type: cf.type,
+          is_required: cf.is_required,
+          value: ""
+        }));
+        console.log("Setting newCustomFields:", newCustomFields);
+        setForm({ ...form, [name]: value, ItemCustomFields: newCustomFields });
+      } else {
+        // If category is cleared, reset ItemCustomFields
+        setForm({ ...form, [name]: value, ItemCustomFields: [] });
+      }
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+  };
+
+  const handleCustomFieldChange = (fieldId, value) => {
+    const updatedFields = form.ItemCustomFields.map(f => 
+      f.field_id === fieldId ? { ...f, value } : f
+    );
+    setForm({ ...form, ItemCustomFields: updatedFields });
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -248,15 +275,6 @@ const AddItem = ({ isOpen, onClose, mode, selectedItem, onItemCreated }) => {
       brandRef.current?.focus();
       return;
     }
-    if (!form.unit_id) {
-      showToast({
-        type: TOASTTYPE.GENARAL,
-        message: "Please select a unit.",
-        status: TOASTSTATUS.ERROR,
-      });
-      unitRef.current?.focus();
-      return;
-    }
     if (!form.stock_quantity) {
       showToast({
         type: TOASTTYPE.GENARAL,
@@ -315,7 +333,9 @@ const AddItem = ({ isOpen, onClose, mode, selectedItem, onItemCreated }) => {
       const formData = new FormData();
 
       Object.keys(form).forEach((key) => {
-        if (form[key] !== null && form[key] !== undefined) {
+        if (key === "ItemCustomFields") {
+          formData.append(key, JSON.stringify(form[key]));
+        } else if (form[key] !== null && form[key] !== undefined) {
           formData.append(key, form[key]);
         }
       });
@@ -399,6 +419,27 @@ const AddItem = ({ isOpen, onClose, mode, selectedItem, onItemCreated }) => {
           onChange={handleChange}
           required
         />
+        
+        {/* Render Custom Fields */}
+        {form.ItemCustomFields && form.ItemCustomFields.length > 0 && (
+          <div className="custom-fields-section">
+            <div className="custom-fields-section__title fs16 fw600">Category Specific Fields</div>
+            <div className="custom-fields-section__inputs">
+              {form.ItemCustomFields.map((field) => (
+                <InputField
+                  key={field.field_id}
+                  label={field.label}
+                  placeholder={field.label}
+                  value={field.value || ""}
+                  onChange={(e) => handleCustomFieldChange(field.field_id, e.target.value)}
+                  disabled={disabled}
+                  required={field.is_required}
+                  type={field.type === "number" ? "number" : "text"}
+                />
+              ))}
+            </div>
+          </div>
+        )}
         <InputField
           label="SKU"
           disabled={disabled}
@@ -415,15 +456,6 @@ const AddItem = ({ isOpen, onClose, mode, selectedItem, onItemCreated }) => {
           name="brand_id"
           placeholder="Brand"
           value={form.brand_id}
-          onChange={handleChange}
-          required
-        />
-        <UnitAutoCompleteWithAddOption
-          disabled={disabled}
-          ref={unitRef}
-          name="unit_id"
-          placeholder="Unit"
-          value={form.unit_id}
           onChange={handleChange}
           required
         />

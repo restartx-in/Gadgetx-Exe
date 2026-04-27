@@ -1,7 +1,7 @@
-import PageLimitSelect from '@/components/PageLimitSelect'
-import PageSelect from '@/components/PageSelect'
-import './style.scss'
-import { useIsMobile } from '@/utils/useIsMobile'
+import PageLimitSelect from "@/components/PageLimitSelect";
+import PageSelect from "@/components/PageSelect";
+import "./style.scss";
+import { useIsMobile } from "@/utils/useIsMobile";
 
 const TableFooter = ({
   handlePageLimitSelect,
@@ -11,10 +11,10 @@ const TableFooter = ({
   itemsPerPage,
   viewAll = false,
 }) => {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   return (
-    <div className={`table_footer ${isMobile ? 'pt20 pb20' : 'pt10'}`}>
+    <div className={`table_footer ${isMobile ? "pt20 pb20" : "pt10"}`}>
       {handlePageLimitSelect && itemsPerPage && (
         <PageLimitSelect
           handlePageLimitSelect={handlePageLimitSelect}
@@ -33,7 +33,7 @@ const TableFooter = ({
         viewAll={viewAll}
       />
     </div>
-  )
-}
+  );
+};
 
-export default TableFooter
+export default TableFooter;

@@ -1,8 +1,8 @@
 import { useState, useEffect, forwardRef, useRef } from "react";
-import { useParties } from "@/hooks/api/party/useParties";  
+import { useParties } from "@/apps/user/hooks/api/party/useParties";
 import CustomTextField from "@/components/CustomTextField";
 import CustomScrollbar from "@/components/CustomScrollbar";
-import "./style.scss";  
+import "./style.scss";
 
 const PartyAutoComplete = forwardRef(
   (
@@ -15,6 +15,7 @@ const PartyAutoComplete = forwardRef(
       required = false,
       disabled = false,
       className = "",
+      selectedName = "", // Added to show name in edit mode
       filters = {},
       style = {},
     },
@@ -81,6 +82,7 @@ const PartyAutoComplete = forwardRef(
         required={required}
         disabled={disabled || isLoading}
         className={className}
+        selectedName={selectedName}
         style={style}
       />
     );
@@ -102,6 +104,7 @@ const PartySelectAutocompleteInput = forwardRef(
       required = false,
       disabled = false,
       className = "",
+      selectedName = "",
       style = {},
       ...rest
     },
@@ -111,14 +114,18 @@ const PartySelectAutocompleteInput = forwardRef(
     const [filteredOptions, setFilteredOptions] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     const hasBeenFocused = useRef(false);
 
     // Update the input field text when the selected value changes
     useEffect(() => {
       const selectedOption = options.find((opt) => opt.value === value);
-      setInputValue(selectedOption ? selectedOption.label : "");
-    }, [value, options]);
+      if (selectedOption) {
+        setInputValue(selectedOption.label);
+      } else if (selectedName && !inputValue && !hasBeenFocused.current) {
+        setInputValue(selectedName);
+      }
+    }, [value, options, selectedName]);
 
     // Handle user input and filter options accordingly
     const handleInputChange = (e) => {
@@ -157,27 +164,27 @@ const PartySelectAutocompleteInput = forwardRef(
     };
 
     const handleInputClick = () => {
-        setFilteredOptions(options);
-        setShowDropdown(true);
+      setFilteredOptions(options);
+      setShowDropdown(true);
     };
-    
+
     // Handle keyboard navigation (ArrowDown, ArrowUp, Enter, Escape)
     const handleKeyDown = (e) => {
       if (!showDropdown) return;
-      
+
       const itemsCount = filteredOptions.length;
       if (itemsCount === 0) return;
 
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setActiveIndex((prevIndex) => 
+          setActiveIndex((prevIndex) =>
             prevIndex < itemsCount - 1 ? prevIndex + 1 : 0
           );
           break;
         case "ArrowUp":
           e.preventDefault();
-          setActiveIndex((prevIndex) => 
+          setActiveIndex((prevIndex) =>
             prevIndex > 0 ? prevIndex - 1 : itemsCount - 1
           );
           break;
@@ -197,10 +204,7 @@ const PartySelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div
-        style={{ ...style, position: "relative" }}
-        className={className}
-      >
+      <div style={{ ...style, position: "relative" }} className={className}>
         <CustomTextField
           ref={ref}
           id={name}
@@ -221,10 +225,10 @@ const PartySelectAutocompleteInput = forwardRef(
         />
 
         {showDropdown && (
-          <CustomScrollbar 
+          <CustomScrollbar
             className="partyinput-select__dropdown"
-            activeIndex={activeIndex} 
-            as="ul" 
+            activeIndex={activeIndex}
+            as="ul"
           >
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt, index) => (

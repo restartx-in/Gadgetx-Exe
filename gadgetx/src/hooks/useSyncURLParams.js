@@ -1,7 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-
+/**
+ * A custom hook to synchronize a state object with the URL query parameters.
+ * @param {object} params - An object where keys are the desired URL parameter names (e.g., camelCase)
+ * and values are the state values to sync.
+ */
 const useSyncURLParams = (params) => {
   const navigate = useNavigate();
   const location = useLocation();

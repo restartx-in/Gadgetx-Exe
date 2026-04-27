@@ -1,63 +1,93 @@
 module.exports = async (client) => {
   try {
-    // Using client.exec for multi-statement trigger creation
-    await client.exec(accountTriggers);
-    console.log("✅ Account triggers (Initial Balance & Cleanup) added");
-  } catch (e) {
-    console.error("❌ Error creating account triggers:", e.message);
-    throw e;
+    // Check if the trigger already exists in the system catalog
+    const result = await client.query(`
+      SELECT 1 FROM pg_trigger WHERE tgname = 'trg_account_insert';
+    `);
+
+    const triggersExist = result.rowCount > 0;
+
+    if (triggersExist) {
+      console.log('ℹ️ "account" triggers already exist.');
+    } else {
+      await client.query(accountQuery);
+      console.log('✅ "account" triggers have been added.');
+    }
+  } catch (err) {
+    // Using single quotes on the outside to prevent SyntaxErrors with "account"
+    console.error('❌ Failed to add "account" triggers:', err.message);
+    throw err;
   }
 };
 
-const accountTriggers = `
--- =====================================================
--- Trigger for Initial Balance (INSERT)
--- =====================================================
-DROP TRIGGER IF EXISTS trg_account_initial_balance;
-CREATE TRIGGER trg_account_initial_balance
+const accountQuery = `
+---------------------------------------------------
+-- INSERT TRIGGER : Initial Balance
+---------------------------------------------------
+CREATE OR REPLACE FUNCTION account_after_insert()
+RETURNS TRIGGER AS $$
+DECLARE
+  txn_id INTEGER;
+BEGIN
+  -- Only create transaction if initial balance > 0
+  IF NEW.balance > 0 THEN
+
+    INSERT INTO "transaction" (
+      tenant_id,
+      transaction_type,
+      reference_id,
+      cost_center_id,
+      done_by_id,
+      description
+    ) VALUES (
+      NEW.tenant_id,
+      'deposit',
+      NEW.id,
+      NEW.cost_center_id,
+      NEW.done_by_id,
+      'Initial account balance'
+    )
+    RETURNING id INTO txn_id;
+
+    INSERT INTO transaction_ledger (
+      tenant_id,
+      transaction_id,
+      account_id,
+      credit
+    ) VALUES (
+      NEW.tenant_id,
+      txn_id,
+      NEW.id,
+      NEW.balance
+    );
+
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_account_insert
 AFTER INSERT ON account
 FOR EACH ROW
-WHEN (NEW.balance IS NOT NULL AND NEW.balance != 0)
+EXECUTE FUNCTION account_after_insert();
+
+---------------------------------------------------
+-- DELETE TRIGGER : Cleanup
+---------------------------------------------------
+CREATE OR REPLACE FUNCTION account_after_delete()
+RETURNS TRIGGER AS $$
 BEGIN
-    -- Insert into transaction
-    INSERT INTO "transaction" (
-        tenant_id,
-        transaction_type,
-        reference_id,
-        description
-    ) VALUES (
-        NEW.tenant_id,
-        'deposit',
-        NEW.id,
-        'Initial balance for account: ' || NEW.name
-    );
+  DELETE FROM "transaction"
+  WHERE transaction_type = 'deposit'
+    AND reference_id = OLD.id;
 
-    -- Insert into transaction_ledger
-    INSERT INTO transaction_ledger (
-        tenant_id,
-        transaction_id,
-        account_id,
-        credit
-    ) VALUES (
-        NEW.tenant_id,
-        (SELECT last_insert_rowid()),
-        NEW.id,
-        NEW.balance
-    );
+  RETURN OLD;
 END;
+$$ LANGUAGE plpgsql;
 
--- =====================================================
--- Trigger for Account Cleanup (DELETE)
--- =====================================================
-DROP TRIGGER IF EXISTS trg_account_delete_cleanup;
-CREATE TRIGGER trg_account_delete_cleanup
-BEFORE DELETE ON account
+CREATE TRIGGER trg_account_delete
+AFTER DELETE ON account
 FOR EACH ROW
-BEGIN
-    -- Delete related transactions (Ledger entries will cascade)
-    DELETE FROM "transaction"
-    WHERE transaction_type = 'deposit' 
-      AND reference_id = OLD.id
-      AND description LIKE 'Initial balance%';
-END;
+EXECUTE FUNCTION account_after_delete();
 `;

@@ -4,7 +4,7 @@ const validateToken = require('../../middlewares/validateToken');
 
 // --- Repositories ---
 const AccountRepository = require('./account.repository');
-const TenantRepository = require('../tenant/tenant.repository');
+const TenantRepository = require('../../api/tenant/tenant.repository');
 
 // --- Services ---
 const AccountService = require('./account.service');

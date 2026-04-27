@@ -1,6 +1,13 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback, useReducer } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import useMonthlySummary from '@/hooks/api/monthlySummary/useMonthlySummary'
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  useReducer,
+} from "react";
+import { useSearchParams } from "react-router-dom";
+import useMonthlySummary from "@/apps/user/hooks/api/monthlySummary/useMonthlySummary";
 import {
   Table,
   Thead,
@@ -10,66 +17,66 @@ import {
   TdNumeric,
   TableCaption,
   Th,
-} from '@/components/Table'
-import Loader from '@/components/Loader'
-import Button from '@/components/Button'
-import HStack from '@/components/HStack'
-import VStack from '@/components/VStack'
-import DateField from '@/components/DateField'
-import Select from '@/components/Select'
-import PageHeader from '@/components/PageHeader'
-import TableFooter from '@/components/TableFooter'
-import { useIsMobile } from '@/utils/useIsMobile'
-import ContainerWrapper from '@/components/ContainerWrapper'
-import TableWrapper from '@/components/TableWrapper'
-import PageTitleWithBackButton from '@/components/PageTitleWithBackButton'
-import RefreshButton from '@/components/RefreshButton'
-import PopUpFilter from '@/components/PopUpFilter'
-import Spacer from '@/components/Spacer'
-import useSyncURLParams from '@/hooks/useSyncURLParams'
-import './style.scss'
+} from "@/components/Table";
+import Loader from "@/components/Loader";
+import Button from "@/components/Button";
+import HStack from "@/components/HStack";
+import VStack from "@/components/VStack";
+import DateField from "@/components/DateField";
+import Select from "@/components/Select";
+import PageHeader from "@/components/PageHeader";
+import TableFooter from "@/components/TableFooter";
+import { useIsMobile } from "@/utils/useIsMobile";
+import ContainerWrapper from "@/components/ContainerWrapper";
+import TableWrapper from "@/components/TableWrapper";
+import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
+import RefreshButton from "@/components/RefreshButton";
+import PopUpFilter from "@/components/PopUpFilter";
+import Spacer from "@/components/Spacer";
+import useSyncURLParams from "@/hooks/useSyncURLParams";
+import "./style.scss";
 
 // REDUCER FUNCTION: Handles merging of state updates
 const stateReducer = (state, newState) => ({ ...state, ...newState });
 
 const TABS = [
-  { key: 'sales', label: 'Sales' },
-  { key: 'purchases', label: 'Purchases' },
-  { key: 'expenses', label: 'Expenses' },
-]
+  { key: "sales", label: "Sales" },
+  { key: "purchases", label: "Purchases" },
+  { key: "expenses", label: "Expenses" },
+];
 
 const formatCurrency = (amount) => {
   const options = {
-    style: 'currency',
-    currency: 'INR',
+    style: "currency",
+    currency: "INR",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }
-  return new Intl.NumberFormat('en-IN', options).format(Math.abs(amount))
-}
+  };
+  return new Intl.NumberFormat("en-IN", options).format(Math.abs(amount));
+};
 
 // --- Extracted & Memoized Mobile Card ---
 const MobileSummaryCard = React.memo(({ item, activeTab }) => {
   let count, total, receivedPaid, balance, label;
 
-  if (activeTab === 'sales') {
+  if (activeTab === "sales") {
     count = item.sale?.count || 0;
     receivedPaid = item.sale?.received || 0;
     balance = item.sale?.pending || 0;
     total = receivedPaid + balance;
-    label = 'Sales';
-  } else if (activeTab === 'purchases') {
+    label = "Sales";
+  } else if (activeTab === "purchases") {
     count = item.purchase?.count || 0;
     receivedPaid = item.purchase?.paid || 0;
     balance = item.purchase?.pending || 0;
     total = receivedPaid + balance;
-    label = 'Purchases';
+    label = "Purchases";
   } else {
     count = item.expense?.count || 0;
     total = item.expense?.amount || 0;
     receivedPaid = item.expense?.paid || 0;
     balance = item.expense?.balance || 0;
-    label = 'Expenses';
+    label = "Expenses";
   }
 
   return (
@@ -88,7 +95,8 @@ const MobileSummaryCard = React.memo(({ item, activeTab }) => {
             {formatCurrency(total)}
           </div>
           <div className="monthly_summary_report__mobile_card-paid">
-            {activeTab === 'sales' ? 'Received' : 'Paid'}: {formatCurrency(receivedPaid)}
+            {activeTab === "sales" ? "Received" : "Paid"}:{" "}
+            {formatCurrency(receivedPaid)}
           </div>
           <div className="monthly_summary_report__mobile_card-balance">
             Balance: {formatCurrency(balance)}
@@ -101,22 +109,26 @@ const MobileSummaryCard = React.memo(({ item, activeTab }) => {
 
 // --- Extracted & Memoized Desktop Row ---
 const DesktopSummaryRow = React.memo(({ item, activeTab }) => {
-  if (activeTab === 'sales') {
+  if (activeTab === "sales") {
     const total = (item.sale?.received || 0) + (item.sale?.pending || 0);
     return (
       <Tr>
-        <Td>{item.month} {item.year}</Td>
+        <Td>
+          {item.month} {item.year}
+        </Td>
         <Td>{item.sale?.count || 0}</Td>
         <TdNumeric>{total}</TdNumeric>
         <TdNumeric>{item.sale?.received || 0}</TdNumeric>
         <TdNumeric>{item.sale?.pending || 0}</TdNumeric>
       </Tr>
     );
-  } else if (activeTab === 'purchases') {
+  } else if (activeTab === "purchases") {
     const total = (item.purchase?.paid || 0) + (item.purchase?.pending || 0);
     return (
       <Tr>
-        <Td>{item.month} {item.year}</Td>
+        <Td>
+          {item.month} {item.year}
+        </Td>
         <Td>{item.purchase?.count || 0}</Td>
         <TdNumeric>{total}</TdNumeric>
         <TdNumeric>{item.purchase?.paid || 0}</TdNumeric>
@@ -126,7 +138,9 @@ const DesktopSummaryRow = React.memo(({ item, activeTab }) => {
   } else {
     return (
       <Tr>
-        <Td>{item.month} {item.year}</Td>
+        <Td>
+          {item.month} {item.year}
+        </Td>
         <Td>{item.expense?.count || 0}</Td>
         <TdNumeric>{item.expense?.amount || 0}</TdNumeric>
         <TdNumeric>{item.expense?.paid || 0}</TdNumeric>
@@ -144,11 +158,11 @@ const MonthlySummaryReport = () => {
 
   // --- Centralized State using useReducer (UPDATED) ---
   const [state, setState] = useReducer(stateReducer, {
-    page: parseInt(searchParams.get('page')) || 1,
-    page_size: parseInt(searchParams.get('pageSize')) || 10,
-    start_date: searchParams.get('startDate') || `${today.getFullYear()}-01-01`,
-    end_date: searchParams.get('endDate') || `${today.getFullYear()}-12-31`,
-    active_tab: searchParams.get('activeTab') || 'sales',
+    page: parseInt(searchParams.get("page")) || 1,
+    page_size: parseInt(searchParams.get("pageSize")) || 10,
+    start_date: searchParams.get("startDate") || `${today.getFullYear()}-01-01`,
+    end_date: searchParams.get("endDate") || `${today.getFullYear()}-12-31`,
+    active_tab: searchParams.get("activeTab") || "sales",
   });
 
   // --- URL Sync ---
@@ -167,7 +181,11 @@ const MonthlySummaryReport = () => {
   const [localYear, setLocalYear] = useState(String(today.getFullYear()));
 
   // --- API Call ---
-  const { data: summaryResponse, isLoading, isRefetching } = useMonthlySummary({
+  const {
+    data: summaryResponse,
+    isLoading,
+    isRefetching,
+  } = useMonthlySummary({
     start_date: state.start_date,
     end_date: state.end_date,
     page: state.page,
@@ -175,18 +193,21 @@ const MonthlySummaryReport = () => {
   });
 
   // --- Derived Data ---
-  const monthlyData = useMemo(() => summaryResponse?.data || [], [summaryResponse]);
+  const monthlyData = useMemo(
+    () => summaryResponse?.data || [],
+    [summaryResponse]
+  );
   const totalPages = summaryResponse?.page_count || 0;
   const totalItems = summaryResponse?.count || 0;
   const loading = isLoading || isRefetching;
 
   const activeData = useMemo(() => {
     switch (state.active_tab) {
-      case 'sales':
+      case "sales":
         return monthlyData.filter((item) => item.sale?.count > 0);
-      case 'purchases':
+      case "purchases":
         return monthlyData.filter((item) => item.purchase?.count > 0);
-      case 'expenses':
+      case "expenses":
         return monthlyData.filter((item) => item.expense?.count > 0);
       default:
         return [];
@@ -194,8 +215,12 @@ const MonthlySummaryReport = () => {
   }, [state.active_tab, monthlyData]);
 
   const captionItem = useMemo(() => {
-      const mapping = { sales: 'Sale', purchases: 'Purchase', expenses: 'Expense' };
-      return mapping[state.active_tab] || 'Item';
+    const mapping = {
+      sales: "Sale",
+      purchases: "Purchase",
+      expenses: "Expense",
+    };
+    return mapping[state.active_tab] || "Item";
   }, [state.active_tab]);
 
   const yearOptions = useMemo(() => {
@@ -216,18 +241,17 @@ const MonthlySummaryReport = () => {
   useEffect(() => {
     if (isMobile && tabsContainerRef.current) {
       const activeTabElement = tabsContainerRef.current.querySelector(
-        `[data-tab-key="${state.active_tab}"]`,
+        `[data-tab-key="${state.active_tab}"]`
       );
       if (activeTabElement) {
         activeTabElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center',
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
         });
       }
     }
   }, [state.active_tab, isMobile]);
-
 
   // --- Handlers - UPDATED setState CALLS ---
 
@@ -244,7 +268,8 @@ const MonthlySummaryReport = () => {
   }, []);
 
   const handleApplyFilter = useCallback(() => {
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       start_date: localStartDate,
       end_date: localEndDate,
       page: 1,
@@ -261,9 +286,10 @@ const MonthlySummaryReport = () => {
     setLocalStartDate(defaultStartDate);
     setLocalEndDate(defaultEndDate);
     setLocalYear(currentYearStr);
-    
+
     // Reset global state
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       start_date: defaultStartDate,
       end_date: defaultEndDate,
       page: 1,
@@ -281,13 +307,12 @@ const MonthlySummaryReport = () => {
   }, []);
 
   const handleLocalStartDateChange = useCallback((date) => {
-     setLocalStartDate(date ? date.toISOString().slice(0, 10) : '');
+    setLocalStartDate(date ? date.toISOString().slice(0, 10) : "");
   }, []);
 
   const handleLocalEndDateChange = useCallback((date) => {
-     setLocalEndDate(date ? date.toISOString().slice(0, 10) : '');
+    setLocalEndDate(date ? date.toISOString().slice(0, 10) : "");
   }, []);
-
 
   const filterProps = {
     showFilter,
@@ -328,7 +353,9 @@ const MonthlySummaryReport = () => {
                       key={tab.key}
                       data-tab-key={tab.key}
                       variant={
-                        state.active_tab === tab.key ? 'primary' : 'filter-outline'
+                        state.active_tab === tab.key
+                          ? "primary"
+                          : "filter-outline"
                       }
                       onClick={() => handleTabChange(tab.key)}
                       className="monthly_summary_report__tab_btn"
@@ -345,11 +372,11 @@ const MonthlySummaryReport = () => {
             </PageHeader>
             <VStack className="monthly_summary_report__mobile-list">
               {activeData.map((item) => (
-                 <MobileSummaryCard 
-                    key={`${item.year}-${item.month}`} 
-                    item={item} 
-                    activeTab={state.active_tab} 
-                 />
+                <MobileSummaryCard
+                  key={`${item.year}-${item.month}`}
+                  item={item}
+                  activeTab={state.active_tab}
+                />
               ))}
             </VStack>
             <Spacer />
@@ -368,7 +395,9 @@ const MonthlySummaryReport = () => {
                       key={tab.key}
                       data-tab-key={tab.key}
                       variant={
-                        state.active_tab === tab.key ? 'primary' : 'filter-outline'
+                        state.active_tab === tab.key
+                          ? "primary"
+                          : "filter-outline"
                       }
                       onClick={() => handleTabChange(tab.key)}
                       className="monthly_summary_report__tab_btn fs18 fw600"
@@ -387,7 +416,7 @@ const MonthlySummaryReport = () => {
             <div className="monthly_summary_report__table_responsive">
               <Table>
                 <Thead>
-                  {state.active_tab === 'sales' && (
+                  {state.active_tab === "sales" && (
                     <Tr>
                       <Th>Month</Th>
                       <Th>Sales Count</Th>
@@ -396,7 +425,7 @@ const MonthlySummaryReport = () => {
                       <Th>Balance</Th>
                     </Tr>
                   )}
-                  {state.active_tab === 'purchases' && (
+                  {state.active_tab === "purchases" && (
                     <Tr>
                       <Th>Month</Th>
                       <Th>Purchases Count</Th>
@@ -405,7 +434,7 @@ const MonthlySummaryReport = () => {
                       <Th>Cost (Balance)</Th>
                     </Tr>
                   )}
-                  {state.active_tab === 'expenses' && (
+                  {state.active_tab === "expenses" && (
                     <Tr>
                       <Th>Month</Th>
                       <Th>Expenses Count</Th>
@@ -417,10 +446,10 @@ const MonthlySummaryReport = () => {
                 </Thead>
                 <Tbody>
                   {activeData.map((item) => (
-                    <DesktopSummaryRow 
-                        key={`${item.year}-${item.month}`} 
-                        item={item} 
-                        activeTab={state.active_tab} 
+                    <DesktopSummaryRow
+                      key={`${item.year}-${item.month}`}
+                      item={item}
+                      activeTab={state.active_tab}
                     />
                   ))}
                 </Tbody>
@@ -440,49 +469,51 @@ const MonthlySummaryReport = () => {
         />
       )}
     </ContainerWrapper>
-  )
-}
+  );
+};
 
-const MonthlySummaryListFilter = React.memo(({
-  showFilter,
-  setShowFilter,
-  handleApplyFilter,
-  handleFilterReset,
-  localStartDate,
-  handleLocalStartDateChange,
-  localEndDate,
-  handleLocalEndDateChange,
-  localYear,
-  handleLocalYearChange,
-  yearOptions,
-}) => {
-  return (
-    <PopUpFilter
-      isOpen={showFilter}
-      setIsOpen={setShowFilter}
-      onApply={handleApplyFilter}
-      onReset={handleFilterReset}
-    >
-      <VStack>
-        <DateField
-          label="From Date"
-          value={localStartDate ? new Date(localStartDate) : null}
-          onChange={handleLocalStartDateChange}
-        />
-        <DateField
-          label="To Date"
-          value={localEndDate ? new Date(localEndDate) : null}
-          onChange={handleLocalEndDateChange}
-        />
-        <Select
-          label="Year"
-          value={localYear}
-          onChange={handleLocalYearChange}
-          options={yearOptions}
-        />
-      </VStack>
-    </PopUpFilter>
-  )
-})
+const MonthlySummaryListFilter = React.memo(
+  ({
+    showFilter,
+    setShowFilter,
+    handleApplyFilter,
+    handleFilterReset,
+    localStartDate,
+    handleLocalStartDateChange,
+    localEndDate,
+    handleLocalEndDateChange,
+    localYear,
+    handleLocalYearChange,
+    yearOptions,
+  }) => {
+    return (
+      <PopUpFilter
+        isOpen={showFilter}
+        setIsOpen={setShowFilter}
+        onApply={handleApplyFilter}
+        onReset={handleFilterReset}
+      >
+        <VStack>
+          <DateField
+            label="From Date"
+            value={localStartDate ? new Date(localStartDate) : null}
+            onChange={handleLocalStartDateChange}
+          />
+          <DateField
+            label="To Date"
+            value={localEndDate ? new Date(localEndDate) : null}
+            onChange={handleLocalEndDateChange}
+          />
+          <Select
+            label="Year"
+            value={localYear}
+            onChange={handleLocalYearChange}
+            options={yearOptions}
+          />
+        </VStack>
+      </PopUpFilter>
+    );
+  }
+);
 
-export default MonthlySummaryReport
+export default MonthlySummaryReport;

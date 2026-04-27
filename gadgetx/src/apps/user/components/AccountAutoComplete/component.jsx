@@ -1,9 +1,9 @@
 import { useState, useEffect, forwardRef, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAccounts } from "@/hooks/api/account/useAccounts";
+import { useAccounts } from "@/apps/user/hooks/api/account/useAccounts";
 import AddAccount from "@/apps/user/pages/List/AccountList/components/AddAccount";
 import CashBook from "@/apps/user/pages/Transactions/CashBook";
-import CustomTextField from "@/components/CustomTextField"; 
+import CustomTextField from "@/components/CustomTextField";
 import CustomScrollbar from "@/components/CustomScrollbar";
 import "./style.scss";
 
@@ -166,7 +166,7 @@ const AccountSelectAutocompleteInput = forwardRef(
     const [filteredOptions, setFilteredOptions] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     const hasBeenFocused = useRef(false);
 
     useEffect(() => {
@@ -206,26 +206,26 @@ const AccountSelectAutocompleteInput = forwardRef(
     };
 
     const handleInputClick = () => {
-        setFilteredOptions(options);
-        setShowDropdown(true);
+      setFilteredOptions(options);
+      setShowDropdown(true);
     };
 
     const handleKeyDown = (e) => {
       if (!showDropdown) return;
-      
+
       const itemsCount = filteredOptions.length;
       if (itemsCount === 0) return;
 
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setActiveIndex((prevIndex) => 
+          setActiveIndex((prevIndex) =>
             prevIndex < itemsCount - 1 ? prevIndex + 1 : 0
           );
           break;
         case "ArrowUp":
           e.preventDefault();
-          setActiveIndex((prevIndex) => 
+          setActiveIndex((prevIndex) =>
             prevIndex > 0 ? prevIndex - 1 : itemsCount - 1
           );
           break;
@@ -245,10 +245,7 @@ const AccountSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div
-        style={{ ...style, position: "relative" }}
-        className={className}
-      >
+      <div style={{ ...style, position: "relative" }} className={className}>
         <CustomTextField
           ref={ref}
           id={name}
@@ -269,10 +266,10 @@ const AccountSelectAutocompleteInput = forwardRef(
         />
 
         {showDropdown && (
-          <CustomScrollbar 
+          <CustomScrollbar
             className="accountinput-select__dropdown"
-            activeIndex={activeIndex} 
-            as="ul" 
+            activeIndex={activeIndex}
+            as="ul"
           >
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt, index) => (

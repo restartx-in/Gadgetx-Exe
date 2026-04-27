@@ -1,251 +1,222 @@
 class DashboardRepository {
-  async getFinancialSummary(db, tenantId) {
-    const today = new Date().toISOString().split('T')[0]
+  async getFinancialSummary(db, tenantId, period = "month") {
+    // Determine the date filter based on period
+    let dateFilter = "INTERVAL '1 month'";
+    if (period === "today") dateFilter = "INTERVAL '1 day'";
+    if (period === "week") dateFilter = "INTERVAL '1 week'";
 
-    const queries = {
-      service: `
-        SELECT
-          COALESCE(SUM(service_cost), 0) as total_cost,
-          COALESCE(SUM(service_charges), 0) as total_service_charges,
-          COALESCE(
-            SUM(CASE WHEN service_charges > 0 THEN service_charges - service_cost ELSE 0 END), 
-           0) AS total_profit,
-          
-          COUNT(job_id) AS total_count,
-          SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pending_count,
-          SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) AS progress_count,
-          SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed_count,
-          SUM(CASE WHEN status = 'Delivered' THEN 1 ELSE 0 END) AS delivered_count
-        FROM job_sheets WHERE tenant_id = $1
-      `,
-      expense: `
-        SELECT
-          COALESCE(SUM(amount), 0) as total,
-          COALESCE(SUM(amount_paid), 0) as paid,
-          COALESCE(SUM(amount - amount_paid), 0) as balance
-        FROM expenses WHERE tenant_id = $1
-      `,
-      sales: `
-        SELECT
-          COALESCE(SUM(total_amount), 0) as total,
-          COALESCE(SUM(paid_amount), 0) as paid,
-          COALESCE(SUM(total_amount - paid_amount), 0) as pending
-        FROM sales WHERE tenant_id = $1
-      `,
-      purchases: `
-        SELECT
-          COALESCE(SUM(total_amount), 0) as total,
-          COALESCE(SUM(paid_amount), 0) as paid,
-          COALESCE(SUM(total_amount - paid_amount), 0) as pending
-        FROM purchase WHERE tenant_id = $1
-      `,
-      salesReturns: `SELECT 0 as total, 0 as paid, 0 as pending`,
-      purchaseReturns: `
-        SELECT
-          COALESCE(SUM(total_refund_amount), 0) as total,
-          COALESCE(SUM(total_refund_amount), 0) as paid,
-          0 as pending
-        FROM purchase_return WHERE tenant_id = $1
-      `,
-      today: `
-        SELECT
-          (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE tenant_id = $1 AND date(date) = $2) as "salesTotal",
-          (SELECT COALESCE(SUM(paid_amount), 0) FROM sales WHERE tenant_id = $1 AND date(date) = $2) as "salesPaid",
-          (SELECT COALESCE(SUM(total_amount), 0) FROM purchase WHERE tenant_id = $1 AND date(date) = $2) as "purchasesTotal",
-          (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE tenant_id = $1 AND date(date) = $2) as "expensesTotal",
-          (SELECT COALESCE(SUM(service_cost), 0) FROM job_sheets WHERE tenant_id = $1 AND date(date) = $2) as "serviceCost",
-          (SELECT COALESCE(SUM(service_charges), 0) FROM job_sheets WHERE tenant_id = $1 AND date(date) = $2) as "servicecharge",
-          (SELECT 
-            COALESCE(
-             SUM(
-                CASE 
-                    WHEN service_charges != 0 THEN service_charges - service_cost
-                    ELSE 0 
-                END
-             ), 
-            0
-           ) 
-            FROM job_sheets 
-            WHERE tenant_id = $1 AND date(date) = $2
-          ) as "serviceProfit"
-      `,
-    }
+    const salesQuery = `
+      SELECT 
+        COALESCE(SUM(total_amount), 0) as total,
+        COALESCE(SUM(paid_amount), 0) as paid
+      FROM sales 
+      WHERE tenant_id = $1 AND order_date >= NOW() - ${dateFilter}
+    `;
 
-    const [
-      expense,
-      service,
-      sales,
-      purchases,
-      salesReturns,
-      purchaseReturns,
-      todaySummary,
-    ] = await Promise.all([
-      db.query(queries.expense, [tenantId]),
-      db.query(queries.service, [tenantId]),
-      db.query(queries.sales, [tenantId]),
-      db.query(queries.purchases, [tenantId]),
-      db.query(queries.salesReturns),
-      db.query(queries.purchaseReturns, [tenantId]),
-      db.query(queries.today, [tenantId, today]),
-    ])
+    const purchaseQuery = `
+      SELECT 
+        COALESCE(SUM(total_amount), 0) as total,
+        COALESCE(SUM(paid_amount), 0) as paid
+      FROM purchase 
+      WHERE tenant_id = $1 AND date >= NOW() - ${dateFilter}
+    `;
+
+    const expenseQuery = `
+      SELECT 
+        COALESCE(SUM(amount), 0) as total,
+        COALESCE(SUM(amount_paid), 0) as paid
+      FROM expenses 
+      WHERE tenant_id = $1 AND date >= NOW() - ${dateFilter}
+    `;
+
+    const serviceQuery = `
+      SELECT 
+        COALESCE(SUM(service_charge - cost), 0) as total_profit
+      FROM services 
+      WHERE tenant_id = $1 AND created_at >= NOW() - ${dateFilter}
+    `;
+
+    const [sales, purchase, expense, service] = await Promise.all([
+      db.query(salesQuery, [tenantId]),
+      db.query(purchaseQuery, [tenantId]),
+      db.query(expenseQuery, [tenantId]),
+      db.query(serviceQuery, [tenantId]),
+    ]);
 
     return {
-      expense: expense.rows[0],
-      service: service.rows[0],
       sales: sales.rows[0],
-      purchases: purchases.rows[0],
-      salesReturns: salesReturns.rows[0],
-      purchaseReturns: purchaseReturns.rows[0],
-      today: todaySummary.rows[0],
-    }
+      purchase: purchase.rows[0],
+      expense: {
+        ...expense.rows[0],
+        balance: expense.rows[0].total - expense.rows[0].paid
+      },
+      service: service.rows[0],
+      today: {
+        serviceProfit: service.rows[0].total_profit, // For now mapping this
+        serviceCost: 0 // placeholder
+      }
+    };
   }
 
-  async getWeeklySalesAndPurchases(db, tenantId) {
-    // Recursive CTE to replace generate_series for last 7 days
-    const query = `
-        WITH RECURSIVE last_7_days(day) AS (
-            SELECT date('now', '-6 days')
-            UNION ALL
-            SELECT date(day, '+1 day')
-            FROM last_7_days
-            WHERE day < date('now')
+  async getWeeklySalesPurchases(db, tenantId, period = "month") {
+    let query = "";
+    if (period === "today") {
+      query = `
+        WITH hours AS (
+          SELECT generate_series(
+            date_trunc('day', NOW()) + INTERVAL '6 hours',
+            date_trunc('day', NOW()) + INTERVAL '22 hours',
+            '2 hour'::interval
+          ) as hr
         )
-        SELECT
-            d.day AS day,
-            COALESCE(s.total_sales, 0) AS "Sales",
-            COALESCE(p.total_purchases, 0) AS "Purchases"
-        FROM last_7_days d
-        LEFT JOIN (
-            SELECT date(date) AS day, SUM(total_amount) AS total_sales
-            FROM sales
-            WHERE tenant_id = $1 AND date(date) >= date('now', '-6 days')
-            GROUP BY date(date)
-        ) s ON d.day = s.day
-        LEFT JOIN (
-            SELECT date(date) AS day, SUM(total_amount) AS total_purchases
-            FROM purchase
-            WHERE tenant_id = $1 AND date(date) >= date('now', '-6 days')
-            GROUP BY date(date)
-        ) p ON d.day = p.day
+        SELECT 
+          TO_CHAR(h.hr, 'HH24:MI') as day,
+          (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE tenant_id = $1 AND order_date >= h.hr AND order_date < h.hr + INTERVAL '2 hour') as "Sales",
+          (SELECT COALESCE(SUM(total_amount), 0) FROM purchase WHERE tenant_id = $1 AND date >= h.hr AND date < h.hr + INTERVAL '2 hour') as "Purchases"
+        FROM hours h
+        ORDER BY h.hr;
+      `;
+    } else if (period === "year") {
+      query = `
+        WITH months AS (
+          SELECT generate_series(
+            date_trunc('year', NOW()),
+            date_trunc('year', NOW()) + INTERVAL '11 months',
+            '1 month'::interval
+          ) as mo
+        )
+        SELECT 
+          TO_CHAR(m.mo, 'Mon') as day,
+          (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE tenant_id = $1 AND order_date >= m.mo AND order_date < m.mo + INTERVAL '1 month') as "Sales",
+          (SELECT COALESCE(SUM(total_amount), 0) FROM purchase WHERE tenant_id = $1 AND date >= m.mo AND date < m.mo + INTERVAL '1 month') as "Purchases"
+        FROM months m
+        ORDER BY m.mo;
+      `;
+    } else {
+      // Week or Month
+      let interval = period === "week" ? "6 days" : "29 days";
+      query = `
+        WITH days AS (
+          SELECT generate_series(
+            CURRENT_DATE - INTERVAL '${interval}',
+            CURRENT_DATE,
+            '1 day'::interval
+          )::date as day
+        )
+        SELECT 
+          TO_CHAR(d.day, 'DD Mon') as day,
+          (SELECT COALESCE(SUM(total_amount), 0) FROM sales WHERE tenant_id = $1 AND order_date::date = d.day) as "Sales",
+          (SELECT COALESCE(SUM(total_amount), 0) FROM purchase WHERE tenant_id = $1 AND date::date = d.day) as "Purchases"
+        FROM days d
         ORDER BY d.day;
-    `
-    const { rows } = await db.query(query, [tenantId])
-    return rows
+      `;
+    }
+    const { rows } = await db.query(query, [tenantId]);
+    return rows;
   }
 
-  async getTopSellingProducts(db, tenantId, limit = 5) {
+  async getTopSellingProducts(db, tenantId, period = "month") {
+    // Simplified: Show grouping by category or brands if items table isn't easily summary-able
     const query = `
-        SELECT i.name, SUM(si.quantity) as value
-        FROM sale_item si
-        JOIN item i ON si.item_id = i.id
-        WHERE si.tenant_id = $1
-        GROUP BY i.name
-        ORDER BY value DESC
-        LIMIT $2;
-    `
-    const { rows } = await db.query(query, [tenantId, limit])
-    return rows
+      SELECT 
+        COALESCE(c.name, 'Other') as name,
+        COALESCE(SUM(si.total_price), 0) as value
+      FROM sale_item si
+      LEFT JOIN frame_variants fv ON si.frame_variant_id = fv.id
+      LEFT JOIN frame f ON fv.frame_id = f.id
+      LEFT JOIN category c ON f.category_id = c.id
+      WHERE si.tenant_id = $1
+      GROUP BY c.name
+      LIMIT 5
+    `;
+    const { rows } = await db.query(query, [tenantId]);
+    return rows;
   }
 
-  async getTopCustomers(db, tenantId, limit = 5) {
-    const query = `
-        SELECT pa.name, SUM(s.total_amount) as value
-        FROM sales s
-        JOIN party pa ON s.party_id = pa.id
-        WHERE s.tenant_id = $1
-        GROUP BY pa.name
-        ORDER BY value DESC
-        LIMIT $2;
-    `
-    const { rows } = await db.query(query, [tenantId, limit])
-    return rows
-  }
-
-  async getStockAlerts(db, tenantId, limit = 5) {
-    const query = `
-      SELECT
-        sku as code,
+  async getStockAlerts(db, tenantId) {
+    const framesQuery = `
+      SELECT 
+        f.name || ' (' || fv.color || ' ' || fv.size || ')' as product,
+        fv.stock_qty as quantity,
+        fv.sku as code,
+        'frame' as type
+      FROM frame_variants fv
+      JOIN frame f ON fv.frame_id = f.id
+      WHERE fv.tenant_id = $1
+      ORDER BY fv.created_at DESC
+      LIMIT 10
+    `;
+    const lensesQuery = `
+      SELECT 
         name as product,
-        stock_quantity as quantity,
-        min_stock_level as alert_quantity
-      FROM item
-      WHERE tenant_id = $1 AND stock_quantity <= min_stock_level
-      ORDER BY stock_quantity ASC
-      LIMIT $2;
-    `
-    const { rows } = await db.query(query, [tenantId, limit])
-    return rows
+        stock as quantity,
+        'LENS-' || id as code,
+        'lens' as type
+      FROM lenses
+      WHERE tenant_id = $1
+      ORDER BY created_at DESC
+      LIMIT 10
+    `;
+    const addonsQuery = `
+      SELECT 
+        name as product,
+        stock as quantity,
+        'ADDON-' || id as code,
+        'addon' as type
+      FROM lens_addons
+      WHERE tenant_id = $1
+      ORDER BY created_at DESC
+      LIMIT 10
+    `;
+
+    const [frames, lenses, addons] = await Promise.all([
+      db.query(framesQuery, [tenantId]),
+      db.query(lensesQuery, [tenantId]),
+      db.query(addonsQuery, [tenantId])
+    ]);
+
+    return {
+      frames: frames.rows,
+      lenses: lenses.rows,
+      addons: addons.rows
+    };
   }
 
-  async getRecentSales(db, tenantId, limit = 5) {
+  async getRecentSales(db, tenantId) {
     const query = `
-      SELECT
-        s.id as reference,
-        pa.name as party,
-        s.status,
+      SELECT 
+        s.id,
+        p.name as party,
+        s.invoice_number as reference,
+        s.order_date as date,
         s.total_amount as "grandTotal",
-        s.paid_amount as "paid",
-        (s.total_amount - s.paid_amount) as "due",
-        CASE
-          WHEN s.paid_amount >= s.total_amount THEN 'Paid'
-          WHEN s.paid_amount > 0 AND s.paid_amount < s.total_amount THEN 'Partial'
-          ELSE 'Unpaid'
-        END AS "paymentStatus"
+        s.payment_status as "paymentStatus"
       FROM sales s
-      LEFT JOIN party pa ON s.party_id = pa.id
+      JOIN party p ON s.party_id = p.id
       WHERE s.tenant_id = $1
-      ORDER BY s.date DESC, s.id DESC
-      LIMIT $2;
-    `
-    const { rows } = await db.query(query, [tenantId, limit])
-    return rows
+      ORDER BY s.order_date DESC
+      LIMIT 5
+    `;
+    const { rows } = await db.query(query, [tenantId]);
+    return rows;
   }
-
-  async getRecentPurchases(db, tenantId, limit = 5) {
+  async getRecentPurchases(db, tenantId) {
     const query = `
-      SELECT
-        p.id as reference,
-        pa.name as party,
+      SELECT 
+        p.id,
+        pt.name as party,
+        p.invoice_number as reference,
+        p.date,
         p.total_amount as "grandTotal",
-        p.paid_amount as "paid",
-        (p.total_amount - p.paid_amount) as "due",
-        CASE
-          WHEN p.paid_amount >= p.total_amount THEN 'Paid'
-          WHEN p.paid_amount > 0 AND p.paid_amount < p.total_amount THEN 'Partial'
-          ELSE 'Unpaid'
-        END AS "paymentStatus"
+        p.status as "paymentStatus"
       FROM purchase p
-      LEFT JOIN party pa ON p.party_id = pa.id
+      JOIN party pt ON p.party_id = pt.id
       WHERE p.tenant_id = $1
-      ORDER BY p.date DESC, p.id DESC
-      LIMIT $2;
-    `
-    const { rows } = await db.query(query, [tenantId, limit])
-    return rows
-  }
-
-  async getRecentExpenses(db, tenantId, limit = 5) {
-    const query = `
-      SELECT
-        e.id as reference,
-        et.name as category,
-        e.description,
-        e.amount as "grandTotal",
-        e.amount_paid as "paid",
-        (e.amount - e.amount_paid) as "due",
-        CASE
-          WHEN e.amount_paid >= e.amount THEN 'Paid'
-          WHEN e.amount_paid > 0 AND e.amount_paid < e.amount THEN 'Partial'
-          ELSE 'Unpaid'
-        END AS "paymentStatus"
-      FROM expenses e
-      LEFT JOIN "expense_type" et ON e.expense_type_id = et.id
-      WHERE e.tenant_id = $1
-      ORDER BY e.date DESC, e.id DESC
-      LIMIT $2;
-    `
-    const { rows } = await db.query(query, [tenantId, limit])
-    return rows
+      ORDER BY p.date DESC
+      LIMIT 10
+    `;
+    const { rows } = await db.query(query, [tenantId]);
+    return rows;
   }
 }
 

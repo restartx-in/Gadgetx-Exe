@@ -1,0 +1,249 @@
+/* ReceiptInvoice.scss - A4 Version with Thermal Print Logic */
+
+.invoice-sheet-a4 {
+  background: #fff;
+  // width: 210mm; /* A4 Width */
+  min-height: 297mm; /* A4 Height */
+  padding: 15mm;
+  margin: 0 auto;
+  box-sizing: border-box;
+  font-family: "Helvetica", "Arial", sans-serif;
+  color: #111;
+  font-size: 12px;
+  line-height: 1.5;
+
+  /* Helper for Arabic Font */
+  .ar {
+    font-family: 'Amiri', 'Times New Roman', serif;
+    margin-left: 5px;
+    direction: rtl;
+    display: inline-block;
+  }
+}
+
+/* --- HEADER --- */
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+
+  .company-info {
+    width: 55%;
+    
+    .logo-image {
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+    .company-name {
+      font-size: 20px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin: 0 0 5px 0;
+    }
+    .company-details {
+      color: #555;
+      font-size: 11px;
+    }
+  }
+
+  .invoice-meta {
+    width: 40%;
+    text-align: right;
+
+    .title-row {
+      font-size: 26px;
+      font-weight: 800;
+      color: #222;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      
+      .ar { font-size: 0.6em; }
+    }
+
+    .meta-row {
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+
+      .label {
+        font-weight: 700;
+        color: #666;
+        margin-right: 10px;
+      }
+      .value {
+        font-weight: 600;
+        color: #000;
+        min-width: 80px;
+      }
+      .status.paid { color: green; }
+      .status.pending { color: red; }
+    }
+  }
+}
+
+/* --- BILL TO --- */
+.invoice-bill-to {
+  margin-bottom: 25px;
+  
+  .section-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+  .partner-name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .partner-detail {
+    font-size: 11px;
+    color: #444;
+  }
+}
+
+/* --- TABLE --- */
+.invoice-items-container {
+  margin-bottom: 30px;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  thead tr th {
+    background-color: #f8f8f8;
+    color: #333;
+    font-weight: 700;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #ddd;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+
+  tbody tr td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+  }
+
+  /* Columns */
+  .col-idx   { width: 5%; text-align: center; }
+  .col-desc  { width: 50%; }
+  .col-qty   { width: 10%; text-align: center; }
+  .col-price { width: 15%; text-align: right; }
+  .col-total { width: 20%; text-align: right; font-weight: 600; }
+}
+
+/* --- FOOTER --- */
+.invoice-footer-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+
+  .footer-left {
+    width: 60%;
+    padding-right: 30px;
+
+    .terms-title {
+      font-weight: 700;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+    .terms-text {
+      font-size: 10px;
+      color: #666;
+      font-style: italic;
+      line-height: 1.4;
+    }
+    .footer-qr {
+      margin-top: 15px;
+      img {
+        width: 80px;
+        height: 80px;
+      }
+    }
+  }
+
+  .footer-right {
+    width: 35%;
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 12px;
+
+      .lbl { color: #555; }
+      .val { font-weight: 600; color: #000; }
+    }
+
+    .grand-total-row {
+      border-top: 2px solid #222;
+      margin-top: 10px;
+      padding-top: 10px;
+      
+      .lbl { font-size: 14px; font-weight: 800; color: #000; }
+      .val { font-size: 16px; font-weight: 800; color: #000; }
+    }
+
+    .payment-info {
+      margin-top: 10px;
+      border-top: 1px dashed #ccc;
+      padding-top: 10px;
+
+      .balance-row {
+        .lbl, .val { color: #d9534f; font-weight: 700; }
+      }
+    }
+  }
+}
+
+.generated-footer {
+  margin-top: 40px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  text-align: center;
+  font-size: 10px;
+  color: #aaa;
+}
+
+
+/* 
+  === THE MAGIC PRINT LOGIC === 
+  (Same concept as Thermal, but for A4)
+*/
+@media print {
+  @page {
+    size: A4;
+    margin: 0; 
+  }
+
+  /* 1. Hide EVERYTHING on the page first */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* 2. Make ONLY the Invoice Visible */
+  .invoice-sheet-a4,
+  .invoice-sheet-a4 * {
+    visibility: visible !important;
+  }
+
+  /* 3. Position the invoice at the very top-left of the paper */
+  .invoice-sheet-a4 {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm; /* Force A4 Width */
+    margin: 0;
+    padding: 10mm; /* Optional print padding */
+    background: #fff;
+  }
+}

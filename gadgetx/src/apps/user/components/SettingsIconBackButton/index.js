@@ -1,2 +1,2 @@
-import IconBackButton from './component'
-export default IconBackButton;
+import SettingsIconBackButton from './component'
+export default SettingsIconBackButton;

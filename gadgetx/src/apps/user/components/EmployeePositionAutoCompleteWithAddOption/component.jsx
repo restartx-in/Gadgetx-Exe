@@ -1,12 +1,12 @@
-import { useState, useEffect, forwardRef, useRef, useMemo } from 'react'
-import { useEmployeePosition } from '@/hooks/api/employeePosition/useEmployeePosition'
-import AddEmployeePosition from '@/apps/user/pages/List/EmployeePositionList/components/AddEmployeePosition' 
-import { HiPencil } from 'react-icons/hi2'
+import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
+import { useEmployeePosition } from "@/apps/user/hooks/api/employeePosition/useEmployeePosition";
+import AddEmployeePosition from "@/apps/user/pages/List/EmployeePositionList/components/AddEmployeePosition";
+import { HiPencil } from "react-icons/hi2";
 
-import CustomTextField from '@/components/CustomTextField'
-import CustomScrollbar from '@/components/CustomScrollbar'
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
 
-import './style.scss'
+import "./style.scss";
 
 const EmployeePositionAutoCompleteWithAddOption = forwardRef(
   (
@@ -14,14 +14,14 @@ const EmployeePositionAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label='Employee Position',
-      placeholder = 'Select an Employee Position',
+      label = "Employee Position",
+      placeholder = "Select an Employee Position",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       filters = {},
       is_edit = true,
-      style = {}
+      style = {},
     },
     ref
   ) => {
@@ -31,60 +31,60 @@ const EmployeePositionAutoCompleteWithAddOption = forwardRef(
       isError,
       error,
       refetch,
-    } = useEmployeePosition(filters)
-    const [employeePositionOptions, setEmployeePositionOptions] = useState([])
+    } = useEmployeePosition(filters);
+    const [employeePositionOptions, setEmployeePositionOptions] = useState([]);
 
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [modalMode, setModalMode] = useState('add')
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState("add");
     const [
       selectedEmployeePositionInModal,
       setSelectedEmployeePositionInModal,
-    ] = useState(null)
+    ] = useState(null);
 
     useEffect(() => {
       if (employeePositions) {
         const options = employeePositions.map((position) => ({
           value: position.id,
           label: position.name,
-        }))
-        setEmployeePositionOptions(options)
+        }));
+        setEmployeePositionOptions(options);
       }
-    }, [employeePositions])
+    }, [employeePositions]);
 
     const handleAddNew = (typedValue) => {
-      setSelectedEmployeePositionInModal({ name: typedValue })
-      setModalMode('add')
-      setIsModalOpen(true)
-    }
+      setSelectedEmployeePositionInModal({ name: typedValue });
+      setModalMode("add");
+      setIsModalOpen(true);
+    };
 
     const handleEdit = (option) => {
       const positionToEdit = employeePositions.find(
         (position) => position.id === option.value
-      )
+      );
       if (positionToEdit) {
-        setSelectedEmployeePositionInModal(positionToEdit)
-        setModalMode('edit')
-        setIsModalOpen(true)
+        setSelectedEmployeePositionInModal(positionToEdit);
+        setModalMode("edit");
+        setIsModalOpen(true);
       }
-    }
+    };
 
     const handleCloseModal = () => {
-      setIsModalOpen(false)
-      setSelectedEmployeePositionInModal(null)
-    }
+      setIsModalOpen(false);
+      setSelectedEmployeePositionInModal(null);
+    };
 
     const onEmployeePositionCreated = (newPosition) => {
       if (newPosition && newPosition.id) {
-        refetch()
-        onChange({ target: { name, value: newPosition.id } })
-        handleCloseModal()
+        refetch();
+        onChange({ target: { name, value: newPosition.id } });
+        handleCloseModal();
       }
-    }
+    };
 
     const onEmployeePositionUpdated = () => {
-      refetch()
-      handleCloseModal()
-    }
+      refetch();
+      handleCloseModal();
+    };
 
     if (isLoading) {
       return (
@@ -97,11 +97,11 @@ const EmployeePositionAutoCompleteWithAddOption = forwardRef(
             variant="outlined"
           />
         </div>
-      )
+      );
     }
 
     if (isError) {
-      console.error('Failed to load employee positions:', error)
+      console.error("Failed to load employee positions:", error);
       return (
         <div className="employeepositioninput-select">
           <CustomTextField
@@ -113,7 +113,7 @@ const EmployeePositionAutoCompleteWithAddOption = forwardRef(
             variant="outlined"
           />
         </div>
-      )
+      );
     }
 
     return (
@@ -143,11 +143,11 @@ const EmployeePositionAutoCompleteWithAddOption = forwardRef(
           onEmployeePositionUpdated={onEmployeePositionUpdated}
         />
       </>
-    )
+    );
   }
-)
+);
 
-export default EmployeePositionAutoCompleteWithAddOption
+export default EmployeePositionAutoCompleteWithAddOption;
 
 const EmployeePositionSelectAutocompleteInput = forwardRef(
   (
@@ -157,10 +157,10 @@ const EmployeePositionSelectAutocompleteInput = forwardRef(
       onChange,
       options,
       label,
-      placeholder = '',
+      placeholder = "",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       onAddNew,
       onEdit,
       is_edit,
@@ -169,27 +169,27 @@ const EmployeePositionSelectAutocompleteInput = forwardRef(
     },
     ref
   ) => {
-    const [showDropdown, setShowDropdown] = useState(false)
-    const [inputValue, setInputValue] = useState('')
-    const [activeIndex, setActiveIndex] = useState(-1)
-    
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [inputValue, setInputValue] = useState("");
+    const [activeIndex, setActiveIndex] = useState(-1);
+
     // REMOVED: dropdownRef and scrolling useEffect
     // Logic is now handled by CustomScrollbar
 
     useEffect(() => {
-      const selectedOption = options.find((opt) => opt.value === value)
-      setInputValue(selectedOption ? selectedOption.label : '')
-    }, [value, options])
+      const selectedOption = options.find((opt) => opt.value === value);
+      setInputValue(selectedOption ? selectedOption.label : "");
+    }, [value, options]);
 
     const filteredOptions = useMemo(() => {
-        if (!inputValue) {
-          return options
-        } else {
-          return options.filter((opt) =>
-            opt.label.toLowerCase().includes(inputValue.toLowerCase())
-          )
-        }
-    }, [inputValue, options])
+      if (!inputValue) {
+        return options;
+      } else {
+        return options.filter((opt) =>
+          opt.label.toLowerCase().includes(inputValue.toLowerCase())
+        );
+      }
+    }, [inputValue, options]);
 
     const exactMatchExists = useMemo(
       () =>
@@ -197,81 +197,78 @@ const EmployeePositionSelectAutocompleteInput = forwardRef(
           (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim()
         ),
       [inputValue, options]
-    )
+    );
 
-    const showAddNewOption =
-      inputValue && !exactMatchExists && onAddNew;
+    const showAddNewOption = inputValue && !exactMatchExists && onAddNew;
 
     const handleInputChange = (e) => {
-      const currentInput = e.target.value
-      setInputValue(currentInput)
-      setActiveIndex(-1)
-      setShowDropdown(true)
+      const currentInput = e.target.value;
+      setInputValue(currentInput);
+      setActiveIndex(-1);
+      setShowDropdown(true);
       if (!currentInput) {
-        onChange({ target: { name, value: '' } })
+        onChange({ target: { name, value: "" } });
       }
-    }
+    };
 
     const handleSelectOption = (option) => {
-      onChange({ target: { name, value: option.value } })
-      setInputValue(option.label)
-      setShowDropdown(false)
-    }
+      onChange({ target: { name, value: option.value } });
+      setInputValue(option.label);
+      setShowDropdown(false);
+    };
 
     const handleAddNew = () => {
       if (onAddNew) {
-        onAddNew(inputValue)
+        onAddNew(inputValue);
       }
-      setShowDropdown(false)
-    }
+      setShowDropdown(false);
+    };
 
     const handleEditClick = (e, option) => {
-      e.preventDefault()
-      e.stopPropagation()
+      e.preventDefault();
+      e.stopPropagation();
       if (onEdit) {
-        onEdit(option)
-        setShowDropdown(false)
+        onEdit(option);
+        setShowDropdown(false);
       }
-    }
+    };
 
     const handleKeyDown = (e) => {
-      if (disabled || !showDropdown) return
+      if (disabled || !showDropdown) return;
 
-      const itemsCount = filteredOptions.length + (showAddNewOption ? 1 : 0)
-      if (itemsCount === 0) return
+      const itemsCount = filteredOptions.length + (showAddNewOption ? 1 : 0);
+      if (itemsCount === 0) return;
 
       switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault()
-          setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount)
-          break
-        case 'ArrowUp':
-          e.preventDefault()
+        case "ArrowDown":
+          e.preventDefault();
+          setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
           setActiveIndex(
             (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
-          )
-          break
-        case 'Enter':
-          if (activeIndex < 0) return
-          e.preventDefault()
+          );
+          break;
+        case "Enter":
+          if (activeIndex < 0) return;
+          e.preventDefault();
           if (activeIndex < filteredOptions.length) {
-            handleSelectOption(filteredOptions[activeIndex])
+            handleSelectOption(filteredOptions[activeIndex]);
           } else if (showAddNewOption) {
-            handleAddNew()
+            handleAddNew();
           }
-          break
-        case 'Escape':
-          setShowDropdown(false)
-          break
+          break;
+        case "Escape":
+          setShowDropdown(false);
+          break;
         default:
-          break
+          break;
       }
-    }
+    };
 
     return (
-      <div 
-        style={{ ...style, position: 'relative' }}
-      >
+      <div style={{ ...style, position: "relative" }}>
         <CustomTextField
           ref={ref}
           id={name}
@@ -302,19 +299,21 @@ const EmployeePositionSelectAutocompleteInput = forwardRef(
                   <li
                     key={opt.value}
                     onMouseDown={(e) => {
-                        e.preventDefault()
-                        handleSelectOption(opt)
+                      e.preventDefault();
+                      handleSelectOption(opt);
                     }}
                     className={`employeepositioninput-select__option ${
-                      index === activeIndex ? 'active' : ''
-                    }`}>
+                      index === activeIndex ? "active" : ""
+                    }`}
+                  >
                     <div className="employeepositioninput-select__option-content">
                       <span>{opt.label}</span>
                       {is_edit && !disabled && (
                         <button
                           type="button"
                           className="employeepositioninput-select__edit-button"
-                          onMouseDown={(e) => handleEditClick(e, opt)}>
+                          onMouseDown={(e) => handleEditClick(e, opt)}
+                        >
                           <HiPencil size={15} />
                         </button>
                       )}
@@ -324,18 +323,19 @@ const EmployeePositionSelectAutocompleteInput = forwardRef(
               : showAddNewOption && (
                   <li
                     onMouseDown={(e) => {
-                        e.preventDefault()
-                        handleAddNew()
+                      e.preventDefault();
+                      handleAddNew();
                     }}
                     className={`employeepositioninput-select__option employeepositioninput-select__option--add ${
-                      activeIndex === 0 ? 'active' : ''
-                    }`}>
+                      activeIndex === 0 ? "active" : ""
+                    }`}
+                  >
                     + Add "{inputValue}"
                   </li>
                 )}
           </CustomScrollbar>
         )}
       </div>
-    )
+    );
   }
-)
+);

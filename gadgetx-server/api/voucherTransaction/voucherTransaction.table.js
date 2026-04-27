@@ -1,16 +1,16 @@
 module.exports = async (client) => {
   try {
     const result = await client.query(`
-      SELECT name FROM sqlite_master WHERE type='table' AND name='voucher_transactions';
+      SELECT to_regclass('public.voucher_transactions') AS table_name;
     `);
-    const tableExists = result.rows.length > 0;
+    const tableExists = result.rows[0].table_name !== null;
 
     if (tableExists) {
       console.log('ℹ️ "voucher_transactions" table already exists.');
     } else {
       await client.query(`
         CREATE TABLE voucher_transactions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id SERIAL PRIMARY KEY,
           voucher_id INTEGER NOT NULL REFERENCES "voucher"(id) ON DELETE CASCADE,
           invoice_id VARCHAR(50) NOT NULL,
           invoice_type VARCHAR(50) NOT NULL,

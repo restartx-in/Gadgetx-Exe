@@ -1,6 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import Login from '@/pages/Login'
+import Login from '@/apps/user/pages/Login'
 import UserLayout from '@/layouts/UserLayout'
 import AdminLayout from '@/layouts/AdminLayout'
 

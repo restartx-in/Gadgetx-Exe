@@ -3,11 +3,11 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
-  useReducer, 
-} from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { format, isValid } from 'date-fns'
-import PageTitleWithBackButton from '@/components/PageTitleWithBackButton'
+  useReducer,
+} from "react";
+import { useSearchParams } from "react-router-dom";
+import { format, isValid } from "date-fns";
+import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import {
   Table,
   Thead,
@@ -18,23 +18,23 @@ import {
   ThSL,
   TdSL,
   TableCaption,
-} from '@/components/Table'
-import PageHeader from '@/components/PageHeader'
-import ContainerWrapper from '@/components/ContainerWrapper'
-import Loader from '@/components/Loader'
-import { useDoneBySummary } from '@/hooks/api/doneBySummary/useDoneBySummary'
-import { useIsMobile } from '@/utils/useIsMobile'
-import ScrollContainer from '@/components/ScrollContainer'
-import ListItem from '@/apps/user/components/ListItem/component'
-import Spacer from '@/components/Spacer'
-import TitleContainer from '@/components/TitleContainer'
-import TableTopContainer from '@/components/TableTopContainer'
-import DateFilter from '@/components/DateFilter'
-import RefreshButton from '@/components/RefreshButton'
-import HStack from '@/components/HStack/component'
-import useSyncURLParams from '@/hooks/useSyncURLParams'
+} from "@/components/Table";
+import PageHeader from "@/components/PageHeader";
+import ContainerWrapper from "@/components/ContainerWrapper";
+import Loader from "@/components/Loader";
+import { useDoneBySummary } from "@/apps/user/hooks/api/doneBySummary/useDoneBySummary";
+import { useIsMobile } from "@/utils/useIsMobile";
+import ScrollContainer from "@/components/ScrollContainer";
+import ListItem from "@/components/ListItem/component";
+import Spacer from "@/components/Spacer";
+import TitleContainer from "@/components/TitleContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
+import DateFilter from "@/components/DateFilter";
+import RefreshButton from "@/components/RefreshButton";
+import HStack from "@/components/HStack/component";
+import useSyncURLParams from "@/hooks/useSyncURLParams";
 
-import './style.scss'
+import "./style.scss";
 
 const stateReducer = (state, newState) => ({ ...state, ...newState });
 
@@ -46,8 +46,8 @@ const DoneByRow = React.memo(({ item, index }) => {
       <Td>{item.count}</Td>
       <Td>{item.total_amount}</Td>
     </Tr>
-  )
-})
+  );
+});
 
 const MobileDoneByCard = React.memo(({ item }) => {
   return (
@@ -56,72 +56,72 @@ const MobileDoneByCard = React.memo(({ item }) => {
       title={item.name}
       subtitle={`Count: ${item.count} | Total: ${item.total_amount}`}
     />
-  )
-})
+  );
+});
 
 const DoneByListView = () => {
-  const [searchParams] = useSearchParams()
-  const isMobile = useIsMobile()
+  const [searchParams] = useSearchParams();
+  const isMobile = useIsMobile();
 
   const [state, setState] = useReducer(stateReducer, {
-    start_date: searchParams.get('startDate') || '',
-    end_date: searchParams.get('endDate') || '',
-  })
+    start_date: searchParams.get("startDate") || "",
+    end_date: searchParams.get("endDate") || "",
+  });
 
   useSyncURLParams({
     startDate: state.start_date,
     endDate: state.end_date,
-  })
+  });
 
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
     endDate: null,
-    rangeType: 'custom',
-  })
+    rangeType: "custom",
+  });
 
-  const { data, isLoading } = useDoneBySummary(state)
+  const { data, isLoading } = useDoneBySummary(state);
 
-  const listData = useMemo(() => data || [], [data])
+  const listData = useMemo(() => data || [], [data]);
 
   useEffect(() => {
     setDateFilter({
       startDate: state.start_date || null,
       endDate: state.end_date || null,
-      rangeType: 'custom',
-    })
-  }, [state.start_date, state.end_date])
+      rangeType: "custom",
+    });
+  }, [state.start_date, state.end_date]);
 
   const handleDateFilterChange = useCallback((newDateValue) => {
-    setDateFilter(newDateValue)
+    setDateFilter(newDateValue);
     setState({
-      start_date: newDateValue.startDate || '',
-      end_date: newDateValue.endDate || '',
-    })
-  }, [])
+      start_date: newDateValue.startDate || "",
+      end_date: newDateValue.endDate || "",
+    });
+  }, []);
 
   const handleRefresh = useCallback(() => {
-    setDateFilter({ startDate: null, endDate: null, rangeType: 'custom' })
+    setDateFilter({ startDate: null, endDate: null, rangeType: "custom" });
     setState({
-      start_date: '',
-      end_date: '',
-    })
-  }, [])
+      start_date: "",
+      end_date: "",
+    });
+  }, []);
 
   const dateSubtitle = useMemo(() => {
-    const { startDate, endDate } = dateFilter
+    const { startDate, endDate } = dateFilter;
     const isDateFilterActive =
       startDate &&
       endDate &&
       isValid(new Date(startDate)) &&
-      isValid(new Date(endDate))
+      isValid(new Date(endDate));
 
     return isDateFilterActive
-      ? `${format(new Date(startDate), 'MMM d, yyyy')} → ${format(
+      ? `${format(new Date(startDate), "MMM d, yyyy")} to ${format(
           new Date(endDate),
-          'MMM d, yyyy',
+          "MMM d, yyyy"
         )}`
-      : 'No date range selected'
-  }, [dateFilter])
+      : "No date range selected";
+  }, [dateFilter]);
 
   return (
     <>
@@ -133,7 +133,7 @@ const DoneByListView = () => {
               subtitle={dateSubtitle}
             />
             <TableTopContainer
-              isMargin={true}
+              //isMargin={true}
               mainActions={
                 <>
                   <DateFilter
@@ -195,10 +195,7 @@ const DoneByListView = () => {
                 <div>
                   {listData &&
                     listData.map((item) => (
-                      <MobileDoneByCard
-                        key={item.done_by_id}
-                        item={item}
-                      />
+                      <MobileDoneByCard key={item.done_by_id} item={item} />
                     ))}
                 </div>
               )}
@@ -208,7 +205,7 @@ const DoneByListView = () => {
         )}
       </ContainerWrapper>
     </>
-  )
-}
+  );
+};
 
-export default DoneByListView
+export default DoneByListView;

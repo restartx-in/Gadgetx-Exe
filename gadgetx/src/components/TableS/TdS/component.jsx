@@ -2,7 +2,7 @@ import './style.scss'
 
 const TdS = ({ children }) => {
   return (
-    <td className="td fs14 fw600">
+    <td className="td fs14 fw400">
       <div>{children}</div>
     </td>
   )

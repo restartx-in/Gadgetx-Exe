@@ -1,5 +1,5 @@
 import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
-import { useSuppliers } from "@/hooks/api/supplier/useSuppliers";
+import { useSuppliers } from "@/apps/user/hooks/api/supplier/useSuppliers";
 
 import CustomTextField from "@/components/CustomTextField";
 import CustomScrollbar from "@/components/CustomScrollbar";
@@ -142,7 +142,7 @@ const SupplierAutocompleteInput = forwardRef(
 
       if (!val) {
         // MODIFIED: Pass null when input is cleared (for the parent component to handle clearing state)
-        onChange(null); 
+        onChange(null);
       }
     };
 

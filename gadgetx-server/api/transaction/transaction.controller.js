@@ -61,6 +61,15 @@ class TransactionController {
       next(error);
     }
   }
+
+    async getRecentTransactions(req, res, next) {
+    try {
+      const data = await this.service.getRecent(req.user.tenant_id, req.db);
+      res.json(data);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = TransactionController;

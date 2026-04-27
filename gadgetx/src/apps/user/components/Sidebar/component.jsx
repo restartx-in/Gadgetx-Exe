@@ -1,7 +1,7 @@
-import { useState, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-
+import api from "@/utils/axios/api";
 import { HiArrowsExpand } from "react-icons/hi";
 import {
   RiLogoutBoxRLine,
@@ -54,78 +54,158 @@ import { useIsMobile } from "@/utils/useIsMobile";
 import { HiShoppingBag } from "react-icons/hi2";
 import SidebarLink from "./SidebarLink";
 import "./style.scss";
+import { add } from "date-fns";
 
 const sidebarData = [
+  // ===== DASHBOARD =====
   { to: "/", title: "Dashboard", label: "Dashboard", Icon: MdDashboard },
-  {
-    to: "/jobsheet-Report",
-    title: "Job Sheet",
-    label: "Job Sheet",
-    Icon: LuFileSpreadsheet,
-  },
+
+  // ===== SALES & BILLING =====
   {
     category: "Sales",
-    icon: <FaShoppingCart size={26} />,
+    icon: <FaCashRegister size={26} />,
     items: [
       {
         to: "/sale-report",
         title: "Sales Report",
         label: "Sales",
         Icon: FaShoppingCart,
+        addPath: "/sale/add",
       },
-      {
-        to: "/sale-return-report",
-        title: "Sales Return",
-        label: "Sales Return",
-        Icon: TbTruckReturn,
-      },
+      // {
+      //   to: "/sale-return-report",
+      //   title: "Sales Return",
+      //   label: "Returns",
+      //   Icon: TbTruckReturn,
+      //   addPath: "/sale-return/add",
+      // },
     ],
   },
 
+  // ===== PURCHASE & STOCK =====
   {
-    category: "Purchase",
+    category: "purchase",
     icon: <HiShoppingBag size={26} />,
     items: [
       {
         to: "/purchase-report",
         title: "Purchase Report",
-        label: "Purchase",
+        label: "Purchases",
         Icon: MdShoppingBag,
+        addPath: "/purchase/add",
       },
-      {
-        to: "/purchase-return-report",
-        title: "Purchase Return",
-        label: "Purchase Return",
-        Icon: TbTruckReturn,
-      },
+      // {
+      //   to: "/purchase-return-report",
+      //   title: "Purchase Return",
+      //   label: "Purchase Returns",
+      //   Icon: TbTruckReturn,
+      //   addPath: "/purchase-return/add",
+      // },
     ],
   },
-
+  // ===== PATIENT MANAGEMENT =====
   {
-    category: "Employees",
-    icon: <MdPeopleAlt size={26} />,
+    category: "Customers",
+    icon: <IoPerson size={26} />,
     items: [
       {
-        to: "/employee-list",
-        title: "Employee list",
-        label: "Employees",
-        Icon: MdPeopleAlt,
+        to: "/customer-list",
+        title: "Customer Report",
+        label: "Customers",
+        Icon: IoPerson,
+        addPath: "/customer-list?action=add",
       },
       {
-        to: "/employee/payroll",
-        title: "Payroll",
-        label: "Payroll",
-        Icon: MdPayments,
-      },
-      {
-        to: "/employee-position",
-        title: "Employee Position",
-        label: "Employee Position",
-        Icon: GrUserWorker,
+        to: "/prescription-list",
+        title: "Prescription List",
+        label: "Prescriptions",
+        Icon: LuFileSpreadsheet,
+        addPath: "/prescription-list?action=add",
       },
     ],
   },
 
+  // ===== BUSINESS RELATIONS =====
+  {
+    category: "Contacts",
+    icon: <BiSolidUser size={26} />,
+    items: [
+      {
+        to: "/partner-list",
+        title: "Partner List",
+        label: "Partners",
+        Icon: BiSolidUser,
+        addPath: "/partner-list?action=add",
+      },
+      {
+        to: "/suppliers-list",
+        title: "Supplier Report",
+        label: "Suppliers",
+        Icon: IoManSharp,
+        addPath: "/suppliers-list?action=add",
+      },
+    ],
+  },
+
+  // ===== PRODUCTS =====
+  {
+    category: "Items",
+    icon: <FaStoreAlt size={26} />,
+    items: [
+      {
+        to: "/item-list",
+        title: "Item List",
+        label: "Items",
+        Icon: MdInventory,
+        addPath: "/item-list?action=add",
+      },
+      {
+        to: "/brand-list",
+        title: "Brand List",
+        label: "Brands",
+        Icon: MdBrandingWatermark,
+        addPath: "/brand-list?action=add",
+      },
+      {
+        to: "/category-list",
+        title: "Category List",
+        label: "Categories",
+        Icon: MdCategory,
+        addPath: "/category-list?action=add",
+      },
+    ],
+  },
+
+  // ===== ACCOUNTS =====
+  {
+    category: "Transactions",
+    icon: <MdAccountBalance size={26} />,
+    items: [
+      // {
+      //   to: "/account-list",
+      //   title: "Account Report",
+      //   label: "Accounts",
+      //   Icon: MdAccountBalance,
+      //   addPath: "/account-list?action=add",
+      // },
+      {
+        to: "/ledger-list",
+        title: "Ledger List",
+        label: "Ledgers",
+        Icon: RiBillFill,
+        addPath: "/ledger-list?action=add",
+      },
+      {
+        to: "/mode-of-payment",
+        title: "Mode Of Payment",
+        label: "Payment Methods",
+        Icon: RiBillFill,
+        addPath: "/mode-of-payment?action=add",
+      },
+    ],
+  },
+
+  // ===== EXPENSES =====
   {
     category: "Expenses",
     icon: <RiBillFill size={26} />,
@@ -135,265 +215,78 @@ const sidebarData = [
         title: "Expense Report",
         label: "Expenses",
         Icon: RiBillFill,
+        addPath: "/expense-report?action=add",
       },
       {
         to: "/expense-type",
         title: "Expense Type",
-        label: "Expense Types",
+        label: "Expense Categories",
         Icon: RiBillFill,
+        addPath: "/expense-type?action=add",
       },
     ],
   },
 
+  // ===== SERVICES =====
   {
-    category: "Stock Items",
-    icon: <FaStoreAlt size={26} />,
+    to: "/service-list",
+    title: "Service List",
+    label: "Services",
+    Icon: FaReceipt,
+    addPath: "/service-list?action=add",
+  },
+  // ===== STAFF MANAGEMENT =====
+  {
+    category: "Staff",
+    icon: <MdPeopleAlt size={26} />,
     items: [
       {
-        to: "/brand-list",
-        title: "Brand List",
-        label: "Brand",
-        Icon: MdBrandingWatermark,
+        to: "/employee-list",
+        title: "Employee List",
+        label: "Employees",
+        Icon: MdPeopleAlt,
+        addPath: "/employee-list?action=add",
       },
       {
-        to: "/category-list",
-        title: "Category List",
-        label: "Category",
-        Icon: MdCategory,
+        to: "/employee/payroll",
+        title: "Payroll",
+        label: "Payroll",
+        Icon: MdPayments,
+        addPath: "/employee/payroll?action=add",
       },
       {
-        to: "/unit-list",
-        title: "Unit List",
-        label: "Unit",
-        Icon: RiRuler2Line,
-      },
-      { to: "/item-list", title: "Item Report", label: "Items", Icon: CiShop },
-    ],
-  },
-
-  {
-    category: "Reports",
-    icon: <LuFileSpreadsheet size={26} />,
-    items: [
-      {
-        to: "/cash-book-report",
-        title: "Cash Book",
-        label: "Cash Book",
-        Icon: FaCashRegister,
-      },
-      {
-        to: "/partnership-report",
-        title: "Partnership Report",
-        label: "Partnerships",
-        Icon: RiUserAddFill,
-      },
-      {
-        to: "/register-session-report",
-        title: "Register Session Report",
-        label: "Register Sessions",
-        Icon: LuFileSpreadsheet,
-      },
-      {
-        to:"/ledger-report",
-        title: "Ledger Report",
-        label: "Ledger",
-        Icon: LuFileSpreadsheet,
-      }
-    ],
-  },
-
-  {
-    category: "Receipt",
-    icon: <RiReceiptFill size={26} />,
-    items: [
-      {
-        to: "/receipt-report",
-        title: "Receipt Report",
-        label: "Receipt Report",
-        Icon: TbFileReport,
-      },
-      {
-        to: "/receipt-against-sale",
-        title: "Receipt Against Sale",
-        label: "Receipt Against Sale",
-        Icon: LuReceipt,
-      },
-      {
-        to: "/receipt-against-purchase-return",
-        title: "Receipt Against Purchase Return",
-        label: "Receipt Against Purchase Return",
-        Icon: LuReceiptCent,
-      },
-    ],
-  },
-  {
-    category: "Payment",
-    icon: <FaReceipt size={26} />,
-    items: [
-      {
-        to: "/payment-report",
-        title: "Payment Report",
-        label: "Payment Report",
-        Icon: TbFileReport,
-      },
-
-      {
-        to: "/payment-against-purchase",
-        title: "Payment Against Purchase",
-        label: "Payment Against Purchase",
-        Icon: BsReceipt,
-      },
-
-      {
-        to: "/payment-against-sale-return",
-        title: "Payment Against Sale Return",
-        label: "Payment Against Sale Return",
-        Icon: MdReceipt,
-      },
-    ],
-  },
-  {
-    category: "Summary",
-    icon: <LuFileSpreadsheet size={26} />,
-    items: [
-      {
-        to: "/daily-summary-report",
-        title: "Daily Summary",
-        label: "Daily Summary",
-        Icon: IoPerson,
-      },
-      {
-        to: "/monthly-summary-report",
-        title: "Monthly Summary",
-        label: "Monthly Summary",
-        Icon: IoPerson,
-      },
-
-      {
-        to: "/done-by-summary",
-        title: "Done By Summary",
-        label: "Done By Summary",
-        Icon: RiBillFill,
-      },
-      {
-        to: "/monthly-ledger-report",
-        title: "Monthly Ledger",
-        label: "Monthly Ledger",
-        Icon: RiBillFill,
-      },
-      {
-        to: "/cost-center-summary",
-        title: "Cost Center Summary",
-        label: "Cost Center Summary",
-        Icon: RiBillFill,
-      },
-      {
-        to: "/party-based-summary",
-        title: "Party Summary",
-        label: "Party Summary",
-        Icon: RiBillFill,
-      },
-      {
-        to: "/party-payment",
-        title: "Party Payment",
-        label: "Party Payment",
-        Icon: RiBillFill,
-      },
-      {
-        to: "/stock-detailed-report",
-        title: "Stock Detailed Report",
-        label: "Stock Report",
-        Icon: MdOutlineInventory,
-      },
-      {
-        to: "/item-profit-report",
-        title: "Item Profit Report",
-        label: "Item Profit",
-        Icon: MdOutlineInventory,
-      },
-      {
-        to: "/daily-profit-report",
-        title: "Daily Profit Report",
-        label: "Daily Profit",
-        Icon: FaSun,
-      },
-      {
-        to: "/periodic-profit-report",
-        title: "Periodic Profit Report",
-        label: "Periodic Profit",
-        Icon: FaChartLine,
-      },
-      {
-        to: "/stock-value-report",
-        title: "Stock Value Report",
-        label: "Stock Value",
-        Icon: MdInventory,
-      },
-      {
-        to: "/tax-summary-report",
-        title: "Tax Summary Report",
-        label: "Tax Summary",
-        Icon: FaFileInvoiceDollar,
-      },
-      {
-        to: "/balance-sheet-report",
-        title: "Balance Sheet Report",
-        label: "Balance Sheet",
-        Icon: FaBalanceScale,
+        to: "/employee-position",
+        title: "Employee Position",
+        label: "Positions",
+        Icon: GrUserWorker,
+        addPath: "/employee-position?action=add",
       },
     ],
   },
 
+  // ===== SYSTEM =====
   {
-    category: "List",
+    category: "System",
     icon: <RiFileList3Line size={26} />,
     items: [
       {
         to: "/cost-center",
         title: "Cost Center",
-        label: "Cost Center",
+        label: "Cost Centers",
         Icon: RiBillFill,
-      },
-      { to: "/done-by", title: "Done By", label: "Done By", Icon: RiBillFill },
-      {
-        to: "/suppliers-list",
-        title: "Supplier Report",
-        label: "Suppliers",
-        Icon: IoManSharp,
+        addPath: "/cost-center?action=add",
       },
       {
-        to: "/customer-list",
-        title: "Customer Report",
-        label: "Customers",
-        Icon: IoPerson,
-      },
-      {
-        to: "/account-list",
-        title: "Account Report",
-        label: "Account",
-        Icon: MdAccountBalance,
-      },
-      {
-        to: "/partner-list",
-        title: "Partner List",
-        label: "Partners",
-        Icon: BiSolidUser,
-      },
-      {
-        to: "/mode-of-payment",
-        title: "Mode Of Payment",
-        label: "Mode Of Payment",
+        to: "/done-by",
+        title: "Done By",
+        label: "Done By",
         Icon: RiBillFill,
-      },
-      {
-        to: "/ledger-list",
-        title: "Ledger List",
-        label: "Ledgers",
-        Icon: RiBillFill,
+        addPath: "/done-by?action=add",
       },
     ],
   },
 
+  // ===== SETTINGS =====
   {
     category: "Settings",
     icon: <IoSettingsSharp size={26} />,
@@ -407,14 +300,16 @@ const sidebarData = [
       {
         to: "/role-list",
         title: "Role List",
-        label: "Role List",
+        label: "Roles & Permissions",
         Icon: HiArrowsExpand,
+        addPath: "/role-list?action=add",
       },
       {
         to: "/user-list",
         title: "User List",
-        label: "User List",
+        label: "Users",
         Icon: HiArrowsExpand,
+        addPath: "/user-list?action=add",
       },
     ],
   },
@@ -429,11 +324,27 @@ const Sidebar = ({
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const location = useLocation();
+
+  const [customPages, setCustomPages] = useState([]);
+
+  useEffect(() => {
+    const fetchCustomPages = async () => {
+      try {
+        const { data } = await api.get("/custom-pages");
+        setCustomPages(data.data || []);
+      } catch (error) {
+        console.error("Failed to fetch custom pages", error);
+      }
+    };
+    fetchCustomPages();
+  }, []);
 
   const [openCategories, setOpenCategories] = useState({
     Expenses: true,
     Reports: true,
     List: true,
+    "Custom Pages": true,
   });
 
   const [hoveredCategory, setHoveredCategory] = useState(null);
@@ -456,8 +367,23 @@ const Sidebar = ({
   const userRole = getUserRole();
 
   const filteredSidebarData = useMemo(() => {
+    let finalSidebarData = [...sidebarData];
+
+    if (customPages.length > 0) {
+      finalSidebarData.push({
+        category: "Custom Pages",
+        icon: <RiFileList3Line size={26} />,
+        items: customPages.map((page) => ({
+          to: page.path,
+          title: page.title,
+          label: page.title,
+          Icon: RiFileList3Line,
+        })),
+      });
+    }
+
     if (userRole !== "admin") {
-      return sidebarData.map((category) => {
+      return finalSidebarData.map((category) => {
         if (category.category === "Settings") {
           return {
             ...category,
@@ -467,8 +393,8 @@ const Sidebar = ({
         return category;
       });
     }
-    return sidebarData;
-  }, [userRole]);
+    return finalSidebarData;
+  }, [userRole, customPages]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -512,39 +438,47 @@ const Sidebar = ({
 
   const showLabels = isMobile || !isCollapsed;
 
-  const renderNavItems = (items) => {
+  const renderNavItems = (items, isChild = false) => {
     return items.map((item, index) => {
       const isCategory = item.items && item.items.length > 0;
       if (isCategory) {
         const isOpen = !!openCategories[item.category];
+        const isCategoryActive = item.items.some(
+          (child) => location.pathname === child.to,
+        );
+
         return (
           <li
             key={item.category || index}
-            className="sidebar__nav-category"
+            className="gadgetx-sidebar__nav-category"
             ref={(el) => (categoryRefs.current[item.category] = el)}
             onMouseEnter={() => handleMouseEnter(item.category)}
             onMouseLeave={handleMouseLeave}
           >
             <div
-              className="sidebar__nav-category-header"
+              className={`gadgetx-sidebar__nav-category-header ${
+                isCategoryActive ? "is-active" : ""
+              }`}
               onClick={() => handleCategoryToggle(item.category)}
               title={item.category}
             >
-              <span className="sidebar__nav-category-icon">{item.icon}</span>
+              <span className="gadgetx-sidebar__nav-category-icon">
+                {item.icon}
+              </span>
               {showLabels && (
                 <>
-                  <span className="sidebar__nav-category-label">
+                  <span className="gadgetx-sidebar__nav-category-label">
                     {item.category}
                   </span>
-                  <span className="sidebar__nav-category-arrow">
+                  <span className="gadgetx-sidebar__nav-category-arrow">
                     {isOpen ? <RiArrowUpSLine /> : <RiArrowDownSLine />}
                   </span>
                 </>
               )}
             </div>
             {showLabels && isOpen && (
-              <div className="sidebar__nav-submenu">
-                <ul>{renderNavItems(item.items)}</ul>
+              <div className="gadgetx-sidebar__nav-submenu">
+                <ul>{renderNavItems(item.items, true)}</ul>
               </div>
             )}
           </li>
@@ -559,6 +493,8 @@ const Sidebar = ({
               Icon={item.Icon}
               showLabel={showLabels}
               onClick={handleLinkClick}
+              isChild={isChild}
+              addPath={item.addPath}
             />
           </li>
         );
@@ -576,6 +512,8 @@ const Sidebar = ({
           Icon={child.Icon}
           showLabel={true}
           onClick={handleLinkClick}
+          isChild={true}
+          addPath={child.addPath}
         />
       </li>
     ));
@@ -584,23 +522,25 @@ const Sidebar = ({
   return (
     <>
       <aside
-        className={`sidebar ${!isMobile && isCollapsed ? "collapsed" : ""} ${
-          isMobile && isOpenOnMobile ? "mobile-open" : ""
-        }`}
+        className={`gadgetx-sidebar ${
+          !isMobile && isCollapsed ? "collapsed" : ""
+        } ${isMobile && isOpenOnMobile ? "mobile-open" : ""}`}
       >
-        <nav className="sidebar__nav fs16 fw600">
+        <nav className="gadgetx-sidebar__nav fs16 fw600">
           <ul>{renderNavItems(filteredSidebarData)}</ul>
         </nav>
 
         <div
-          className="sidebar__logout fs16 fw600"
+          className="gadgetx-sidebar__logout fs16 fw600"
           onClick={handleLogout}
           title="Logout"
         >
-          <span className="sidebar__logout-icon">
+          <span className="gadgetx-sidebar__logout-icon">
             <RiLogoutBoxRLine size={26} />
           </span>
-          {showLabels && <span className="sidebar__logout-label">Logout</span>}
+          {showLabels && (
+            <span className="gadgetx-sidebar__logout-label">Logout</span>
+          )}
         </div>
       </aside>
 
@@ -611,7 +551,7 @@ const Sidebar = ({
           .map((item) => (
             <div
               key={item.category}
-              className={`sidebar__collapsed-popup fs16 ${
+              className={`gadgetx-sidebar__collapsed-popup fs16 ${
                 hoveredCategory === item.category ? "open" : ""
               }`}
               style={{
@@ -622,10 +562,10 @@ const Sidebar = ({
               onMouseEnter={() => handleMouseEnter(item.category)}
               onMouseLeave={handleMouseLeave}
             >
-              <div className="sidebar__collapsed-popup-header">
+              <div className="gadgetx-sidebar__collapsed-popup-header">
                 {item.category}
               </div>
-              <ul className="sidebar__collapsed-popup-list">
+              <ul className="gadgetx-sidebar__collapsed-popup-list">
                 {renderPopupItems(item.items)}
               </ul>
             </div>

@@ -1,13 +1,13 @@
-import { useState, useEffect, forwardRef, useRef, useMemo } from 'react';
-import { HiPencil } from 'react-icons/hi2';
-import { useCategorys } from '@/hooks/api/category/useCategorys';
-import AddCategory from '@/apps/user/pages/List/CategoryList/components/AddCategory';
+import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
+import { HiPencil } from "react-icons/hi2";
+import { useCategorys } from "@/apps/user/hooks/api/category/useCategorys";
+import AddCategory from "@/apps/user/pages/List/CategoryList/components/AddCategory";
 
 // 1. Import Custom Components
-import CustomTextField from '@/components/CustomTextField';
-import CustomScrollbar from '@/components/CustomScrollbar';
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
 
-import './style.scss';
+import "./style.scss";
 
 const CategoryAutoCompleteWithAddOption = forwardRef(
   (
@@ -15,16 +15,16 @@ const CategoryAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label='Category',
-      placeholder = 'Select or add a category',
+      label = "Category",
+      placeholder = "Select or add a category",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       filters = {},
       is_edit = true,
       style = {},
     },
-    ref,
+    ref
   ) => {
     const {
       data: categories,
@@ -36,14 +36,16 @@ const CategoryAutoCompleteWithAddOption = forwardRef(
 
     const [categoryOptions, setCategoryOptions] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('add');
-    const [selectedCategoryInModal, setSelectedCategoryInModal] = useState(null);
+    const [modalMode, setModalMode] = useState("add");
+    const [selectedCategoryInModal, setSelectedCategoryInModal] =
+      useState(null);
 
     useEffect(() => {
       if (categories) {
         const options = categories.map((category) => ({
           value: category.id,
           label: category.name,
+          original: category
         }));
         setCategoryOptions(options);
       }
@@ -51,15 +53,17 @@ const CategoryAutoCompleteWithAddOption = forwardRef(
 
     const handleAddNew = (typedValue) => {
       setSelectedCategoryInModal({ name: typedValue });
-      setModalMode('add');
+      setModalMode("add");
       setIsModalOpen(true);
     };
 
     const handleEdit = (option) => {
-      const categoryToEdit = categories.find((category) => category.id === option.value);
+      const categoryToEdit = categories.find(
+        (category) => category.id === option.value
+      );
       if (categoryToEdit) {
         setSelectedCategoryInModal(categoryToEdit);
-        setModalMode('edit');
+        setModalMode("edit");
         setIsModalOpen(true);
       }
     };
@@ -99,7 +103,7 @@ const CategoryAutoCompleteWithAddOption = forwardRef(
     }
 
     if (isError) {
-      console.error('Failed to load categories:', error);
+      console.error("Failed to load categories:", error);
       return (
         <div className="categoryinput-select">
           <CustomTextField
@@ -142,10 +146,11 @@ const CategoryAutoCompleteWithAddOption = forwardRef(
         />
       </>
     );
-  },
+  }
 );
 
-CategoryAutoCompleteWithAddOption.displayName = 'CategoryAutoCompleteWithAddOption';
+CategoryAutoCompleteWithAddOption.displayName =
+  "CategoryAutoCompleteWithAddOption";
 
 export default CategoryAutoCompleteWithAddOption;
 
@@ -157,28 +162,28 @@ const CategorySelectAutocompleteInput = forwardRef(
       onChange,
       options,
       label,
-      placeholder = '',
+      placeholder = "",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       onAddNew,
       onEdit,
       is_edit,
       style = {},
       ...rest
     },
-    ref,
+    ref
   ) => {
     const [showDropdown, setShowDropdown] = useState(false);
-    const [inputValue, setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // Removed: dropdownRef and scrolling useEffect
     const hasBeenFocused = useRef(false);
 
     useEffect(() => {
       const selectedOption = options.find((opt) => opt.value === value);
-      setInputValue(selectedOption ? selectedOption.label : '');
+      setInputValue(selectedOption ? selectedOption.label : "");
     }, [value, options]);
 
     const filteredOptions = useMemo(() => {
@@ -186,16 +191,16 @@ const CategorySelectAutocompleteInput = forwardRef(
         return options;
       }
       return options.filter((opt) =>
-        opt.label.toLowerCase().includes(inputValue.toLowerCase()),
+        opt.label.toLowerCase().includes(inputValue.toLowerCase())
       );
     }, [inputValue, options]);
 
     const exactMatchExists = useMemo(
       () =>
         options.some(
-          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim(),
+          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim()
         ),
-      [inputValue, options],
+      [inputValue, options]
     );
 
     const showAddNewOption = inputValue && !exactMatchExists && onAddNew;
@@ -207,12 +212,13 @@ const CategorySelectAutocompleteInput = forwardRef(
       setShowDropdown(true);
 
       if (currentInput.length === 0) {
-        onChange({ target: { name, value: '' } });
+        onChange({ target: { name, value: "" } });
       }
     };
 
     const handleSelectOption = (option) => {
-      onChange({ target: { name, value: option.value } });
+      console.log("Category handleSelectOption:", option);
+      onChange({ target: { name, value: option.value, category: option.original } });
       setInputValue(option.label);
       setShowDropdown(false);
     };
@@ -238,20 +244,22 @@ const CategorySelectAutocompleteInput = forwardRef(
 
     const handleKeyDown = (e) => {
       if (disabled || !showDropdown) return;
-      
+
       const itemsCount = filteredOptions.length + (showAddNewOption ? 1 : 0);
       if (itemsCount === 0) return;
 
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
-          setActiveIndex((prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount);
+          setActiveIndex(
+            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
+          );
           break;
-        case 'Enter':
+        case "Enter":
           if (activeIndex < 0) return;
           e.preventDefault();
           if (activeIndex < filteredOptions.length) {
@@ -260,7 +268,7 @@ const CategorySelectAutocompleteInput = forwardRef(
             handleAddNew();
           }
           break;
-        case 'Escape':
+        case "Escape":
           setShowDropdown(false);
           break;
         default:
@@ -269,9 +277,9 @@ const CategorySelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
+      <div
         // className={`categoryinput-select ${className}`}
-        style={{ ...style, position: 'relative' }}
+        style={{ ...style, position: "relative" }}
       >
         <CustomTextField
           ref={ref}
@@ -308,7 +316,9 @@ const CategorySelectAutocompleteInput = forwardRef(
                     e.preventDefault();
                     handleSelectOption(opt);
                   }}
-                  className={`categoryinput-select__option ${index === activeIndex ? 'active' : ''}`}
+                  className={`categoryinput-select__option ${
+                    index === activeIndex ? "active" : ""
+                  }`}
                 >
                   <div className="categoryinput-select__option-content">
                     <span>{opt.label}</span>
@@ -318,7 +328,7 @@ const CategorySelectAutocompleteInput = forwardRef(
                         className="categoryinput-select__edit-button"
                         onMouseDown={(e) => handleEditClick(e, opt)}
                       >
-                        <HiPencil size={15}/>
+                        <HiPencil size={15} />
                       </button>
                     )}
                   </div>
@@ -331,7 +341,7 @@ const CategorySelectAutocompleteInput = forwardRef(
                   handleAddNew();
                 }}
                 className={`categoryinput-select__option categoryinput-select__option--add ${
-                  activeIndex === 0 ? 'active' : ''
+                  activeIndex === 0 ? "active" : ""
                 }`}
               >
                 + Add "{inputValue}"
@@ -341,7 +351,7 @@ const CategorySelectAutocompleteInput = forwardRef(
         )}
       </div>
     );
-  },
+  }
 );
 
-CategorySelectAutocompleteInput.displayName = 'CategorySelectAutocompleteInput';
+CategorySelectAutocompleteInput.displayName = "CategorySelectAutocompleteInput";

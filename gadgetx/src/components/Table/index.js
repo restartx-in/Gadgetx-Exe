@@ -18,4 +18,4 @@ export { default as ThSearchOrFilterPopover } from './ThSearchOrFilterPopover/co
 export { default as SearchTableTh } from './SearchTableTh/component'
 export { default as ThFilterContainer } from './ThFilterContainer/component'
 export { default as ThDotMenu } from './ThDotMenu/component'
-export { default as Th1 } from './Th1/component'
+export { default as TrTotal } from './TrTotal/component'

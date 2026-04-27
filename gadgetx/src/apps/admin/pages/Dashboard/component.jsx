@@ -12,7 +12,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import useUsers from "@/hooks/api/user/useUsers";
+import useUsers from "@/apps/user/hooks/api/user/useUsers";
 import "./style.scss";
 
 const Icon = ({ children, color }) => (

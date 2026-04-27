@@ -1,663 +1,479 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
+  BarChart,
+  Bar,
 } from "recharts";
 import {
-  FaShoppingCart,
-  FaArrowRight,
-  FaArrowLeft,
-  FaHandHoldingUsd,
-  FaDollarSign,
-  FaMoneyBillWave,
-  FaFileInvoiceDollar,
-} from "react-icons/fa";
+  LuShoppingCart as ShoppingCart,
+  LuUsers as Users,
+  LuActivity as Activity,
+  LuCreditCard as CreditCard,
+  LuTarget as Target,
+  LuGlasses as Glasses,
+  LuScrollText as ScrollText,
+  LuPackage as Package,
+  LuChevronRight as ChevronRight,
+  LuArrowRight as ArrowRight,
+  LuArrowUpRight as ArrowUpRight,
+  LuTrendingUp as TrendingUp,
+} from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
-import TextBadge from "@/apps/user/components/TextBadge";
-import { useDashboardSummary } from "@/hooks/api/summary/useDashboardSummary";
-import SummaryCard from "@/apps/user/components/SummaryCard";
-import Loader from "@/components/Loader";
-import AmountSymbol from "@/components/AmountSymbol";
-import useFetchPrintSettings from "@/hooks/api/printSettings/useFetchPrintSettings";
-import useFetchSettings from "@/hooks/api/settings/useFetchSettings";
+import AmountSymbol from "@/apps/user/components/AmountSymbol";
+
+// Hooks
+import useFetchPrintSettings from "@/apps/user/hooks/api/printSettings/useFetchPrintSettings";
+import useFetchSettings from "@/apps/user/hooks/api/settings/useFetchSettings";
+import { useFinancialSummary } from "@/apps/user/hooks/api/summary/useFinancialSummary";
+import { useWeeklySalesAndPurchases } from "@/apps/user/hooks/api/summary/useWeeklySalesAndPurchases";
+import { useStockAlerts } from "@/apps/user/hooks/api/summary/useStockAlerts";
+import { useRecentSales } from "@/apps/user/hooks/api/summary/useRecentSales";
+import { useRecentPurchases } from "@/apps/user/hooks/api/summary/useRecentPurchases";
+import { useFrameVariants } from "@/apps/user/hooks/api/frameVariant/useFrameVariants";
+import { useLenses } from "@/apps/user/hooks/api/lens/useLenses";
+import { useServicesPaginated } from "@/apps/user/hooks/api/services/useServicesPaginated";
+import { usePrescriptionsPaginated } from "@/apps/user/hooks/api/prescription/usePrescriptionsPaginated";
+import { useCustomersPaginated } from "@/apps/user/hooks/api/customer/useCustomersPaginated";
 
 import "./style.scss";
 
-const PIE_COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF"];
-const CUSTOMER_PIE_COLORS = [
-  "#6366f1",
-  "#8b5cf6",
-  "#a78bfa",
-  "#c4b5fd",
-  "#ddd6fe",
-];
-
-const CARD_COLORS = {
-  expense: "#3498db",
-  service: "#fd5bf5bd",
-  sales: "#2e8b57",
-  purchases: "#4682b4",
-  sales_returns: "#ffa500",
-  purchase_returns: "#dc143c",
-  today_sales: "#6a5acd",
-  today_received: "#20b2aa",
-  today_purchases: "#778899",
-  today_expenses: "#b22222",
-  today_service_cost: "#f2786dbd",
-  today_service_profit: "#91fd25bd",
-};
-
-// ✅ Recent Sales Table (Corrected)
-const RecentSalesTable = ({ data = [] }) => (
-  <div className="responsive-table fs16 fw600">
-    <table>
-      <thead>
-        <tr>
-          <th>Customer</th>
-          <th>Status</th>
-          <th>Grand Total</th>
-          <th>Paid</th>
-          {/* <th>Due</th> */}
-        </tr>
-      </thead>
-      <tbody>
-        {data.length === 0 ? (
-          <tr>
-            <td colSpan="5" style={{ textAlign: "center" }}>
-              No recent sales found.
-            </td>
-          </tr>
-        ) : (
-          data.map((sale) => (
-            <tr key={sale.reference}>
-              <td data-label="Customer">{sale.party || "N/A"}</td>
-              <td data-label="Status">
-                <TextBadge variant="paymentStatus" type={sale.paymentStatus}>
-                  {sale.paymentStatus}
-                </TextBadge>
-              </td>
-              <td data-label="Grand Total">
-                <AmountSymbol>{sale.grandTotal}</AmountSymbol>
-              </td>
-              <td style={{ color: "green" }} data-label="Paid">
-                <AmountSymbol>{sale.paid}</AmountSymbol>
-              </td>
-              {/* <td style={{ color: "red" }} data-label="Due">
-                <AmountSymbol>{sale.due}</AmountSymbol>
-              </td> */}
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
-);
-
-// ✅ Recent Purchases Table (New)
-const RecentPurchasesTable = ({ data = [] }) => (
-  <div className="responsive-table fs16 fw600">
-    <table>
-      <thead>
-        <tr>
-          <th>Supplier</th>
-          <th>Status</th>
-          <th>Grand Total</th>
-          <th>Paid</th>
-          {/* <th>Due</th> */}
-        </tr>
-      </thead>
-      <tbody>
-        {data.length === 0 ? (
-          <tr>
-            <td colSpan="5" style={{ textAlign: "center" }}>
-              No recent purchases found.
-            </td>
-          </tr>
-        ) : (
-          data.map((purchase) => (
-            <tr key={purchase.reference}>
-              <td data-label="Supplier">{purchase.party || "N/A"}</td>
-              <td data-label="Status">
-                <TextBadge
-                  variant="paymentStatus"
-                  type={purchase.paymentStatus}
-                >
-                  {purchase.paymentStatus}
-                </TextBadge>
-              </td>
-              <td data-label="Grand Total">
-                <AmountSymbol>{purchase.grandTotal}</AmountSymbol>
-              </td>
-              <td style={{ color: "green" }} data-label="Paid">
-                <AmountSymbol>{purchase.paid}</AmountSymbol>
-              </td>
-              {/* <td style={{ color: "red" }} data-label="Due">
-                <AmountSymbol>{purchase.due}</AmountSymbol>
-              </td> */}
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
-);
-
-// ✅ Recent Expenses Table (New)
-const RecentExpensesTable = ({ data = [] }) => (
-  <div className="responsive-table fs16 fw600">
-    <table>
-      <thead>
-        <tr>
-          <th>Category</th>
-          <th>Description</th>
-          <th>Grand Total</th>
-          <th>Paid</th>
-          {/* <th>Due</th> */}
-        </tr>
-      </thead>
-      <tbody>
-        {data.length === 0 ? (
-          <tr>
-            <td colSpan="5" style={{ textAlign: "center" }}>
-              No recent expenses found.
-            </td>
-          </tr>
-        ) : (
-          data.map((expense) => (
-            <tr key={expense.reference}>
-              <td data-label="Category">{expense.category || "N/A"}</td>
-              <td data-label="Description">{expense.description}</td>
-              <td data-label="Grand Total">
-                <AmountSymbol>{expense.grandTotal}</AmountSymbol>
-              </td>
-              <td style={{ color: "green" }} data-label="Paid">
-                <AmountSymbol>{expense.paid}</AmountSymbol>
-              </td>
-              {/* <td style={{ color: "red" }} data-label="Due">
-                <AmountSymbol>{expense.due}</AmountSymbol>
-              </td> */}
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
-);
-
-// ✅ Stock Alert Table
-const StockAlertTable = ({ data = [] }) => (
-  <div className="responsive-table">
-    <table>
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>Product</th>
-          <th>Quantity</th>
-          <th>Alert Quantity</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.length === 0 ? (
-          <tr>
-            <td colSpan="4" style={{ textAlign: "center" }}>
-              No items are below stock alert level.
-            </td>
-          </tr>
-        ) : (
-          data.map((item) => (
-            <tr key={item.code}>
-              <td data-label="Code">{item.code}</td>
-              <td data-label="Product">{item.product}</td>
-              <td data-label="Quantity">
-                <span className="quantity-badge quantity-badge--low">
-                  {item.quantity} units
-                </span>
-              </td>
-              <td style={{ color: "red" }} data-label="Alert Quantity">
-                <span className="quantity-badge quantity-badge--alert">
-                  {item.alert_quantity} units
-                </span>
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
-);
-
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { data, isLoading, isError, error } = useDashboardSummary();
-  const { data: printSettings } = useFetchPrintSettings();
+  const [period, setPeriod] = useState("month");
 
-  const { data: userSettings } = useFetchSettings();
+  // Real Data Hooks
+  const { data: financialSummary, isLoading: summaryLoading } =
+    useFinancialSummary(period);
+  const { data: weeklyData } = useWeeklySalesAndPurchases(period);
+  const { data: stockAlerts } = useStockAlerts();
+  const { data: recentSales } = useRecentSales();
+  const { data: recentPurchases } = useRecentPurchases();
+  const { data: servicesData } = useServicesPaginated({ limit: 5 });
+  const { data: frameVariants } = useFrameVariants({ page_size: 10 });
 
-  useEffect(() => {
-    if (printSettings) {
-      localStorage.setItem("PRINT_SETTINGS", JSON.stringify(printSettings));
-    }
-  }, [printSettings]);
+  const { data: patientsData } = useCustomersPaginated({ limit: 1 });
+  const { data: prescriptionsData } = usePrescriptionsPaginated({ limit: 1 });
 
-  useEffect(() => {
-    if (userSettings) {
-      const defaultCostCenterId =
-        userSettings.user_settings?.default_cost_center_id;
-      if (defaultCostCenterId) {
-        localStorage.setItem("DEFAULT_COST_CENTER", defaultCostCenterId);
-      } else {
-        localStorage.removeItem("DEFAULT_COST_CENTER");
-      }
-    }
-  }, [userSettings]);
+  const periodLabel = {
+    today: "Today",
+    week: "This Week",
+    month: "This Month",
+    year: "This Year",
+  }[period];
 
-  if (isLoading) {
+  if (summaryLoading && !financialSummary) {
     return (
-      <div className="dashboard-status">
-        <Loader />
+      <div className="dashboard--optical" style={{ padding: "40px" }}>
+        Loading Dashboard Data...
       </div>
     );
   }
 
-  if (isError) {
-    return <div className="dashboard-status error">Error: {error.message}</div>;
-  }
-
-  const summary = data?.summary || {};
-  const weeklyChartData = data?.weeklyChartData || [];
-
-  const topProductsPieData = (data?.topProductsPieData || []).map((item) => ({
-    name: item.name || item.product || "Unknown",
-    value: Number(item.value || item.total || 0),
-  }));
-
-  const topCustomersData = (data?.topCustomersData || []).map((item) => ({
-    name: item.name || item.customer || "Unknown",
-    value: Number(item.value || item.salesTotal || 0),
-  }));
-
-  const recentSalesData = data?.recentSales || [];
-  const recentPurchasesData = data?.recentPurchases || []; // New
-  const recentExpensesData = data?.recentExpenses || []; // New
-  const stockAlertData = data?.stockAlerts || [];
-
   return (
-    <div className="dashboard">
-      {/* Summary Cards */}
-      <section className="dashboard__stats-grid-8">
-        <SummaryCard
-          theme="sales"
-          icon={FaHandHoldingUsd}
-          color={CARD_COLORS.sales}
-          label="Sales"
-          value={<AmountSymbol>{summary.sales?.total}</AmountSymbol>}
-          subStats={[
-            {
-              label: "Received",
-              value: <AmountSymbol>{summary.sales?.paid}</AmountSymbol>,
-            },
-            {
-              label: "Balance",
-              value: <AmountSymbol>{summary.sales?.pending}</AmountSymbol>,
-              align: "end",
-            },
-          ]}
-        />
+    <div className="dashboard--optical">
+      {/* ── Header ── */}
+      <header className="dashboard__header">
+        <div>
+          <h1 className="dashboard__title">Dashboard Overview</h1>
+          <p className="dashboard__subtitle">
+            Track your optical shop's performance and inventory.
+          </p>
+        </div>
+        <div className="header-actions">
+          <div className="period-toggle-clean">
+            {["today", "week", "month", "year"].map((p) => (
+              <button
+                key={p}
+                className={period === p ? "active" : ""}
+                onClick={() => setPeriod(p)}
+              >
+                {p.charAt(0).toUpperCase() + p.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
 
-        <SummaryCard
-          theme="purchases"
-          icon={FaShoppingCart}
-          color={CARD_COLORS.purchases}
-          label="Purchases"
-          value={<AmountSymbol>{summary.purchases?.total}</AmountSymbol>}
-          subStats={[
-            {
-              label: "Paid",
-              value: <AmountSymbol>{summary.purchases?.paid}</AmountSymbol>,
-            },
-            {
-              label: "Balance",
-              value: <AmountSymbol>{summary.purchases?.pending}</AmountSymbol>,
-              align: "end",
-            },
-          ]}
-        />
+      {/* ── KPI Grid ── */}
+      <section className="kpi-grid">
+        <div className="kpi-card" onClick={() => navigate("/sale-report")}>
+          <div className="kpi-content">
+            <span className="label">{periodLabel} Sales</span>
+            <div className="value">
+              <AmountSymbol>{financialSummary?.sales?.total}</AmountSymbol>
+            </div>
+            <span className="subtext">Completed orders</span>
+          </div>
+          <div className="kpi-icon green">
+            <Glasses size={24} />
+          </div>
+        </div>
 
-        <SummaryCard
-          theme="sales-returns"
-          icon={FaArrowRight}
-          label="Sales Returns"
-          color={CARD_COLORS.sales_returns}
-          value={<AmountSymbol>{summary.salesReturns?.total}</AmountSymbol>}
-          subStats={[
-            {
-              label: "Received",
-              value: <AmountSymbol>{summary.salesReturns?.paid}</AmountSymbol>,
-            },
-            {
-              label: "Balance",
-              value: (
-                <AmountSymbol>{summary.salesReturns?.pending}</AmountSymbol>
-              ),
-              align: "end",
-            },
-          ]}
-        />
+        <div
+          className="kpi-card"
+          onClick={() => navigate("/prescription-list")}
+        >
+          <div className="kpi-content">
+            <span className="label">Prescriptions</span>
+            <div className="value">{prescriptionsData?.count || 0}</div>
+            <span className="subtext">Issued records</span>
+          </div>
+          <div className="kpi-icon orange">
+            <ScrollText size={24} />
+          </div>
+        </div>
 
-        <SummaryCard
-          theme="purchase-returns"
-          icon={FaArrowLeft}
-          label="Purchase Returns"
-          color={CARD_COLORS.purchase_returns}
-          value={<AmountSymbol>{summary.purchaseReturns?.total}</AmountSymbol>}
-          subStats={[
-            {
-              label: "Paid",
-              value: (
-                <AmountSymbol>{summary.purchaseReturns?.paid}</AmountSymbol>
-              ),
-            },
-            {
-              label: "Balance",
-              value: (
-                <AmountSymbol>{summary.purchaseReturns?.pending}</AmountSymbol>
-              ),
-              align: "end",
-            },
-          ]}
-        />
-
-        <SummaryCard
-          theme="expense"
-          icon={FaArrowLeft}
-          label="Expense"
-          color={CARD_COLORS.expense}
-          value={<AmountSymbol>{summary.expense?.total}</AmountSymbol>}
-          subStats={[
-            {
-              label: "Paid",
-              value: <AmountSymbol>{summary.expense?.paid}</AmountSymbol>,
-            },
-            {
-              label: "Balance",
-              value: <AmountSymbol>{summary.expense?.balance}</AmountSymbol>,
-              align: "end",
-            },
-          ]}
-        />
-        <SummaryCard
-          theme="service"
-          icon={FaArrowLeft}
-          label="Serivice"
-          color={CARD_COLORS.service}
-          value={<AmountSymbol>{summary.service?.total_profit}</AmountSymbol>}
-          subStats={[
-            {
-              label: "Cost",
-              value: <AmountSymbol>{summary.service?.total_cost}</AmountSymbol>,
-            },
-            {
-              label: "Charge",
-              value: (
-                <AmountSymbol>
-                  {summary.service?.total_service_charges}
-                </AmountSymbol>
-              ),
-              align: "end",
-            },
-          ]}
-        />
-
-        <SummaryCard
-          theme="today-sales"
-          icon={FaDollarSign}
-          color={CARD_COLORS.today_sales}
-          label="Today's Sales"
-          value={<AmountSymbol>{summary.today?.salesTotal}</AmountSymbol>}
-        />
-
-        <SummaryCard
-          theme="today-received"
-          color={CARD_COLORS.today_received}
-          icon={FaMoneyBillWave}
-          label="Today's Received"
-          value={<AmountSymbol>{summary.today?.salesPaid}</AmountSymbol>}
-        />
-
-        <SummaryCard
-          theme="today-purchases"
-          color={CARD_COLORS.today_purchases}
-          icon={FaShoppingCart}
-          label="Today's Purchases"
-          value={<AmountSymbol>{summary.today?.purchasesTotal}</AmountSymbol>}
-        />
-
-        <SummaryCard
-          theme="today-expenses"
-          color={CARD_COLORS.today_expenses}
-          icon={FaFileInvoiceDollar}
-          label="Today's Expense"
-          value={<AmountSymbol>{summary.today?.expensesTotal}</AmountSymbol>}
-        />
-        <SummaryCard
-          theme="today-service-cost"
-          icon={FaFileInvoiceDollar}
-          color={CARD_COLORS.today_service_cost}
-          label="Today's Service Cost"
-          value={<AmountSymbol>{summary.today?.serviceCost}</AmountSymbol>}
-        />
-        <SummaryCard
-          theme="today-service-profit"
-          icon={FaFileInvoiceDollar}
-          color={CARD_COLORS.today_service_profit}
-          label="Today's Service Profit"
-          value={<AmountSymbol>{summary.today?.serviceProfit}</AmountSymbol>}
-        />
+        <div className="kpi-card" onClick={() => navigate("/service-list")}>
+          <div className="kpi-content">
+            <span className="label">Service Profit</span>
+            <div className="value">
+              <AmountSymbol>
+                {financialSummary?.service?.total_profit}
+              </AmountSymbol>
+            </div>
+            <span className="subtext">Repairs & maintenance</span>
+          </div>
+          <div className="kpi-icon purple">
+            <Activity size={24} />
+          </div>
+        </div>
       </section>
 
-      {/* Charts & Tables */}
-      <main className="dashboard__main-content fs16 fw600">
-        {/* Weekly Sales & Purchases */}
-        <div className="card-widget">
-          <div className="card-widget__header">
-            <h3>This Week Sales & Purchases</h3>
+      {/* ── Analytics Row ── */}
+      <div className="dashboard-content-grid">
+        <div className="panel-card">
+          <div className="panel-header">
+            <h3>Revenue Comparison (Sales vs Purchases)</h3>
           </div>
-          <div className="card-widget__body">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={weeklyChartData}
-                margin={{ top: 20, right: 20, left: -10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip
-                  formatter={(value) => (
-                    <span>
-                      <AmountSymbol>{value}</AmountSymbol>
-                    </span>
-                  )}
-                />
-                <Legend />
-                <Bar dataKey="Sales" fill="#8884d8" />
-                <Bar dataKey="Purchases" fill="#82ca9d" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Top Selling Products */}
-        <div className="card-widget">
-          <div className="card-widget__header">
-            <h3>Top Selling Products</h3>
-          </div>
-          <div className="card-widget__body" style={{ height: 300 }}>
-            {topProductsPieData.length > 0 ? (
+          <div className="panel-body">
+            <div style={{ height: "300px", width: "100%" }}>
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={topProductsPieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {topProductsPieData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={PIE_COLORS[index % PIE_COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => `${value} units sold`} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="no-data-message">
-                No top selling product data available.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Top Customers */}
-        <div className="card-widget">
-          <div className="card-widget__header">
-            <h3>Top 5 Customers</h3>
-          </div>
-          <div className="card-widget__body" style={{ height: 300 }}>
-            {topCustomersData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={topCustomersData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {topCustomersData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={
-                          CUSTOMER_PIE_COLORS[
-                            index % CUSTOMER_PIE_COLORS.length
-                          ]
-                        }
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) => (
-                      <span>
-                        Total Sales: <AmountSymbol>{value}</AmountSymbol>
-                      </span>
-                    )}
+                <BarChart
+                  data={weeklyData || []}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#edf2f7"
                   />
-                  <Legend />
-                </PieChart>
+                  <XAxis
+                    dataKey="day"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#718096" }}
+                    dy={10}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#718096" }}
+                  />
+                  <RechartsTooltip
+                    cursor={{ fill: "#f7fafc" }}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    }}
+                  />
+                  <Bar
+                    dataKey="Sales"
+                    fill="#2be438"
+                    radius={[4, 4, 0, 0]}
+                    barSize={20}
+                  />
+                  <Bar
+                    dataKey="Purchases"
+                    fill="#e0243d"
+                    radius={[4, 4, 0, 0]}
+                    barSize={20}
+                  />
+                </BarChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="no-data-message">
-                No top customer data available.
+            </div>
+          </div>
+        </div>
+
+        <div className="panel-card">
+          <div className="panel-header">
+            <h3>Expense Summary</h3>
+          </div>
+          <div className="panel-body">
+            <div className="expense-summary-box">
+              <div className="summary-row">
+                <span className="label">Total Expense</span>
+                <span className="value text-danger">
+                  <AmountSymbol>
+                    {financialSummary?.expense?.total}
+                  </AmountSymbol>
+                </span>
               </div>
-            )}
+              <div className="summary-row">
+                <span className="label">Amount Paid</span>
+                <span className="value text-success">
+                  <AmountSymbol>{financialSummary?.expense?.paid}</AmountSymbol>
+                </span>
+              </div>
+              <div className="summary-row" style={{ borderBottom: "none" }}>
+                <span className="label">Balance Due</span>
+                <span className="value">
+                  <AmountSymbol>
+                    {financialSummary?.expense?.balance}
+                  </AmountSymbol>
+                </span>
+              </div>
+            </div>
+            <div style={{ marginTop: "24px" }}>
+              <button
+                className="btn-primary-clean"
+                style={{ width: "100%", justifyContent: "center" }}
+                onClick={() => navigate("/expense-report")}
+              >
+                View Expense Report
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Recent Sales */}
-        <div className="card-widget full-width">
-          <div className="card-widget__header">
+      {/* ── Main Reports Section ── */}
+      <div className="dashboard-content-grid">
+        {/* SALE REPORT WIDGET */}
+        <div className="panel-card">
+          <div className="panel-header">
             <h3>Recent Sales</h3>
-            <a
-              href="/sale-report"
-              className="card-widget__view-all"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/sale-report");
-              }}
+            <button
+              className="btn-link"
+              onClick={() => navigate("/sale-report")}
             >
-              View All Sales
-            </a>
+              Report <ChevronRight size={14} />
+            </button>
           </div>
-          <div className="card-widget__body">
-            <RecentSalesTable data={recentSalesData} />
+          <div className="panel-body" style={{ padding: "0 24px" }}>
+            <table className="clean-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentSales?.slice(0, 5).map((sale) => (
+                  <tr key={sale.reference}>
+                    <td style={{ fontWeight: 600 }}>{sale.party}</td>
+                    <td style={{ color: "#4c51bf", fontWeight: 700 }}>
+                      <AmountSymbol>{sale.grandTotal}</AmountSymbol>
+                    </td>
+                    <td>
+                      <span
+                        className={`pill-status ${sale.paymentStatus?.toLowerCase()}`}
+                      >
+                        {sale.paymentStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <div className="card-widget full-width">
-          <div className="card-widget__header">
+        {/* PURCHASE REPORT WIDGET */}
+        <div className="panel-card">
+          <div className="panel-header">
             <h3>Recent Purchases</h3>
-            <a
-              href="/purchase-report"
-              className="card-widget__view-all"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/purchase-report");
-              }}
+            <button
+              className="btn-link"
+              onClick={() => navigate("/purchase-report")}
             >
-              View All Purchases
-            </a>
+              Report <ChevronRight size={14} />
+            </button>
           </div>
-          <div className="card-widget__body">
-            <RecentPurchasesTable data={recentPurchasesData} />
+          <div className="panel-body" style={{ padding: "0 24px" }}>
+            <table className="clean-table">
+              <thead>
+                <tr>
+                  <th>Supplier</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentPurchases?.slice(0, 5).map((pur) => (
+                  <tr key={pur.reference}>
+                    <td style={{ fontSize: "13px", fontWeight: 600 }}>
+                      {pur.party}
+                    </td>
+                    <td style={{ fontWeight: 700 }}>
+                      <AmountSymbol>{pur.grandTotal}</AmountSymbol>
+                    </td>
+                    <td>
+                      <span
+                        className={`pill-status ${pur.paymentStatus?.toLowerCase()}`}
+                      >
+                        {pur.paymentStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Recent Expenses (New) */}
-        <div className="card-widget full-width">
-          <div className="card-widget__header">
-            <h3>Recent Expenses</h3>
-            <a
-              href="/expense-report"
-              className="card-widget__view-all"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/expense-report");
-              }}
+        {/* SERVICE REPORT WIDGET */}
+        <div className="panel-card">
+          <div className="panel-header">
+            <h3>Recent Services</h3>
+            <button
+              className="btn-link"
+              onClick={() => navigate("/service-list")}
             >
-              View All Expenses
-            </a>
+              Report <ChevronRight size={14} />
+            </button>
           </div>
-          <div className="card-widget__body">
-            <RecentExpensesTable data={recentExpensesData} />
+          <div className="panel-body" style={{ padding: "0 24px" }}>
+            <table className="clean-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Details</th>
+                  <th>Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {servicesData?.data?.slice(0, 5).map((svc) => (
+                  <tr key={svc.id}>
+                    <td style={{ fontWeight: 600 }}>
+                      {svc.customer_name || "Customer"}
+                    </td>
+                    <td>
+                      <div style={{ fontSize: "12px", fontWeight: 600 }}>
+                        {svc.item_name || "Repair"}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#718096" }}>
+                        {svc.description || svc.issue_report}
+                      </div>
+                    </td>
+                    <td style={{ fontWeight: 700 }}>
+                      <AmountSymbol>
+                        {svc.service_charge || svc.cost}
+                      </AmountSymbol>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Stock Alert */}
-        <div className="card-widget full-width">
-          <div className="card-widget__header">
-            <h3>Stock Alert</h3>
-            <a
-              href="/item-list"
-              className="card-widget__view-all"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/item-list");
-              }}
-            >
-              View Full Report
-            </a>
-          </div>
-          <div className="card-widget__body">
-            <StockAlertTable data={stockAlertData} />
-          </div>
+        <InventoryPanel
+          title="Latest Frames"
+          items={stockAlerts?.frames}
+          navigatePath="/frames"
+          navigateLabel="Frames"
+        />
+
+        <InventoryPanel
+          title="Latest Lenses"
+          items={stockAlerts?.lenses}
+          navigatePath="/lens-list"
+          navigateLabel="Lenses"
+        />
+
+        <InventoryPanel
+          title="Latest Addons"
+          items={stockAlerts?.addons}
+          navigatePath="/lens-addons"
+          navigateLabel="Addons"
+        />
+      </div>
+
+      {/* ── Footer ── */}
+      <footer className="dashboard-footer-clean">
+        <span>© 2026 OptiVision • Professional Optical Management</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div
+            style={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              background: "#38a169",
+            }}
+          ></div>
+          <span>System Online</span>
         </div>
-      </main>
+      </footer>
+    </div>
+  );
+};
+
+// Helper component for Inventory Panels
+const InventoryPanel = ({ title, items, navigatePath, navigateLabel }) => {
+  const navigate = useNavigate();
+  return (
+    <div className="panel-card">
+      <div className="panel-header">
+        <h3>{title}</h3>
+        <button className="btn-link" onClick={() => navigate(navigatePath)}>
+          {navigateLabel} <ChevronRight size={14} />
+        </button>
+      </div>
+      <div className="panel-body" style={{ padding: "0 24px" }}>
+        <table className="clean-table">
+          <thead>
+            <tr>
+              <th>Product Details</th>
+              <th style={{ textAlign: "right" }}>Stock Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items?.slice(0, 5).map((item) => (
+              <tr key={item.code}>
+                <td style={{ fontSize: "13px" }}>
+                  <div style={{ fontWeight: 600 }}>{item.product}</div>
+                  <div style={{ fontSize: "11px", color: "#718096" }}>
+                    Code: {item.code}
+                  </div>
+                </td>
+                <td style={{ textAlign: "right" }}>
+                  <span
+                    className={`stock-badge ${item.quantity <= 5 ? "low" : "good"}`}
+                  >
+                    {item.quantity} In Stock
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {(!items || items.length === 0) && (
+              <tr>
+                <td
+                  colSpan="2"
+                  style={{
+                    textAlign: "center",
+                    padding: "40px 0",
+                    color: "#718096",
+                  }}
+                >
+                  <div style={{ marginBottom: "8px" }}>
+                    <Package size={24} opacity={0.3} />
+                  </div>
+                  No items found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

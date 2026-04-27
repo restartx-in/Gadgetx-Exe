@@ -1,252 +1,255 @@
-import { useState, useEffect, useRef } from 'react'
-import { Modal, ModalHeader, ModalFooter, ModalBody } from '@/components/Modal'
-import Select from '@/components/Select'
-import TextArea from '@/components/TextArea'
-import CancelButton from '@/apps/user/components/CancelButton'
-import SubmitButton from '@/apps/user/components/SubmitButton'
-import AccountAutoCompleteWithAddOption from '@/apps/user/components/AccountAutoCompleteWithAddOption'
-import AccountAutoCompleteWithAddOptionWithBalance from '@/apps/user/components/AccountAutoCompleteWithAddOptionWithBalance'
-import DoneByAutoCompleteWithAddOption from '@/apps/user/components/DoneByAutoCompleteWithAddOption'
-import CostCenterAutoCompleteWithAddOption from '@/apps/user/components/CostCenterAutoCompleteWithAddOption'
-import useCreateCashBook from '@/hooks/api/cashBook/useCreateCashBook'
-import useUpdateCashBook from '@/hooks/api/cashBook/useUpdateCashBook'
-import { useToast } from '@/context/ToastContext'
-import { CRUDTYPE, CRUDITEM } from '@/constants/object/crud'
-import { TOASTTYPE, TOASTSTATUS } from '@/constants/object/toastType'
-import Title from '@/apps/user/components/Title'
-import { Report } from '@/constants/object/report'
-import InputFieldWithCalculator from '@/apps/user/components/InputFieldWithCalculator'
+import { useState, useEffect, useRef } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Modal, ModalHeader, ModalFooter, ModalBody } from "@/components/Modal";
+import Select from "@/components/Select";
+import TextArea from "@/components/TextArea";
+import CancelButton from "@/components/CancelButton";
+import SubmitButton from "@/components/SubmitButton";
+import AccountAutoCompleteWithAddOption from "@/apps/user/components/AccountAutoCompleteWithAddOption";
+import AccountAutoCompleteWithAddOptionWithBalance from "@/apps/user/components/AccountAutoCompleteWithAddOptionWithBalance";
+import DoneByAutoCompleteWithAddOption from "@/apps/user/components/DoneByAutoCompleteWithAddOption";
+import CostCenterAutoCompleteWithAddOption from "@/apps/user/components/CostCenterAutoCompleteWithAddOption";
+import useCreateCashBook from "@/apps/user/hooks/api/cashBook/useCreateCashBook";
+import useUpdateCashBook from "@/apps/user/hooks/api/cashBook/useUpdateCashBook";
+import { useToast } from "@/context/ToastContext";
+import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
+import { TOASTTYPE, TOASTSTATUS } from "@/constants/object/toastType";
+import Title from "@/components/Title";
+import { Report } from "@/constants/object/report";
+import InputFieldWithCalculator from "@/apps/user/components/InputFieldWithCalculator";
 
 const transactionTypeOptions = [
-  { value: 'deposit', label: 'Deposit' },
-  { value: 'withdrawal', label: 'Withdrawal' },
-  { value: 'transfer', label: 'Transfer' },
-]
+  { value: "deposit", label: "Deposit" },
+  { value: "withdrawal", label: "Withdrawal" },
+  { value: "transfer", label: "Transfer" },
+];
+
+// 1. Define Zod Schema
+const cashBookSchema = z
+  .object({
+    transaction_type: z.string().min(1, "Please choose a transaction type."),
+    amount: z.coerce.number().min(0.01, "Please enter a valid amount."),
+    account_id: z.union([z.string(), z.number()]).refine((val) => val !== "" && val !== null, "Please select an account."),
+    to_account_id: z.any().optional(),
+    description: z.string().optional(),
+    done_by_id: z.any().optional().nullable(),
+    cost_center_id: z.any().optional().nullable(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.transaction_type === "transfer") {
+      if (!data.to_account_id) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Please select the account to transfer to.",
+          path: ["to_account_id"],
+        });
+      }
+      if (
+        data.account_id &&
+        data.to_account_id &&
+        data.account_id === data.to_account_id
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "From and To accounts cannot be the same.",
+          path: ["to_account_id"],
+        });
+      }
+    }
+  });
 
 const CashBook = ({ isOpen, onClose, mode, selectedEntry, onSuccess }) => {
-  const showToast = useToast()
+  const showToast = useToast();
+  const disabled = mode === "view";
 
-  const accountSelectRef = useRef(null)
-  const toAccountSelectRef = useRef(null)
-  const transactionTypeRef = useRef(null)
-  const amountRef = useRef(null) // Unified ref for amount input
+  const accountSelectRef = useRef(null);
+  const toAccountSelectRef = useRef(null);
+  const transactionTypeRef = useRef(null);
+  const amountRef = useRef(null);
 
-  const defaultForm = {
-    account_id: '',
-    to_account_id: '',
-    transaction_type: '',
-    description: '',
-    amount: '', // Unified amount field
-    done_by_id: '',
-    cost_center_id: '',
-  }
+  const defaultValues = {
+    account_id: "",
+    to_account_id: "",
+    transaction_type: "",
+    description: "",
+    amount: "",
+    done_by_id: "",
+    cost_center_id: "",
+  };
 
-  const [form, setForm] = useState(defaultForm)
-  const [fromAccountBalance, setFromAccountBalance] = useState(null)
-  const disabled = mode === 'view'
+  const [fromAccountBalance, setFromAccountBalance] = useState(null);
 
   const { mutateAsync: createTransaction, isLoading: creating } =
-    useCreateCashBook()
+    useCreateCashBook();
   const { mutateAsync: updateTransaction, isLoading: updating } =
-    useUpdateCashBook()
+    useUpdateCashBook();
+
+  // 2. Setup React Hook Form
+  const { control, handleSubmit, reset, watch, setValue, getValues } = useForm({
+    resolver: zodResolver(cashBookSchema),
+    defaultValues,
+  });
+
+  const watchedFormData = watch();
+  const watchedTransactionType = watch("transaction_type");
+  const watchedAmount = watch("amount");
 
   const clearLocalStorage = () => {
-    localStorage.removeItem('add_cashbook_form')
-  }
+    localStorage.removeItem("add_cashbook_form");
+  };
 
+  // Load data effect
   useEffect(() => {
     if (isOpen) {
-      if (mode === 'edit' || mode === 'view') {
-        // Logic to populate form from selectedEntry based on transaction type
-        let amount = ''
-        let type = selectedEntry.transaction_type
-
-        // Determine amount based on debit/credit from the list view data
-        if (selectedEntry.debit > 0) {
-            amount = selectedEntry.debit
-        } else if (selectedEntry.credit > 0) {
-            amount = selectedEntry.credit
-        }
-
-        setForm({
-          ...defaultForm,
+      if (mode === "edit" || mode === "view") {
+        let amount = "";
+        if (selectedEntry.debit > 0) amount = selectedEntry.debit;
+        else if (selectedEntry.credit > 0) amount = selectedEntry.credit;
+        
+        reset({
+          ...defaultValues,
           ...selectedEntry,
-          transaction_type: type,
           amount: amount,
-          // Ensure IDs are strings/numbers as expected by selects
-          account_id: selectedEntry.account_id || (selectedEntry.from_account_id) || '', 
-          to_account_id: selectedEntry.to_account_id || '', 
-        })
-      } else {
+          account_id:
+            selectedEntry.account_id || selectedEntry.from_account_id || "",
+          to_account_id: selectedEntry.to_account_id || "",
+        });
+
+      } else { // Add mode
         if (selectedEntry && Object.keys(selectedEntry).length > 0) {
-           // Pre-fill if triggered from "Deposit/Withdraw" buttons on Account List
-           // Logic: If account_id is passed, set it.
-           const preFill = { ...defaultForm, ...selectedEntry };
-           // Ensure amount is reset if just opening blank
-           if(!selectedEntry.amount) preFill.amount = '';
-           setForm(preFill)
-           clearLocalStorage()
+          const preFill = { ...defaultValues, ...selectedEntry };
+          if (!selectedEntry.amount) preFill.amount = "";
+          reset(preFill);
+          clearLocalStorage();
         } else {
-          const savedForm = localStorage.getItem('add_cashbook_form')
-          setForm(savedForm ? JSON.parse(savedForm) : { ...defaultForm })
+          const savedForm = localStorage.getItem("add_cashbook_form");
+          if (savedForm) {
+              try {
+                  reset(JSON.parse(savedForm));
+              } catch (e) {
+                  reset(defaultValues);
+              }
+          } else {
+              reset(defaultValues);
+          }
         }
       }
 
-      if (mode !== 'view') {
-        setTimeout(() => transactionTypeRef.current?.focus(), 100)
+      if (mode !== "view") {
+        setTimeout(() => transactionTypeRef.current?.focus(), 100);
       }
     } else {
-      setFromAccountBalance(null)
+      setFromAccountBalance(null);
     }
-  }, [mode, selectedEntry, isOpen])
+  }, [mode, selectedEntry, isOpen, reset]);
 
+  // Save draft effect
   useEffect(() => {
     if (
       isOpen &&
-      mode === 'add' &&
+      mode === "add" &&
       (!selectedEntry || Object.keys(selectedEntry).length === 0)
     ) {
-      localStorage.setItem('add_cashbook_form', JSON.stringify(form))
+      localStorage.setItem("add_cashbook_form", JSON.stringify(watchedFormData));
     }
-  }, [form, isOpen, mode, selectedEntry])
+  }, [watchedFormData, isOpen, mode, selectedEntry]);
 
-  const handleChange = (e) => {
-    const { name, value, selectedOption } = e.target
-    
-    setForm((prevForm) => {
-      const newForm = { ...prevForm, [name]: value }
-
-      if (name === 'transaction_type') {
-        newForm.amount = ''
-        newForm.account_id = ''
-        newForm.to_account_id = ''
-        setFromAccountBalance(null)
-      } else if (name === 'account_id') {
-        if (selectedOption) {
-          setFromAccountBalance(selectedOption.amount) // Assuming option has amount
-        } else {
-          setFromAccountBalance(null)
-        }
-      } 
-      return newForm
-    })
-  }
-
-  const handleTransferAmountChange = (e) => {
-    const { name, value } = e.target
-    const balance = fromAccountBalance ?? 0
-    const numericValue = Number(value)
-
-    // Optional: Client-side validation for transfers/withdrawals exceeding balance
-    if (
-      (form.transaction_type === 'transfer' || form.transaction_type === 'withdrawal') && 
-      numericValue > balance && 
-      balance !== null
-    ) {
-       // You might want to just show a toast or error state rather than blocking input completely
-       // keeping blocking for now based on previous logic
-       showToast({
+  const onFormError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError) {
+      showToast({
         type: TOASTTYPE.GENARAL,
-        message: `Amount cannot exceed account balance of ${balance.toLocaleString()}`,
+        message: firstError.message,
         status: TOASTSTATUS.ERROR,
-      })
-      return
+      });
+      // Focus logic
+      if (errors.transaction_type) transactionTypeRef.current?.focus();
+      if (errors.amount) amountRef.current?.focus();
+      if (errors.account_id) accountSelectRef.current?.focus();
+      if (errors.to_account_id) toAccountSelectRef.current?.focus();
     }
+  };
 
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (!form.transaction_type) {
-      showToast({ type: TOASTTYPE.GENARAL, message: 'Please choose a transaction type.', status: TOASTSTATUS.ERROR })
-      transactionTypeRef.current?.focus()
-      return
+  const onSubmit = async (data) => {
+    // Re-check balance on submit as an extra validation step
+    if (
+      (data.transaction_type === "transfer" ||
+       data.transaction_type === "withdrawal") &&
+      fromAccountBalance !== null &&
+      Number(data.amount) > fromAccountBalance
+    ) {
+      showToast({
+        type: TOASTTYPE.GENARAL,
+        message: `Amount cannot exceed account balance of ${fromAccountBalance.toLocaleString()}`,
+        status: TOASTSTATUS.ERROR,
+      });
+      return;
     }
-
-    if (form.transaction_type === 'transfer') {
-      if (!form.account_id) {
-        showToast({ type: TOASTTYPE.GENARAL, message: 'Please select the account to transfer from.', status: TOASTSTATUS.ERROR })
-        accountSelectRef.current?.focus()
-        return
-      }
-      if (!form.amount) {
-        showToast({ type: TOASTTYPE.GENARAL, message: 'Please enter the amount to transfer.', status: TOASTSTATUS.ERROR })
-        amountRef.current?.focus()
-        return
-      }
-      if (!form.to_account_id) {
-        showToast({ type: TOASTTYPE.GENARAL, message: 'Please select the account to transfer to.', status: TOASTSTATUS.ERROR })
-        toAccountSelectRef.current?.focus()
-        return
-      }
-      if (form.account_id === form.to_account_id) {
-        showToast({ type: TOASTTYPE.GENARAL, message: 'From and To accounts cannot be the same.', status: TOASTSTATUS.ERROR })
-        toAccountSelectRef.current?.focus()
-        return
-      }
-    } else {
-      // Deposit, Withdrawal, Brokerage
-      if (!form.account_id) {
-        showToast({ type: TOASTTYPE.GENARAL, message: 'Please select an account.', status: TOASTSTATUS.ERROR })
-        accountSelectRef.current?.focus()
-        return
-      }
-      if (!form.amount) {
-        showToast({ type: TOASTTYPE.GENARAL, message: 'Please enter the amount.', status: TOASTSTATUS.ERROR })
-        amountRef.current?.focus()
-        return
-      }
-    }
-
+    
     try {
-      let finalDescription = form.description
-      if (form.transaction_type === 'transfer' && !form.description?.trim()) {
-        finalDescription = 'Fund Transfer'
+      let finalDescription = data.description;
+      if (data.transaction_type === "transfer" && !data.description?.trim()) {
+        finalDescription = "Fund Transfer";
       }
 
-      // Construct Payload matching the new Transaction API
       const payload = {
-        transaction_type: form.transaction_type,
-        amount: Number(form.amount),
+        transaction_type: data.transaction_type,
+        amount: Number(data.amount),
         description: finalDescription,
-        done_by_id: form.done_by_id || null,
-        cost_center_id: form.cost_center_id || null,
-      }
+        done_by_id: data.done_by_id || null,
+        cost_center_id: data.cost_center_id || null,
+      };
 
-      // Handle specific fields based on type
-      if (form.transaction_type === 'transfer') {
-          payload.from_account_id = form.account_id;
-          payload.to_account_id = form.to_account_id;
+      if (data.transaction_type === "transfer") {
+        payload.from_account_id = data.account_id;
+        payload.to_account_id = data.to_account_id;
       } else {
-          payload.account_id = form.account_id;
+        payload.account_id = data.account_id;
       }
 
       const handleSuccess = () => {
-        onClose()
-        if (onSuccess) onSuccess()
-      }
+        onClose();
+        if (onSuccess) onSuccess();
+      };
 
-      if (mode === 'edit') {
-        // Note: Update might be restricted depending on backend implementation for 'reference' based edits
-        // but assuming updateTransaction maps correctly.
-        await updateTransaction({ id: selectedEntry.id, data: payload }, { onSuccess: handleSuccess })
-        showToast({ crudItem: CRUDITEM.CASHBOOK, crudType: CRUDTYPE.UPDATE_SUCCESS })
+      if (mode === "edit") {
+        const updateResponse = await updateTransaction({
+          id: selectedEntry.id,
+          data: payload,
+        });
+        const updateResult = updateResponse?.data ?? updateResponse;
+        if (updateResult?.status === "failed") {
+          throw new Error(updateResult?.message || "Failed to update transaction.");
+        }
+        showToast({
+          crudItem: CRUDITEM.CASHBOOK,
+          crudType: CRUDTYPE.UPDATE_SUCCESS,
+        });
+        handleSuccess();
       } else {
-        await createTransaction(payload, {
-          onSuccess: () => {
-            handleSuccess()
-            clearLocalStorage()
-          },
-        })
-        showToast({ crudItem: CRUDITEM.CASHBOOK, crudType: CRUDTYPE.CREATE_SUCCESS })
+        const createResult = await createTransaction(payload);
+        if (createResult?.status === "failed") {
+          throw new Error(createResult?.message || "Failed to create transaction.");
+        }
+        showToast({
+          crudItem: CRUDITEM.CASHBOOK,
+          crudType: CRUDTYPE.CREATE_SUCCESS,
+        });
+        clearLocalStorage();
+        handleSuccess();
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.error || 'An unexpected error occurred.'
-      showToast({ type: TOASTTYPE.GENARAL, message: errorMsg, status: TOASTSTATUS.ERROR })
+      const errorMsg =
+        err.response?.data?.error || "An unexpected error occurred.";
+      showToast({
+        type: TOASTTYPE.GENARAL,
+        message: errorMsg,
+        status: TOASTSTATUS.ERROR,
+      });
     }
-  }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -254,125 +257,210 @@ const CashBook = ({ isOpen, onClose, mode, selectedEntry, onSuccess }) => {
         <Title report={Report.CashBook} mode={mode} />
       </ModalHeader>
       <ModalBody>
-        <Select
-         label="Transaction Type"
-          ref={transactionTypeRef}
-          disabled={disabled || mode === 'edit'}
+        <Controller
           name="transaction_type"
-          value={form.transaction_type}
-          onChange={handleChange}
-          options={transactionTypeOptions}
-          placeholder="Select Transaction Type"
-          required
-        />
-
-        {(form.transaction_type === 'withdrawal') && (
-          <>
-            <InputFieldWithCalculator
-             label="Amount"
-              ref={amountRef}
-              disabled={disabled}
-              name="amount"
-              placeholder="Amount"
-              value={form.amount}
-              onChange={handleChange} 
-            />
-            <AccountAutoCompleteWithAddOptionWithBalance
-              ref={accountSelectRef}
-              disabled={disabled || !form.amount || Number(form.amount) <= 0}
-              name="account_id"
-              value={form.account_id}
-              onChange={handleChange}
+          control={control}
+          render={({ field }) => (
+            <Select
+              {...field}
+              label="Transaction Type"
+              ref={transactionTypeRef}
+              disabled={disabled || mode === "edit"}
+              options={transactionTypeOptions}
+              placeholder="Select Transaction Type"
               required
-              debitAmount={form.amount} // Pass amount to check against balance
+              onChange={(e) => {
+                field.onChange(e.target.value);
+                // Reset dependent fields
+                setValue("amount", "");
+                setValue("account_id", "");
+                setValue("to_account_id", "");
+                setFromAccountBalance(null);
+              }}
+            />
+          )}
+        />
+        
+        {watchedTransactionType === "withdrawal" && (
+          <>
+            <Controller
+                name="amount"
+                control={control}
+                render={({ field }) => (
+                    <InputFieldWithCalculator
+                    {...field}
+                    label="Amount"
+                    ref={amountRef}
+                    disabled={disabled}
+                    placeholder="Amount"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const balance = fromAccountBalance ?? 0;
+                      if (fromAccountBalance !== null && Number(value) > balance) {
+                        showToast({
+                          type: TOASTTYPE.GENARAL,
+                          message: `Amount cannot exceed account balance of ${balance.toLocaleString()}`,
+                          status: TOASTSTATUS.ERROR,
+                        });
+                        return;
+                      }
+                      field.onChange(value);
+                    }}
+                    />
+                )}
+            />
+            <Controller
+                name="account_id"
+                control={control}
+                render={({ field }) => (
+                    <AccountAutoCompleteWithAddOptionWithBalance
+                        {...field}
+                        ref={accountSelectRef}
+                        disabled={disabled || !watchedAmount || Number(watchedAmount) <= 0}
+                        required
+                        debitAmount={watchedAmount}
+                        onChange={(e) => {
+                            field.onChange(e.target.value);
+                            setFromAccountBalance(e.target.selectedOption?.amount || null);
+                        }}
+                    />
+                )}
             />
           </>
         )}
 
-        {form.transaction_type === 'deposit' && (
+        {watchedTransactionType === "deposit" && (
           <>
-             <InputFieldWithCalculator
-              label="Amount"
-              ref={amountRef}
-              disabled={disabled}
-              name="amount"
-              placeholder="Amount"
-              value={form.amount}
-              onChange={handleChange}
+            <Controller
+                name="amount"
+                control={control}
+                render={({ field }) => (
+                    <InputFieldWithCalculator {...field} label="Amount" ref={amountRef} disabled={disabled} placeholder="Amount" />
+                )}
             />
-            <AccountAutoCompleteWithAddOption
-              ref={accountSelectRef}
-              disabled={disabled || !form.amount || Number(form.amount) <= 0}
-              name="account_id"
-              value={form.account_id}
-              onChange={handleChange}
-              required
+            <Controller
+                name="account_id"
+                control={control}
+                render={({ field }) => (
+                    <AccountAutoCompleteWithAddOption
+                        {...field}
+                        ref={accountSelectRef}
+                        disabled={disabled || !watchedAmount || Number(watchedAmount) <= 0}
+                        required
+                        onChange={(e) => {
+                            field.onChange(e.target.value);
+                            setFromAccountBalance(e.target.selectedOption?.amount || null);
+                        }}
+                    />
+                )}
             />
           </>
         )}
 
-        {/* TRANSFER: Source (Balance Check) -> Destination */}
-        {form.transaction_type === 'transfer' && (
+        {watchedTransactionType === "transfer" && (
           <>
-            <AccountAutoCompleteWithAddOptionWithBalance
-              ref={accountSelectRef}
-              disabled={disabled}
-              name="account_id"
-              value={form.account_id}
-              onChange={handleChange}
-              required
-              placeholder="Select From Account"
+            <Controller
+                name="account_id"
+                control={control}
+                render={({ field }) => (
+                    <AccountAutoCompleteWithAddOptionWithBalance
+                        {...field}
+                        ref={accountSelectRef}
+                        disabled={disabled}
+                        required
+                        placeholder="Select From Account"
+                         onChange={(e) => {
+                            field.onChange(e.target.value);
+                            setFromAccountBalance(e.target.selectedOption?.amount || null);
+                        }}
+                    />
+                )}
             />
-            <InputFieldWithCalculator
-              label="Amount"
-              ref={amountRef}
-              disabled={disabled || !form.account_id}
-              name="amount"
-              placeholder="Amount to Transfer"
-              value={form.amount}
-              onChange={handleTransferAmountChange} // Specific handler to check source balance
+             <Controller
+                name="amount"
+                control={control}
+                render={({ field }) => (
+                    <InputFieldWithCalculator
+                    {...field}
+                    label="Amount"
+                    ref={amountRef}
+                    disabled={disabled || !getValues("account_id")}
+                    placeholder="Amount to Transfer"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const balance = fromAccountBalance ?? 0;
+                      if (fromAccountBalance !== null && Number(value) > balance) {
+                        showToast({
+                          type: TOASTTYPE.GENARAL,
+                          message: `Amount cannot exceed account balance of ${balance.toLocaleString()}`,
+                          status: TOASTSTATUS.ERROR,
+                        });
+                        return;
+                      }
+                      field.onChange(value);
+                    }}
+                    />
+                )}
             />
-            <AccountAutoCompleteWithAddOption
-              ref={toAccountSelectRef}
-              disabled={disabled || !form.amount || Number(form.amount) <= 0}
-              name="to_account_id"
-              value={form.to_account_id}
-              onChange={handleChange}
-              required
-              placeholder="Select To Account"
+            <Controller
+                name="to_account_id"
+                control={control}
+                render={({ field }) => (
+                    <AccountAutoCompleteWithAddOption
+                        {...field}
+                        ref={toAccountSelectRef}
+                        disabled={disabled || !watchedAmount || Number(watchedAmount) <= 0}
+                        required
+                        placeholder="Select To Account"
+                        onChange={(e) => field.onChange(e.target.value)}
+                    />
+                )}
             />
           </>
         )}
 
-        <DoneByAutoCompleteWithAddOption
-          placeholder="Done By (Optional)"
-          name="done_by_id"
-          value={form.done_by_id}
-          onChange={handleChange}
-          disabled={disabled}
+        <Controller
+            name="done_by_id"
+            control={control}
+            render={({ field }) => (
+                <DoneByAutoCompleteWithAddOption
+                    {...field}
+                    placeholder="Done By (Optional)"
+                    disabled={disabled}
+                    onChange={(e) => field.onChange(e.target.value)}
+                />
+            )}
         />
-        <CostCenterAutoCompleteWithAddOption
-          placeholder="Cost Center (Optional)"
-          name="cost_center_id"
-          value={form.cost_center_id}
-          onChange={handleChange}
-          disabled={disabled}
+        <Controller
+            name="cost_center_id"
+            control={control}
+            render={({ field }) => (
+                <CostCenterAutoCompleteWithAddOption
+                    {...field}
+                    placeholder="Cost Center (Optional)"
+                    disabled={disabled}
+                    onChange={(e) => field.onChange(e.target.value)}
+                />
+            )}
         />
-        <TextArea
-          label="Description"
-          disabled={disabled}
-          name="description"
-          // placeholder="Description"
-          value={form.description}
-          onChange={handleChange}
+        <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+                <TextArea
+                    {...field}
+                    label="Description"
+                    disabled={disabled}
+                />
+            )}
         />
       </ModalBody>
       <ModalFooter
         style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '16px',
+          width: "100%",
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "16px",
         }}
       >
         <CancelButton onClick={onClose} />
@@ -380,11 +468,11 @@ const CashBook = ({ isOpen, onClose, mode, selectedEntry, onSuccess }) => {
           isLoading={creating || updating}
           disabled={disabled}
           type={mode}
-          onClick={handleSubmit}
+          onClick={handleSubmit(onSubmit, onFormError)}
         />
       </ModalFooter>
     </Modal>
-  )
-}
+  );
+};
 
-export default CashBook
+export default CashBook;

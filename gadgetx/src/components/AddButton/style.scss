@@ -12,7 +12,7 @@
   --color-text-dark: #374151;
   --color-text-light: #111;
   --color-text-disabled: #6b7280;
-  --color-bg-disabled: #e5e7eb;
+  --app-bg-disabled: #e5e7eb;
 
   --font-size-base: 1rem;
 }
@@ -36,7 +36,7 @@
 
   &:disabled {
     cursor: not-allowed;
-    background-color: var(--color-bg-disabled);
+    background-color: var(--app-bg-disabled);
     color: var(--color-text-disabled);
     border-color: var(--color-grey-border);
     box-shadow: none;
@@ -61,6 +61,15 @@
     font-size: calc(var(--font-size-base) * 1.1);
   }
 
+  &.primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+    }
+  }
   &-icon {
     &-svg {
       height: 20px;
@@ -87,9 +96,8 @@
       display: inline-flex;
       align-items: center;
       &-svg {
-       display: inline;
+        display: inline;
       }
     }
   }
 }
-

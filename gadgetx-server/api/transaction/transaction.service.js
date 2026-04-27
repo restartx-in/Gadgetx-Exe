@@ -125,10 +125,16 @@ class TransactionService {
       }
 
       if (!existingClient) await client.query("COMMIT");
-      return transaction;
+      return {
+        status: "success",
+        data: transaction,
+      };
     } catch (error) {
       if (!existingClient) await client.query("ROLLBACK");
-      throw error;
+      return {
+        status: "failed",
+        message: error.message || "Something went wrong",
+      };
     } finally {
       if (!existingClient) client.release();
     }
@@ -248,13 +254,22 @@ class TransactionService {
         const result = await this.transactionRepository.deleteTransactionById(client, id, tenantId);
 
         if (!existingClient) await client.query('COMMIT');
-        return result;
+        return {
+            status: 'success',
+            data: result,
+        };
     } catch (error) {
         if (!existingClient) await client.query('ROLLBACK');
-        throw error;
+       return {
+            status: 'failed',
+            message: error.message || 'Something went wrong',
+        };
     } finally {
         if (!existingClient) client.release();
     }
+  }
+   async getRecent(tenantId, db) {
+    return await this.transactionRepository.getRecentByTenantId(db, tenantId);
   }
 
   async deleteByReference(tenantId, transactionType, referenceId, client) {

@@ -8,7 +8,7 @@ const SettingsRepository = require('./settings.repository');
 const SettingsService = require('./settings.service');
 const SettingsController = require('./settings.controller');
 const SettingsValidator = require('./settings.validator');
-const UserRepository = require('../user/user.repository'); // This is updated
+const UserRepository = require('../../api/user/user.repository'); // This is updated
 
 const repository = new SettingsRepository();
 const userRepository = new UserRepository(); // This is updated

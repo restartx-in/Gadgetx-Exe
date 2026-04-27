@@ -94,7 +94,6 @@ class ItemRepository {
       category_id,
       sku,
       brand_id,
-      unit_id,
       bar_code,
       stock_quantity,
       purchase_price,
@@ -109,11 +108,11 @@ class ItemRepository {
     } = itemData;
     const { rows } = await db.query(
       `INSERT INTO item (
-        tenant_id, name, description, category_id, sku, brand_id, unit_id, bar_code, 
+        tenant_id, name, description, category_id, sku, brand_id, bar_code, 
         stock_quantity, purchase_price, selling_price, tax, min_stock_level, 
         party_id, image, done_by_id, cost_center_id, selling_price_with_tax
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING *`,
       [
         tenant_id,
@@ -122,7 +121,6 @@ class ItemRepository {
         category_id,
         sku,
         brand_id,
-        unit_id,
         bar_code,
         stock_quantity,
         purchase_price,
@@ -174,13 +172,24 @@ class ItemRepository {
             i.*,
             p.name as party_name, p.phone as party_phone,
             c.name as category_name, b.name as brand_name,
-            u.name as unit_name, u.symbol as unit_symbol,
-            db.name as done_by_name, cc.name as cost_center_name
+            db.name as done_by_name, cc.name as cost_center_name,
+            (
+              SELECT COALESCE(json_agg(json_build_object(
+                'field_id', cf.id,
+                'label', cf.label,
+                'type', cf.type,
+                'is_required', cf.is_required,
+                'value', icfv.value
+              )), '[]'::json)
+              FROM category_custom_fields cf
+              LEFT JOIN item_custom_field_values icfv 
+                ON cf.id = icfv.field_id AND icfv.item_id = i.id
+              WHERE cf.category_id = i.category_id
+            ) AS "ItemCustomFields"
         FROM item i
         LEFT JOIN party p ON i.party_id = p.id 
         LEFT JOIN category c ON i.category_id = c.id
         LEFT JOIN brand b ON i.brand_id = b.id
-        LEFT JOIN unit u ON i.unit_id = u.id
         LEFT JOIN "done_by" db ON i.done_by_id = db.id
         LEFT JOIN "cost_center" cc ON i.cost_center_id = cc.id
         WHERE i.id = $1 AND i.tenant_id = $2;
@@ -193,12 +202,23 @@ class ItemRepository {
     const baseQuery = `
       SELECT 
         i.*, c.name as category_name, b.name as brand_name,
-        u.name as unit_name, u.symbol as unit_symbol,
-        db.name as done_by_name, cc.name as cost_center_name
+        db.name as done_by_name, cc.name as cost_center_name,
+        (
+          SELECT COALESCE(json_agg(json_build_object(
+            'field_id', cf.id,
+            'label', cf.label,
+            'type', cf.type,
+            'is_required', cf.is_required,
+            'value', icfv.value
+          )), '[]'::json)
+          FROM category_custom_fields cf
+          LEFT JOIN item_custom_field_values icfv 
+            ON cf.id = icfv.field_id AND icfv.item_id = i.id
+          WHERE cf.category_id = i.category_id
+        ) AS "ItemCustomFields"
       FROM item i
       LEFT JOIN category c ON i.category_id = c.id
       LEFT JOIN brand b ON i.brand_id = b.id
-      LEFT JOIN unit u ON i.unit_id = u.id
       LEFT JOIN "done_by" db ON i.done_by_id = db.id
       LEFT JOIN "cost_center" cc ON i.cost_center_id = cc.id
       WHERE i.tenant_id = $1`;
@@ -216,14 +236,25 @@ class ItemRepository {
     const baseQuery = `
       SELECT 
         i.*, p.name as party_name, c.name as category_name, b.name as brand_name, 
-        u.name as unit_name, u.symbol as unit_symbol,
         db.name as done_by_name, cc.name as cost_center_name,
-        COUNT(*) OVER() as total_count 
+        COUNT(*) OVER() as total_count,
+        (
+          SELECT COALESCE(json_agg(json_build_object(
+            'field_id', cf.id,
+            'label', cf.label,
+            'type', cf.type,
+            'is_required', cf.is_required,
+            'value', icfv.value
+          )), '[]'::json)
+          FROM category_custom_fields cf
+          LEFT JOIN item_custom_field_values icfv 
+            ON cf.id = icfv.field_id AND icfv.item_id = i.id
+          WHERE cf.category_id = i.category_id
+        ) AS "ItemCustomFields"
       FROM item i
       LEFT JOIN party p ON i.party_id = p.id 
       LEFT JOIN category c ON i.category_id = c.id
       LEFT JOIN brand b ON i.brand_id = b.id
-      LEFT JOIN unit u ON i.unit_id = u.id
       LEFT JOIN "done_by" db ON i.done_by_id = db.id
       LEFT JOIN "cost_center" cc ON i.cost_center_id = cc.id
       WHERE i.tenant_id = $1

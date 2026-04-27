@@ -1,8 +1,8 @@
-import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
-import { FiTrash2 } from 'react-icons/fi';
-import { Modal, ModalHeader, ModalFooter, ModalBody } from '@/components/Modal';
-import CancelButton from '@/apps/user/components/CancelButton'; 
-import './style.scss';
+import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import { FiTrash2 } from "react-icons/fi";
+import { Modal, ModalHeader, ModalFooter, ModalBody } from "@/components/Modal";
+import CancelButton from "@/components/CancelButton";
+import "./style.scss";
 
 const DeleteButtonForActionMenu = forwardRef(
   ({ transaction, onClick, isDeleting = false }, ref) => {
@@ -14,23 +14,23 @@ const DeleteButtonForActionMenu = forwardRef(
 
     useEffect(() => {
       const handleEscape = (e) => {
-        if (e.key === 'Escape') setIsOpen(false);
+        if (e.key === "Escape") setIsOpen(false);
       };
-      if (isOpen) document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
+      if (isOpen) document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
     }, [isOpen]);
 
     useEffect(() => {
-      if (isOpen) document.body.style.overflow = 'hidden';
+      if (isOpen) document.body.style.overflow = "hidden";
       return () => {
-        document.body.style.overflow = 'unset';
+        document.body.style.overflow = "unset";
       };
     }, [isOpen]);
 
     const onClose = () => setIsOpen(false);
 
     const handleConfirm = () => {
-      if (typeof onClick === 'function') {
+      if (typeof onClick === "function") {
         onClick();
       }
     };
@@ -40,7 +40,7 @@ const DeleteButtonForActionMenu = forwardRef(
         <div
           className="delete_modall_triggerr_btnn fs10 fw500"
           onClick={() => setIsOpen(true)}
-          onKeyDown={(e) => e.key === 'Enter' && setIsOpen(true)}
+          onKeyDown={(e) => e.key === "Enter" && setIsOpen(true)}
           role="button"
           tabIndex={0}
         >
@@ -58,7 +58,7 @@ const DeleteButtonForActionMenu = forwardRef(
             <div className="delete_modall__popup_content-body">
               <p>
                 Are you sure you want to delete
-                {transaction ? <strong> {transaction}</strong> : ''}?
+                {transaction ? <strong> {transaction}</strong> : ""}?
               </p>
             </div>
           </ModalBody>
@@ -68,13 +68,15 @@ const DeleteButtonForActionMenu = forwardRef(
               <CancelButton onClick={onClose} />
               <button
                 onClick={handleConfirm}
-                className="submit_button2" 
+                className="submit_button2"
                 disabled={isDeleting}
               >
                 {isDeleting ? (
                   <span className="submit_button2-loader"></span>
                 ) : (
-                  <span className="submit_button2-text fs18 fw500">Confirm</span>
+                  <span className="submit_button2-text fs18 fw500">
+                    Confirm
+                  </span>
                 )}
               </button>
             </div>

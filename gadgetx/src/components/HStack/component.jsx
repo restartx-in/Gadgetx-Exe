@@ -4,35 +4,33 @@ const HStack = ({
   justifyContent = 'flex-end',
   alignItems = 'center',
   gap = '12px',
-  style = {},
   onClick,
+  style,
 }) => {
-
   const handleClick = (event) => {
     if (onClick) {
-      event.preventDefault();
-      onClick(event);
+      event.preventDefault() 
+      onClick(event) 
     }
-  };
+  }
 
   const inlineStyles = {
     display: 'flex',
     flexDirection: 'row',
     justifyContent,
     alignItems,
-    gap,
-    ...style,          
-  };
+    gap: gap,
+  }
 
   return (
     <div
       className={`hstack ${className}`}
-      style={inlineStyles}
+      style={{ ...inlineStyles, ...style }}
       onClick={handleClick}
     >
       {children}
     </div>
-  );
-};
+  )
+}
 
-export default HStack;
+export default HStack

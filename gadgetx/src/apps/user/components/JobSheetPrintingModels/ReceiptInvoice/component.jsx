@@ -8,6 +8,8 @@ import {
   Image,
   Font,
 } from "@react-pdf/renderer";
+import { isInvalidImageUrl } from "@/config/api";
+
 
 Font.register({
   family: 'Helvetica',
@@ -93,7 +95,7 @@ const ReceiptInvoice = ({ data, barcodeImage }) => {
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.logoSection}>
-            {store?.full_header_image_url && (
+            {store?.full_header_image_url && !isInvalidImageUrl(store.full_header_image_url) && (
               <Image src={store.full_header_image_url} style={styles.logo} />
             )}
             <Text style={styles.companyName}>{store?.company_name}</Text>

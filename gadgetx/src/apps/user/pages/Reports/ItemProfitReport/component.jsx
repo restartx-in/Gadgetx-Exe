@@ -1,8 +1,15 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback, useReducer } from "react"; // Import useReducer
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react"; // Import useReducer
 import { useSearchParams } from "react-router-dom";
 import { format, isValid } from "date-fns";
 
-import useItemProfitReport from "@/hooks/api/itemProfitReport/useItemProfitReport";
+import useItemProfitReport from "@/apps/user/hooks/api/itemProfitReport/useItemProfitReport";
 import { useIsMobile } from "@/utils/useIsMobile";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
 
@@ -10,11 +17,11 @@ import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
 import TitleContainer from "@/components/TitleContainer";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import DateFilter from "@/components/DateFilter";
 import RefreshButton from "@/components/RefreshButton";
 import Loader from "@/components/Loader";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PageHeader from "@/components/PageHeader";
 import HStack from "@/components/HStack/component.jsx";
 import {
@@ -109,7 +116,8 @@ const ItemProfitReport = () => {
   // --- Handlers (Memoized) - UPDATED setState CALLS ---
   const handleDateFilterChange = useCallback((newDateValue) => {
     setDateFilter(newDateValue);
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       start_date: newDateValue.startDate || "",
       end_date: newDateValue.endDate || "",
     });
@@ -117,7 +125,8 @@ const ItemProfitReport = () => {
 
   const handleRefresh = useCallback(() => {
     setDateFilter({ startDate: null, endDate: null, rangeType: "custom" });
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       start_date: "",
       end_date: "",
     });
@@ -133,7 +142,7 @@ const ItemProfitReport = () => {
       isValid(new Date(endDate));
 
     return isDateFilterActive
-      ? `${format(new Date(startDate), "MMM d, yyyy")} → ${format(
+      ? `${format(new Date(startDate), "MMM d, yyyy")} to ${format(
           new Date(endDate),
           "MMM d, yyyy"
         )}`
@@ -150,7 +159,7 @@ const ItemProfitReport = () => {
           />
 
           <TableTopContainer
-            isMargin={true}
+            //isMargin={true}
             mainActions={
               <>
                 <DateFilter

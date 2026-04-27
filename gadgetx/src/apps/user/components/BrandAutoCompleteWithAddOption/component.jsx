@@ -1,13 +1,13 @@
-import { useState, useEffect, forwardRef, useRef, useMemo } from 'react';
-import { HiPencil } from 'react-icons/hi2';
-import { useBrands } from '@/hooks/api/brand/useBrands';
-import AddBrand from '@/apps/user/pages/List/BrandList/components/AddBrand';
+import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
+import { HiPencil } from "react-icons/hi2";
+import { useBrands } from "@/apps/user/hooks/api/brand/useBrands";
+import AddBrand from "@/apps/user/pages/List/BrandList/components/AddBrand";
 
 // 1. Import Custom Components
-import CustomTextField from '@/components/CustomTextField';
-import CustomScrollbar from '@/components/CustomScrollbar';
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
 
-import './style.scss';
+import "./style.scss";
 
 const BrandAutoCompleteWithAddOption = forwardRef(
   (
@@ -15,23 +15,29 @@ const BrandAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label='Brand',
-      placeholder = 'Select or add a brand',
+      label = "Brand",
+      placeholder = "Select or add a brand",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       filters = {},
       is_edit = true,
       style = {},
     },
-    ref,
+    ref
   ) => {
     // Fetches all brands for the autocomplete options
-    const { data: brands, isLoading, isError, error, refetch } = useBrands(filters);
+    const {
+      data: brands,
+      isLoading,
+      isError,
+      error,
+      refetch,
+    } = useBrands(filters);
     const [brandOptions, setBrandOptions] = useState([]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('add');
+    const [modalMode, setModalMode] = useState("add");
     const [selectedBrandInModal, setSelectedBrandInModal] = useState(null);
 
     useEffect(() => {
@@ -47,7 +53,7 @@ const BrandAutoCompleteWithAddOption = forwardRef(
     // Opens the modal to add a new brand
     const handleAddNew = (typedValue) => {
       setSelectedBrandInModal({ name: typedValue });
-      setModalMode('add');
+      setModalMode("add");
       setIsModalOpen(true);
     };
 
@@ -55,7 +61,7 @@ const BrandAutoCompleteWithAddOption = forwardRef(
       const brandToEdit = brands.find((brand) => brand.id === option.value);
       if (brandToEdit) {
         setSelectedBrandInModal(brandToEdit);
-        setModalMode('edit');
+        setModalMode("edit");
         setIsModalOpen(true);
       }
     };
@@ -99,7 +105,7 @@ const BrandAutoCompleteWithAddOption = forwardRef(
     }
 
     if (isError) {
-      console.error('Failed to load brands:', error);
+      console.error("Failed to load brands:", error);
       return (
         <div className="brandinput-select">
           <CustomTextField
@@ -142,7 +148,7 @@ const BrandAutoCompleteWithAddOption = forwardRef(
         />
       </>
     );
-  },
+  }
 );
 
 export default BrandAutoCompleteWithAddOption;
@@ -155,28 +161,28 @@ const BrandSelectAutocompleteInput = forwardRef(
       onChange,
       options,
       label,
-      placeholder = '',
+      placeholder = "",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       onAddNew,
       onEdit,
       is_edit,
       style = {},
       ...rest
     },
-    ref,
+    ref
   ) => {
     const [showDropdown, setShowDropdown] = useState(false);
-    const [inputValue, setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // Removed: dropdownRef and the scrolling useEffect
     const hasBeenFocused = useRef(false);
 
     useEffect(() => {
       const selectedOption = options.find((opt) => opt.value === value);
-      setInputValue(selectedOption ? selectedOption.label : '');
+      setInputValue(selectedOption ? selectedOption.label : "");
     }, [value, options]);
 
     const filteredOptions = useMemo(() => {
@@ -184,16 +190,16 @@ const BrandSelectAutocompleteInput = forwardRef(
         return options;
       }
       return options.filter((opt) =>
-        opt.label.toLowerCase().includes(inputValue.toLowerCase()),
+        opt.label.toLowerCase().includes(inputValue.toLowerCase())
       );
     }, [inputValue, options]);
 
     const exactMatchExists = useMemo(
       () =>
         options.some(
-          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim(),
+          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim()
         ),
-      [inputValue, options],
+      [inputValue, options]
     );
 
     const showAddNewOption = inputValue && !exactMatchExists && onAddNew;
@@ -205,7 +211,7 @@ const BrandSelectAutocompleteInput = forwardRef(
       setShowDropdown(true);
 
       if (currentInput.length === 0) {
-        onChange({ target: { name, value: '' } });
+        onChange({ target: { name, value: "" } });
       }
     };
 
@@ -240,22 +246,22 @@ const BrandSelectAutocompleteInput = forwardRef(
 
     const handleKeyDown = (e) => {
       if (disabled || !showDropdown) return;
-      
+
       const itemsCount = filteredOptions.length + (showAddNewOption ? 1 : 0);
       if (itemsCount === 0) return;
 
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           setActiveIndex(
-            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount,
+            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
           );
           break;
-        case 'Enter':
+        case "Enter":
           if (activeIndex < 0) return;
           e.preventDefault();
           if (activeIndex < filteredOptions.length) {
@@ -264,7 +270,7 @@ const BrandSelectAutocompleteInput = forwardRef(
             handleAddNew();
           }
           break;
-        case 'Escape':
+        case "Escape":
           setShowDropdown(false);
           break;
         default:
@@ -273,9 +279,9 @@ const BrandSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
+      <div
         // className={`brandinput-select ${className}`}
-        style={{ ...style, position: 'relative' }}
+        style={{ ...style, position: "relative" }}
       >
         <CustomTextField
           ref={ref}
@@ -313,7 +319,7 @@ const BrandSelectAutocompleteInput = forwardRef(
                     handleSelectOption(opt);
                   }}
                   className={`brandinput-select__option ${
-                    index === activeIndex ? 'active' : ''
+                    index === activeIndex ? "active" : ""
                   }`}
                 >
                   <div className="brandinput-select__option-content">
@@ -333,11 +339,11 @@ const BrandSelectAutocompleteInput = forwardRef(
             ) : showAddNewOption ? (
               <li
                 onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleAddNew();
+                  e.preventDefault();
+                  handleAddNew();
                 }}
                 className={`brandinput-select__option brandinput-select__option--add ${
-                  activeIndex === 0 ? 'active' : ''
+                  activeIndex === 0 ? "active" : ""
                 }`}
               >
                 + Add "{inputValue}"
@@ -347,5 +353,5 @@ const BrandSelectAutocompleteInput = forwardRef(
         )}
       </div>
     );
-  },
+  }
 );

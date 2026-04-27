@@ -1,18 +1,18 @@
-import { useRef, useEffect } from 'react'
-import { useUserContext } from '@/apps/user/context/user.context'
-import useUpdateSettings from '@/hooks/api/settings/useUpdateSettings'
-import { useToast } from '@/context/ToastContext'
-import { CRUDTYPE } from '@/constants/object/crud'
+import { useRef, useEffect } from "react";
+import { useUserContext } from "@/context/user.context";
+import useUpdateSettings from "@/apps/user/hooks/api/settings/useUpdateSettings";
+import { useToast } from "@/context/ToastContext";
+import { CRUDTYPE } from "@/constants/object/crud";
 
-import SettingsBackButton from '@/components/SettingsBackButton'
-import InputFieldwithlabel from '@/components/InputFieldwithlabel'
-import Button from '@/components/Button'
+import SettingsBackButton from "@/apps/user/components/SettingsBackButton";
+import InputFieldwithlabel from "@/components/InputFieldwithlabel";
+import Button from "@/components/Button";
 
-import './style.scss'
+import "./style.scss";
 
 const ProfileSettings = ({ onBackClick }) => {
-  const showToast = useToast()
-  const { mutateAsync: updateUser } = useUpdateSettings()
+  const showToast = useToast();
+  const { mutateAsync: updateUser } = useUpdateSettings();
 
   const {
     settings: data,
@@ -21,51 +21,54 @@ const ProfileSettings = ({ onBackClick }) => {
     setCompanyName,
     isNameEditing,
     setIsNameEditing,
-  } = useUserContext()
+  } = useUserContext();
 
-  const nameInputRef = useRef(null)
+  const nameInputRef = useRef(null);
 
   useEffect(() => {
     if (isNameEditing) {
-      nameInputRef.current?.focus()
+      nameInputRef.current?.focus();
     }
-  }, [isNameEditing])
+  }, [isNameEditing]);
 
   useEffect(() => {
     return () => {
-      setIsNameEditing(false)
-      setCompanyName(data?.app_name || '')
-    }
-  }, [data, setIsNameEditing, setCompanyName])
+      setIsNameEditing(false);
+      setCompanyName(data?.app_name || "");
+    };
+  }, [data, setIsNameEditing, setCompanyName]);
 
-
-  const validateCompanyName = (name) => name.length >= 2 && name.length <= 50
+  const validateCompanyName = (name) => name.length >= 2 && name.length <= 50;
 
   const handleNameSave = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!validateCompanyName(companyName)) {
       return showToast({
-        title: 'Company name must be 2-50 characters long.',
-        status: 'error',
-      })
+        title: "Company name must be 2-50 characters long.",
+        status: "error",
+      });
     }
     try {
-      await updateUser({ app_name: companyName })
-      setIsNameEditing(false)
+      await updateUser({ app_name: companyName });
+      setIsNameEditing(false);
       showToast({
-        crudItem: 'Company Name',
+        crudItem: "Company Name",
         crudType: CRUDTYPE.UPDATE_SUCCESS,
-      })
+      });
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to update company name.'
-      showToast({ title: msg, status: 'error' })
+      const msg =
+        err.response?.data?.message || "Failed to update company name.";
+      showToast({ title: msg, status: "error" });
     }
-  }
+  };
 
   return (
     <div className="profile-settings">
       <header className="settings_page__header">
-        <SettingsBackButton title="Profile Settings" onBackClick={onBackClick} />
+        <SettingsBackButton
+          title="Profile Settings"
+          onBackClick={onBackClick}
+        />
       </header>
 
       <section
@@ -92,7 +95,11 @@ const ProfileSettings = ({ onBackClick }) => {
               aria-label="Company Name Input"
             />
             {isNameEditing && (
-              <button className="submit_button2" type="submit" disabled={isUpdating}>
+              <button
+                className="submit_button2"
+                type="submit"
+                disabled={isUpdating}
+              >
                 {isUpdating ? (
                   <span className="submit_button2-loader"></span>
                 ) : (
@@ -110,14 +117,14 @@ const ProfileSettings = ({ onBackClick }) => {
             onClick={() => setIsNameEditing(true)}
             aria-label="Edit Company Name"
             disabled={isUpdating}
-            className='editbutton'
+            className="editbutton"
           >
             Edit Name
           </Button>
         )}
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default ProfileSettings
+export default ProfileSettings;

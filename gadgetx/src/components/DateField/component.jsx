@@ -4,18 +4,26 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 // MUI and Date Picker Imports
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers'
+import { LocalizationProvider, DatePicker, DateTimePicker } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 
 import './style.scss'
 
-const DateField = ({ value, onChange, label, disabled = false }) => {
+const DateField = ({
+  value = null,
+  onChange,
+  label = 'Select Date',
+  disabled = false,
+  showTime = false,
+}) => {
   const wrapperClasses = ['date-field-wrapper'].filter(Boolean).join(' ')
+
+  const Component = showTime ? DateTimePicker : DatePicker
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <div className={wrapperClasses}>
-        <DatePicker
+        <Component
           label={label}
           value={value}
           onChange={onChange}
@@ -23,6 +31,8 @@ const DateField = ({ value, onChange, label, disabled = false }) => {
           slotProps={{
             textField: {
               size: 'small',
+              fullWidth: true,
+              sx: { width: '100%' },
             },
           }}
         />
@@ -35,11 +45,6 @@ DateField.propTypes = {
   value: PropTypes.instanceOf(Date),
   onChange: PropTypes.func.isRequired,
   label: PropTypes.string,
-}
-
-DateField.defaultProps = {
-  value: null,
-  label: 'Select Date',
 }
 
 export default DateField

@@ -1,4 +1,3 @@
-import SaleReturn from "../../apps/user/pages/Transactions/SaleReturn/component";
 
 export const Report = Object.freeze({
   Sale: "Sale",
@@ -22,4 +21,7 @@ export const Report = Object.freeze({
   EmployeePosition: "Employee position",
   RolePermissions: "Permissions",
   Role: "Role",
+  Receipt: "Receipt",
+  Payment: "Payment",
+  LedgerReport: "Ledger Report",
 });

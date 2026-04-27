@@ -1,40 +1,30 @@
 class DashboardService {
-  constructor(dashboardRepository) {
-    this.dashboardRepository = dashboardRepository;
+  constructor(repo) {
+    this.repo = repo;
   }
 
-  // ADDED: db param
-  async getDashboardSummary(tenantId, db) {
-    const [
-      summary,
-      weeklyChartData,
-      topProductsPieData,
-      topCustomersData,
-      stockAlerts,
-      recentSales,
-      recentPurchases,
-      recentExpenses,
-    ] = await Promise.all([
-      this.dashboardRepository.getFinancialSummary(db, tenantId),
-      this.dashboardRepository.getWeeklySalesAndPurchases(db, tenantId),
-      this.dashboardRepository.getTopSellingProducts(db, tenantId),
-      this.dashboardRepository.getTopCustomers(db, tenantId),
-      this.dashboardRepository.getStockAlerts(db, tenantId),
-      this.dashboardRepository.getRecentSales(db, tenantId, 5),
-      this.dashboardRepository.getRecentPurchases(db, tenantId, 5),
-      this.dashboardRepository.getRecentExpenses(db, tenantId, 5),
-    ]);
-    
-    return {
-      summary,
-      weeklyChartData,
-      topProductsPieData,
-      topCustomersData,
-      stockAlerts,
-      recentSales,
-      recentPurchases,
-      recentExpenses,
-    };
+  async getFinancialSummary(user, db, period) {
+    return await this.repo.getFinancialSummary(db, user.tenant_id, period);
+  }
+
+  async getWeeklySalesPurchases(user, db, period) {
+    return await this.repo.getWeeklySalesPurchases(db, user.tenant_id, period);
+  }
+
+  async getTopSellingProducts(user, db, period) {
+    return await this.repo.getTopSellingProducts(db, user.tenant_id, period);
+  }
+
+  async getStockAlerts(user, db) {
+    return await this.repo.getStockAlerts(db, user.tenant_id);
+  }
+
+  async getRecentSales(user, db) {
+    return await this.repo.getRecentSales(db, user.tenant_id);
+  }
+
+  async getRecentPurchases(user, db) {
+    return await this.repo.getRecentPurchases(db, user.tenant_id);
   }
 }
 

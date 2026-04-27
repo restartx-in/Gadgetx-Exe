@@ -1,9 +1,8 @@
-import React from 'react'
-import { Modal, ModalHeader, ModalFooter, ModalBody } from '@/components/Modal'
-import CancelButton from '@/apps/user/components/CancelButton'
-import SubmitButton from '@/apps/user/components/SubmitButton'
-import FilterButton from '@/components/FilterButton'
-import { CiFilter } from "react-icons/ci";
+import React from "react";
+import { Modal, ModalHeader, ModalFooter, ModalBody } from "@/components/Modal";
+import CancelButton from "@/components/CancelButton";
+import SubmitButton from "@/components/SubmitButton";
+import FilterButton from "@/components/FilterButton";
 
 const PopUpFilter = ({
   isOpen,
@@ -11,35 +10,30 @@ const PopUpFilter = ({
   onApply,
   children,
   isLoading,
-  size = 'md',
+  size = "lg",
 }) => {
-  // The 'onClose' function is passed to the Modal, which handles
-  // closing via Escape key, overlay click, or its own close button.
   const handleClose = () => {
-    setIsOpen(false)
-  }
+    setIsOpen(false);
+  };
 
-  // The 'handleApply' function now also closes the modal after applying filters.
   const handleApply = () => {
     if (onApply) {
-      onApply()
+      onApply();
     }
-    handleClose()
-  }
+    handleClose();
+  };
 
   return (
     <>
-      <FilterButton onClick={() => setIsOpen(true)}>
-        <CiFilter   size={18} />
-        </FilterButton>
+      <FilterButton onClick={() => setIsOpen(true)}>Filter</FilterButton>
 
       <Modal isOpen={isOpen} onClose={handleClose} size={size}>
-        <div className='filter fs24 fw400'>
+        <div className="filter fs28 fw500">
           <ModalHeader onClose={handleClose}>Filter</ModalHeader>
         </div>
         <ModalBody>{children}</ModalBody>
         <ModalFooter
-          style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}
+          style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}
         >
           <CancelButton onClick={handleClose} />
           <button onClick={handleApply} className="submit_button2">
@@ -48,11 +42,11 @@ const PopUpFilter = ({
             ) : (
               <span className="submit_button2-text fs18 fw500 ">Apply</span>
             )}
-          </button>{' '}
+          </button>
         </ModalFooter>
       </Modal>
     </>
-  )
-}
+  );
+};
 
-export default PopUpFilter
+export default PopUpFilter;

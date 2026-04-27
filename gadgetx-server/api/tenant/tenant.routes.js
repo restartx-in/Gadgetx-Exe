@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-// const db = require('../../config/db') // No longer needed
+const db = require('../../config/db')
 const isSuperAdmin = require('../../middlewares/isSuperAdmin')
 
 const TenantRepository = require('./tenant.repository')
@@ -11,9 +11,9 @@ const RoleRepository = require('../role/role.repository') // Import RoleReposito
 const UserRepository = require('../user/user.repository') // Import RoleRepository
 
 // Initialize modules
-const tenantRepository = new TenantRepository()
-const userRepository = new UserRepository()
-const roleRepository = new RoleRepository() // Instantiate RoleRepository
+const tenantRepository = new TenantRepository(db)
+const userRepository = new UserRepository(db)
+const roleRepository = new RoleRepository(db) // Instantiate RoleRepository
 const tenantService = new TenantService(
   tenantRepository,
   roleRepository,

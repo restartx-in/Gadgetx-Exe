@@ -3,21 +3,21 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
-  useReducer, 
+  useReducer,
 } from "react";
 import { format, isValid } from "date-fns";
 
-import useCostCenterSummary from "@/hooks/api/costCenterSummary/useCostCenterSummary";
+import useCostCenterSummary from "@/apps/user/hooks/api/costCenterSummary/useCostCenterSummary";
 import { useIsMobile } from "@/utils/useIsMobile";
 
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import DateFilter from "@/components/DateFilter";
 import RefreshButton from "@/components/RefreshButton";
 import Loader from "@/components/Loader";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PageHeader from "@/components/PageHeader";
 import HStack from "@/components/HStack/component.jsx";
 import TitleContainer from "@/components/TitleContainer";
@@ -38,7 +38,7 @@ const stateReducer = (state, newState) => ({ ...state, ...newState });
 
 const CostCenterListSummary = () => {
   const isMobile = useIsMobile();
-  
+
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
     endDate: null,
@@ -79,7 +79,7 @@ const CostCenterListSummary = () => {
       isValid(new Date(endDate));
 
     return isDateFilterActive
-      ? `${format(new Date(startDate), "MMM d, yyyy")} → ${format(
+      ? `${format(new Date(startDate), "MMM d, yyyy")} to ${format(
           new Date(endDate),
           "MMM d, yyyy"
         )}`
@@ -90,12 +90,12 @@ const CostCenterListSummary = () => {
     <ContainerWrapper>
       {!isMobile ? (
         <>
-            <PageTitleWithBackButton
-              title="Cost-Center Based Summary"
-              subtitle={dateSubtitle}
-            />
+          <PageTitleWithBackButton
+            title="Cost-Center Based Summary"
+            subtitle={dateSubtitle}
+          />
           <TableTopContainer
-          isMargin={true}
+            //isMargin={true}
             mainActions={
               <>
                 <DateFilter

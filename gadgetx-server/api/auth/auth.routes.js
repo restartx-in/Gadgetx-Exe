@@ -1,3 +1,4 @@
+// features/auth/auth.routes.js
 const express = require('express')
 const router = express.Router()
 
@@ -7,53 +8,42 @@ const TokenRepository = require('../token/token.repository')
 const TokenService = require('../token/token.service')
 const AuthService = require('./auth.service')
 const AuthController = require('./auth.controller')
+const db = require('../../config/db')
 
-const TenantRepository = require('../tenant/tenant.repository')
-const RoleRepository = require('../role/role.repository')
-const TenantService = require('../tenant/tenant.service')
-
+// --- CORRECT IMPORT ---
+// Import the specific validator arrays and the validate middleware
 const {
   registerValidator,
   loginValidator,
-  signupValidator,  
   validate,
 } = require('./auth.validator')
 
-// --- Dependency Injection (Stateless) ---
-const userRepository = new UserRepository()
-const tokenRepository = new TokenRepository()
-const tenantRepository = new TenantRepository()
-const roleRepository = new RoleRepository()
-
-const tenantService = new TenantService(tenantRepository, roleRepository, userRepository)
-
+// --- Dependency Injection ---
+const userRepository = new UserRepository(db)
+const tokenRepository = new TokenRepository(db)
 const tokenService = new TokenService(tokenRepository, userRepository)
-
-const authService = new AuthService(userRepository, tokenService, tenantService)
-
+const authService = new AuthService(userRepository, tokenService)
 const authController = new AuthController(authService, tokenService)
 
 // --- Public Routes ---
-
-// Signup Route (Creates Tenant + User)
-router.post(
-  '/signup',
-  signupValidator,  
-  validate,
-  authController.signup.bind(authController)
-)
-
 router.post(
   '/login',
-  loginValidator, 
-  validate, 
+  loginValidator, // Apply the validation rules for login
+  validate, // Check for validation errors
   authController.login.bind(authController)
 )
 
 router.post(
   '/register',
-  registerValidator, 
-  validate, 
+  registerValidator, // Apply the validation rules for registration
+  validate, // Check for validation errors
+  authController.register.bind(authController)
+)
+
+router.post(
+  '/register',
+  registerValidator, // Apply the validation rules for registration
+  validate, // Check for validation errors
   authController.register.bind(authController)
 )
 

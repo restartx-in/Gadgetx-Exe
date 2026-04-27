@@ -19,7 +19,7 @@ const VoucherAddButton = ({ title = "Add New", items = [] }) => {
   return (
     <div className="voucher_add_dropdown" ref={dropdownRef}>
       <button
-        className="add_button medium primary"
+        className="add_button medium"
         onClick={() => setIsOpen(!isOpen)}
         type="button"
       >

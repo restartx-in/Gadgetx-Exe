@@ -17,16 +17,22 @@ router.use(validateToken);
 
 // Reports - Must be defined before /:id
 router.get("/report", ledgerController.getReport.bind(ledgerController));
-router.get("/report/monthly", ledgerController.getMonthlyReport.bind(ledgerController));
+router.get(
+  "/report/monthly",
+  ledgerController.getMonthlyReport.bind(ledgerController),
+);
 
-router.get("/paginated", ledgerController.getAllPaginated.bind(ledgerController));
+router.get(
+  "/paginated",
+  ledgerController.getAllPaginated.bind(ledgerController),
+);
 
 router
   .route("/")
   .get(ledgerController.getAll.bind(ledgerController))
   .post(
     ledgerValidator.createValidator.bind(ledgerValidator),
-    ledgerController.create.bind(ledgerController)
+    ledgerController.create.bind(ledgerController),
   );
 
 router
@@ -34,7 +40,7 @@ router
   .get(ledgerController.getById.bind(ledgerController))
   .put(
     ledgerValidator.updateValidator.bind(ledgerValidator),
-    ledgerController.update.bind(ledgerController)
+    ledgerController.update.bind(ledgerController),
   )
   .delete(ledgerController.delete.bind(ledgerController));
 

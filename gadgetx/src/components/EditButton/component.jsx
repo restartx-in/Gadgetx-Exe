@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaRegEdit } from "react-icons/fa";
-import './style.scss'; 
+import './style.scss'; // <-- Changed to style.scss
 
 const EditButton = ({ onClick, type = 'button', className = '', children }) => {
   return (

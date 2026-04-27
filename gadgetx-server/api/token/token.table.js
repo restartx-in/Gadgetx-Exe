@@ -1,19 +1,19 @@
 module.exports = async (client) => {
   try {
     const result = await client.query(`
-      SELECT name FROM sqlite_master WHERE type='table' AND name='token';
+      SELECT to_regclass('public.token') AS table_name;
     `);
 
-    const tableExists = result.rows.length > 0;
+    const tableExists = result.rows[0].table_name !== null;
     if (tableExists) {
       console.log('ℹ️ "token" table already exists.');
     } else {
       await client.query(`
         CREATE TABLE token (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id SERIAL PRIMARY KEY,
           user_id INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
           refresh_token TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          created_at TIMESTAMP DEFAULT NOW()
         );
       `);
       console.log('✅ "token" table created.');

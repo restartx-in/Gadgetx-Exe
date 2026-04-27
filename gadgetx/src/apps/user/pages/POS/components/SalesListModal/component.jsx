@@ -1,16 +1,19 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/Modal";
-import useSalesPaginated from "@/hooks/api/sales/useSalesPaginated";
+import useSalesPaginated from "@/apps/user/hooks/api/sales/useSalesPaginated";
 import Loader from "@/components/Loader";
 import EditButton from "@/components/EditButton";
 import HStack from "@/components/HStack";
-import AmountSymbol from "@/components/AmountSymbol";
+import AmountSymbol from "@/apps/user/components/AmountSymbol";
 import "./style.scss";
 
 const SalesListModal = ({ isOpen, onClose, filters, title, modalType }) => {
   const navigate = useNavigate();
-  const { data, isLoading } = useSalesPaginated({ ...filters, enabled: isOpen });
+  const { data, isLoading } = useSalesPaginated({
+    ...filters,
+    enabled: isOpen,
+  });
 
   const handlePrint = () => {
     const printContent = document.getElementById("printable-sales-table");
@@ -87,7 +90,10 @@ const SalesListModal = ({ isOpen, onClose, filters, title, modalType }) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={modalType === "recent" ? 5 : 4} className="no-data">
+                    <td
+                      colSpan={modalType === "recent" ? 5 : 4}
+                      className="no-data"
+                    >
                       No sales found.
                     </td>
                   </tr>

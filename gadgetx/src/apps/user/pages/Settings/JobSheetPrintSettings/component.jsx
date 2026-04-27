@@ -1,16 +1,16 @@
 import { useRef, useEffect, useState } from "react";
 import { IoClose, IoChevronDown } from "react-icons/io5";
 import { useQueryClient } from "@tanstack/react-query";
-import { API_FILES as server } from "@/config/api";
-import useFetchJobSheetPrintSettings from "@/hooks/api/jobSheetPrintSettings/useFetchJobSheetPrintSettings";
-import useUpdateJobSheetPrintSettings from "@/hooks/api/jobSheetPrintSettings/useUpdateJobSheetPrintSettings";
+import { API_UPLOADS_BASE, buildUploadUrl } from "@/config/api";
+import useFetchJobSheetPrintSettings from "@/apps/user/hooks/api/jobSheetPrintSettings/useFetchJobSheetPrintSettings";
+import useUpdateJobSheetPrintSettings from "@/apps/user/hooks/api/jobSheetPrintSettings/useUpdateJobSheetPrintSettings";
 import { useToast } from "@/context/ToastContext";
 import { CRUDTYPE } from "@/constants/object/crud";
 import { TOASTSTATUS, TOASTTYPE } from "@/constants/object/toastType";
 
 import InputFieldwithlabel from "@/components/InputFieldwithlabel";
-import CancelButton from "@/apps/user/components/CancelButton";
-import SubmitButton from "@/apps/user/components/SubmitButton";
+import CancelButton from "@/components/CancelButton";
+import SubmitButton from "@/components/SubmitButton";
 import Button from "@/components/Button";
 import HStack from "@/components/HStack";
 import Select from "@/components/Select";
@@ -95,10 +95,9 @@ const JobSheetPrintSettings = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (printSettings) {
       // 1. Handle Image URL
-      if (printSettings.header_image_url) {
-        const fullImageUrl = `${server}${printSettings.header_image_url}`;
-        const cacheBustedUrl = `${fullImageUrl}?t=${new Date().getTime()}`;
-        setImagePreview(cacheBustedUrl);
+      const fullImageUrl = buildUploadUrl(API_UPLOADS_BASE, printSettings.header_image_url);
+      if (fullImageUrl) {
+        setImagePreview(`${fullImageUrl}?t=${new Date().getTime()}`);
       } else {
         setImagePreview(demoLogo);
       }
@@ -122,6 +121,7 @@ const JobSheetPrintSettings = ({ isOpen, onClose }) => {
         address: printSettings.address || "",
         store: printSettings.store || "",
         header_image_url: printSettings.header_image_url,
+        header_image_proxy_path: printSettings.header_image_proxy_path || "",
         image_width: printSettings.image_width || "100px",
         image_height: printSettings.image_height || "auto",
         footer_message: printSettings.footer_message || "",

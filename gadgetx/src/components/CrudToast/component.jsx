@@ -1,50 +1,51 @@
-import { useEffect } from 'react';
-import { CRUDTYPE } from '@/constants/object/crud';
-import './style.scss'; // <-- renamed to style.scss
+import { useEffect } from "react";
+import { CRUDTYPE } from "@/constants/object/crud";
+import "./style.scss"; 
 
 export default function CrudToast({ isOpen, crudItem, crudType, onClose }) {
-  const getToastInfo = () => { // renamed function
+  const getToastInfo = () => {
+    // renamed function
     switch (crudType) {
       case CRUDTYPE.CREATE_SUCCESS:
         return {
           message: `${crudItem} created successfully`,
-          status: 'create-success',
+          status: "create-success",
         };
 
       case CRUDTYPE.CREATE_ERROR:
         return {
           message: `Failed to create ${crudItem}`,
-          status: 'create-error',
+          status: "create-error",
         };
 
       case CRUDTYPE.UPDATE_SUCCESS:
         return {
           message: `${crudItem} updated successfully`,
-          status: 'update-success',
+          status: "update-success",
         };
 
       case CRUDTYPE.UPDATE_ERROR:
         return {
           message: `Failed to update ${crudItem}`,
-          status: 'update-error',
+          status: "update-error",
         };
 
       case CRUDTYPE.DELETE_SUCCESS:
         return {
           message: `${crudItem} deleted successfully`,
-          status: 'delete-success',
+          status: "delete-success",
         };
 
       case CRUDTYPE.DELETE_ERROR:
         return {
           message: `Failed to delete ${crudItem}`,
-          status: 'delete-error',
+          status: "delete-error",
         };
 
       default:
         return {
-          message: 'Unknown operation',
-          status: 'unknown',
+          message: "Unknown operation",
+          status: "unknown",
         };
     }
   };

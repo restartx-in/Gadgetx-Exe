@@ -7,6 +7,11 @@ import {
   FaClipboardList,
   FaCashRegister,
   FaEllipsisV,
+  FaHandHoldingUsd,
+  FaMoneyCheckAlt,
+  FaFileInvoice,
+  FaArrowCircleDown,
+  FaUserEdit,
 } from 'react-icons/fa';
 
 const MobileActionDropdown = ({ onOpenModal, navigate }) => {
@@ -40,6 +45,24 @@ const MobileActionDropdown = ({ onOpenModal, navigate }) => {
           </button>
           <button onClick={() => handleAction(() => onOpenModal('register'))}>
             <FaCashRegister /> Register
+          </button>
+          <button onClick={() => handleAction(() => navigate('/payment-against-purchase'))}>
+            <FaHandHoldingUsd /> Payment Out Screen
+          </button>
+          <button onClick={() => handleAction(() => navigate('/payment-report?invoiceTypes=PURCHASE'))}>
+            <FaMoneyCheckAlt /> Another Payment Out (Purchase)
+          </button>
+          <button onClick={() => handleAction(() => navigate('/payment-against-sale-return'))}>
+            <FaMoneyCheckAlt /> Other Payment Out
+          </button>
+          <button onClick={() => handleAction(() => navigate('/payment-report'))}>
+            <FaFileInvoice /> All Payment Data View
+          </button>
+          <button onClick={() => handleAction(() => navigate('/suppliers-list'))}>
+            <FaUserEdit /> Supplier Update
+          </button>
+          <button onClick={() => handleAction(() => navigate('/receipt-against-sale'))}>
+            <FaArrowCircleDown /> Payment In
           </button>
           <button onClick={() => handleAction(() => onOpenModal('sales'))}>
             <FaThList /> Today's Sales

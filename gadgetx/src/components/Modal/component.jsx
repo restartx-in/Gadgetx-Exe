@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react'
-import { IoClose } from 'react-icons/io5'
+import React, { useEffect, useContext, createContext } from 'react';
+import ReactDOM from 'react-dom';
+import { IoClose } from 'react-icons/io5';
 
 import './style.scss'
 export const ModalHeader = ({ children, onClose }) => (
@@ -30,7 +31,7 @@ export const ModalFooter = ({ children, style }) => (
   <div className="modal_footer" style={style}>
     {children}
   </div>
-)
+);
 
 export function Modal({ isOpen, onClose, children, size = 'lg' }) {
   const modalWidth = {
@@ -46,22 +47,22 @@ export function Modal({ isOpen, onClose, children, size = 'lg' }) {
   useEffect(() => {
     const handleEsc = (event) => {
       if (event.key === 'Escape') {
-        onClose()
+        onClose();
       }
-    }
+    };
 
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
-      window.addEventListener('keydown', handleEsc)
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleEsc);
     }
 
     return () => {
-      document.body.style.overflow = 'unset'
-      window.removeEventListener('keydown', handleEsc)
-    }
-  }, [isOpen, onClose])
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen, onClose]);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div
@@ -84,3 +85,4 @@ export function Modal({ isOpen, onClose, children, size = 'lg' }) {
     </div>
   )
 }
+

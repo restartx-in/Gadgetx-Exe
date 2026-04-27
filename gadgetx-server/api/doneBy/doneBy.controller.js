@@ -5,7 +5,6 @@ class DoneByController {
 
   async create(req, res, next) {
     try {
-      // Pass req.db
       const newDoneBy = await this.service.create(req.body, req.user, req.db);
       res.status(201).json(newDoneBy);
     } catch (error) {
@@ -15,7 +14,6 @@ class DoneByController {
 
   async getAll(req, res, next) {
     try {
-      // Pass req.db
       const data = await this.service.getAll(req.user, req.query, req.db);
       res.json(data);
     } catch (error) {
@@ -25,7 +23,6 @@ class DoneByController {
 
   async getById(req, res, next) {
     try {
-      // Pass req.db
       const doneBy = await this.service.getById(req.params.id, req.user, req.db);
       if (!doneBy) {
         return res
@@ -40,7 +37,6 @@ class DoneByController {
 
   async update(req, res, next) {
     try {
-      // Pass req.db
       const updatedDoneBy = await this.service.update(
         req.params.id,
         req.body,
@@ -60,7 +56,6 @@ class DoneByController {
 
   async delete(req, res, next) {
     try {
-      // Pass req.db
       const result = await this.service.delete(req.params.id, req.user, req.db);
       if (!result) {
         return res

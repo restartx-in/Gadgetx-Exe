@@ -1,9 +1,16 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback, useReducer } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react";
 import { useSearchParams } from "react-router-dom";
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
-import usePartnershipsPaginated from "@/hooks/api/partnership/usePartnershipsPaginated";
-import useDeletePartnership from "@/hooks/api/partnership/useDeletePartnership";
-import useAccountById from "@/hooks/api/account/useAccountById";
+import usePartnershipsPaginated from "@/apps/user/hooks/api/partnership/usePartnershipsPaginated";
+import useDeletePartnership from "@/apps/user/hooks/api/partnership/useDeletePartnership";
+import useAccountById from "@/apps/user/hooks/api/account/useAccountById";
 import { Transaction } from "@/constants/object/transaction";
 import { useIsMobile } from "@/utils/useIsMobile";
 import VStack from "@/components/VStack";
@@ -18,7 +25,7 @@ import PopUpFilter from "@/components/PopUpFilter";
 import TableFooter from "@/components/TableFooter";
 import RangeField from "@/components/RangeField";
 import AccountAutoComplete from "@/apps/user/components/AccountAutoComplete";
-import PaymentStatusSelect from "@/components/Transaction/PaymentStatusSelect";
+import PaymentStatusSelect from "@/apps/user/components/Transaction/PaymentStatusSelect";
 import DoneByAutoComplete from "@/apps/user/components/DoneByAutoComplete";
 import CostCenterAutoComplete from "@/apps/user/components/CostCenterAutoComplete";
 import {
@@ -35,28 +42,31 @@ import {
   TdMenu,
   ThMenu,
   TdDate,
+  TdOverflow,
   TableCaption,
   ThContainer,
   ThSearchOrFilterPopover,
   ThFilterContainer,
 } from "@/components/Table";
-import PartnershipModal from "@/components/PartnershipModal";
+import PartnershipModal from "@/apps/user/components/PartnershipModal";
 import { useToast } from "@/context/ToastContext";
 import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import Spacer from "@/components/Spacer";
 import ScrollContainer from "@/components/ScrollContainer";
-import ListItem from "@/apps/user/components/ListItem/component";
-import StatusButton from "@/components/StatusButton";
+import ListItem from "@/components/ListItem/component";
+import StatusButton from "@/apps/user/components/StatusButton";
 import Partnership from "@/apps/user/pages/Transactions/Partnership";
-import AmountSummary from "@/components/AmountSummary";
-import TableTopContainer from "@/components/TableTopContainer";
+import AmountSummary from "@/apps/user/components/AmountSummary";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import ExportMenu from "@/components/ExportMenu";
 import DateFilter from "@/components/DateFilter";
-import TextBadge from "@/apps/user/components/TextBadge";
+import TextBadge from "@/components/TextBadge";
 import { format, isValid } from "date-fns";
-import { usePartnershipExportAndPrint } from "@/hooks/api/exportAndPrint/usePartnershipExportAndPrint";
+import { usePartnershipExportAndPrint } from "@/apps/user/hooks/api/exportAndPrint/usePartnershipExportAndPrint";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
+
+
 import "./style.scss";
 
 // REDUCER FUNCTION: Handles merging of state updates
@@ -64,9 +74,8 @@ const stateReducer = (state, newState) => ({ ...state, ...newState });
 
 // Component to display Account Name
 const AccountNameDisplay = ({ accountId }) => {
+  const { data: account, isLoading } = useAccountById(accountId);
   if (!accountId) return "_";
-  // Assuming useAccountById is a custom hook that handles fetching logic
-  const { data: account, isLoading } = useAccountById(accountId); 
   if (isLoading) return "...";
   return account ? account.name : `ID: ${accountId}`;
 };
@@ -81,14 +90,11 @@ const PartnershipRow = React.memo(({ p, index, page, pageSize, handlers }) => {
     <Tr>
       <TdSL index={index} page={page} pageSize={pageSize} />
       <TdDate>{p.created_at}</TdDate>
-      <Td>{p.partner_name}</Td>
-      <Td>{p.done_by_name || "N/A"}</Td>
-      <Td>{p.cost_center_name || "N/A"}</Td>
+      <TdOverflow>{p.partner_name}</TdOverflow>
+      <TdOverflow>{p.done_by_name || "N/A"}</TdOverflow>
+      <TdOverflow>{p.cost_center_name || "N/A"}</TdOverflow>
       <Td>
-        <TextBadge
-          variant="paymentStatus"
-          type={p.contribution_payment_status}
-        >
+        <TextBadge variant="paymentStatus" type={p.contribution_payment_status}>
           {p.contribution_payment_status}
         </TextBadge>
       </Td>
@@ -96,9 +102,9 @@ const PartnershipRow = React.memo(({ p, index, page, pageSize, handlers }) => {
       <TdNumeric>{paid > 0 ? paid : "-"}</TdNumeric>
       <TdNumeric>{balance > 0 ? balance : "-"}</TdNumeric>
       <TdNumeric>{p.profit_share || "-"}</TdNumeric>
-      <Td>
+      <TdOverflow>
         <AccountNameDisplay accountId={p.from_account} />
-      </Td>
+      </TdOverflow>
       <TdMenu
         onView={() => handlers.onView(p)}
         onEdit={() => handlers.onEdit(p)}
@@ -109,43 +115,51 @@ const PartnershipRow = React.memo(({ p, index, page, pageSize, handlers }) => {
 });
 
 // Memoized Status Filter
-const StatusFilter = React.memo(({ status, handleStatusFilterClick }) => {
+const StatusFilter = ({ status, handleStatusFilterClick }) => {
   return (
-    <HStack
-      justifyContent="flex-start"
-      className="partnership_report-status_filters"
-    >
-      <StatusButton
-        variant="all"
-        isSelected={status === ""}
-        onClick={() => handleStatusFilterClick("")}
-      >
-        All
-      </StatusButton>
-      <StatusButton
-        variant="available"
-        isSelected={status === "paid"}
-        onClick={() => handleStatusFilterClick("paid")}
-      >
-        Paid
-      </StatusButton>
-      <StatusButton
-        variant="maintenance"
-        isSelected={status === "partial"}
-        onClick={() => handleStatusFilterClick("partial")}
-      >
-        Partial
-      </StatusButton>
-      <StatusButton
-        variant="sold"
-        isSelected={status === "unpaid"}
-        onClick={() => handleStatusFilterClick("unpaid")}
-      >
-        Unpaid
-      </StatusButton>
-    </HStack>
+    <div className="status-filter-box">
+      <div className="status-filter-row">
+        <StatusButton
+          size="sm"
+          variant="all"
+          isSelected={status === ""}
+          onClick={() => handleStatusFilterClick("")}
+        >
+          All
+        </StatusButton>
+
+        <StatusButton
+          size="sm"
+          variant="available"
+          isSelected={status === "paid"}
+          onClick={() => handleStatusFilterClick("paid")}
+        >
+          Paid
+        </StatusButton>
+      </div>
+
+      <div className="status-filter-row">
+        <StatusButton
+          size="sm"
+          variant="maintenance"
+          isSelected={status === "partial"}
+          onClick={() => handleStatusFilterClick("partial")}
+        >
+          Partial
+        </StatusButton>
+
+        <StatusButton
+          size="sm"
+          variant="sold"
+          isSelected={status === "unpaid"}
+          onClick={() => handleStatusFilterClick("unpaid")}
+        >
+          Unpaid
+        </StatusButton>
+      </div>
+    </div>
   );
-});
+};
 
 const PartnershipReport = () => {
   const [searchParams] = useSearchParams();
@@ -160,7 +174,8 @@ const PartnershipReport = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [partnerName, setPartnerName] = useState("");
   const [fromAccount, setFromAccount] = useState("");
-  const [contributionPaymentStatus, setContributionPaymentStatus] = useState("");
+  const [contributionPaymentStatus, setContributionPaymentStatus] =
+    useState("");
   const [minContribution, setMinContribution] = useState("");
   const [maxContribution, setMaxContribution] = useState("");
   const [minPaid, setMinPaid] = useState("");
@@ -171,7 +186,7 @@ const PartnershipReport = () => {
   const [maxProfitShare, setMaxProfitShare] = useState("");
   const [doneById, setDoneById] = useState("");
   const [costCenterId, setCostCenterId] = useState(defaltCostCenter);
-  
+
   // Search/Sort Local States
   const [sort, setSort] = useState("");
   const [searchType, setSearchType] = useState("");
@@ -194,14 +209,14 @@ const PartnershipReport = () => {
     endDate: null,
     rangeType: "custom",
   });
-  
+
   const [filterDatas, setFilterDatas] = useState({});
 
   // Modal States
-  const [selectedPartnershipForEdit, setSelectedPartnershipForEdit] = useState(null);
+  const [selectedPartnershipForEdit, setSelectedPartnershipForEdit] =
+    useState(null);
   const [isEditViewModalOpen, setIsEditViewModalOpen] = useState(false);
   const [mode, setMode] = useState("view");
-
 
   // --- 1. Centralized state object initialized from URL using useReducer (UPDATED) ---
   const [state, setState] = useReducer(stateReducer, {
@@ -257,7 +272,8 @@ const PartnershipReport = () => {
     endDate: state.end_date,
   });
 
-  const { data, isLoading, refetch, isRefetching } = usePartnershipsPaginated(state);
+  const { data, isLoading, refetch, isRefetching } =
+    usePartnershipsPaginated(state);
   const { mutateAsync: deletePartnership } = useDeletePartnership();
 
   // Derived Data using useMemo
@@ -282,12 +298,12 @@ const PartnershipReport = () => {
     setMaxProfitShare(state.max_profit_share || "");
     setDoneById(state.done_by_id || "");
     setCostCenterId(state.cost_center_id || defaltCostCenter);
-    
+
     // Sort/Search
     setSort(state.sort || "");
     setSearchKey(state.searchKey || "");
     setSearchType(state.searchType || "");
-    
+
     // Header Filters
     setHeaderFilters({
       partner_name: state.partner_name || "",
@@ -299,12 +315,12 @@ const PartnershipReport = () => {
     setHeaderPartnerName(state.partner_name || "");
     setHeaderFromAccount(state.from_account || "");
     setHeaderStatus(state.contribution_payment_status || "");
-    
+
     // Date Filter
     setDateFilter({
-        startDate: state.start_date || null,
-        endDate: state.end_date || null,
-        rangeType: 'custom',
+      startDate: state.start_date || null,
+      endDate: state.end_date || null,
+      rangeType: "custom",
     });
   }, [state, defaltCostCenter]);
 
@@ -327,32 +343,57 @@ const PartnershipReport = () => {
       headerPartnerName,
       headerFromAccount,
       headerStatus,
-      ...headerFilters
+      ...headerFilters,
     });
-  }, [partnerName, fromAccount, contributionPaymentStatus, minContribution, maxContribution, minPaid, maxPaid, minBalance, maxBalance, minProfitShare, maxProfitShare, doneById, costCenterId, headerPartnerName, headerFromAccount, headerStatus, headerFilters]);
+  }, [
+    partnerName,
+    fromAccount,
+    contributionPaymentStatus,
+    minContribution,
+    maxContribution,
+    minPaid,
+    maxPaid,
+    minBalance,
+    maxBalance,
+    minProfitShare,
+    maxProfitShare,
+    doneById,
+    costCenterId,
+    headerPartnerName,
+    headerFromAccount,
+    headerStatus,
+    headerFilters,
+  ]);
 
-  const { exportToExcel, exportToPdf, printDocument } = usePartnershipExportAndPrint({
-    listData: listData,
-    reportType: "Partnership Report",
-    duration: state.start_date && state.end_date ? `${state.start_date} to ${state.end_date}` : "",
-    pageNumber: state.page,
-    selectedPageCount: state.page_size,
-    totalPage: totalPages,
-    totalData: {
-      totalContribution: data?.total_contribution || 0,
-      totalPaid: data?.total_contribution_paid || 0,
-      totalBalance: (data?.total_contribution || 0) - (data?.total_contribution_paid || 0)
-    },
-    filterDatas,
-    searchType: state.searchType,
-    searchKey: state.searchKey,
-  });
+  const { exportToExcel, exportToPdf, printDocument } =
+    usePartnershipExportAndPrint({
+      listData: listData,
+      reportType: "Partnership Report",
+      duration:
+        state.start_date && state.end_date
+          ? `${state.start_date} to ${state.end_date}`
+          : "",
+      pageNumber: state.page,
+      selectedPageCount: state.page_size,
+      totalPage: totalPages,
+      totalData: {
+        totalContribution: data?.total_contribution || 0,
+        totalPaid: data?.total_contribution_paid || 0,
+        totalBalance:
+          (data?.total_contribution || 0) -
+          (data?.total_contribution_paid || 0),
+      },
+      filterDatas,
+      searchType: state.searchType,
+      searchKey: state.searchKey,
+    });
 
   // --- Handlers (Memoized) - UPDATED setState CALLS ---
 
   const handleDateFilterChange = useCallback((newFilterValue) => {
     setDateFilter(newFilterValue);
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       start_date: newFilterValue.startDate || "",
       end_date: newFilterValue.endDate || "",
       page: 1,
@@ -364,7 +405,8 @@ const PartnershipReport = () => {
   }, []);
 
   const handleSearch = useCallback(() => {
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       page: 1,
       searchType,
       searchKey,
@@ -381,26 +423,37 @@ const PartnershipReport = () => {
   }, [searchType, searchKey, defaltCostCenter]);
 
   const handleHeaderSearch = useCallback((key, value) => {
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       [key]: value,
       page: 1,
       // Clear generic search
       searchType: "",
       searchKey: "",
       // Clear ranges if exact search
-      ...(key === "contribution" && { min_contribution: "", max_contribution: "" }),
-      ...(key === "contribution_payment_paid" && { min_paid: "", max_paid: "" }),
+      ...(key === "contribution" && {
+        min_contribution: "",
+        max_contribution: "",
+      }),
+      ...(key === "contribution_payment_paid" && {
+        min_paid: "",
+        max_paid: "",
+      }),
     });
   }, []);
 
-  const handleHeaderKeyDown = useCallback((e, key) => {
-    if (e.key === "Enter") {
-      handleHeaderSearch(key, headerFilters[key]);
-    }
-  }, [headerFilters, handleHeaderSearch]);
+  const handleHeaderKeyDown = useCallback(
+    (e, key) => {
+      if (e.key === "Enter") {
+        handleHeaderSearch(key, headerFilters[key]);
+      }
+    },
+    [headerFilters, handleHeaderSearch],
+  );
 
   const handleFilter = useCallback(() => {
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       page: 1,
       partner_name: partnerName,
       from_account: fromAccount,
@@ -420,7 +473,21 @@ const PartnershipReport = () => {
       searchKey: "",
     });
     setShowFilter(false);
-  }, [partnerName, fromAccount, contributionPaymentStatus, minContribution, maxContribution, minPaid, maxPaid, minBalance, maxBalance, minProfitShare, maxProfitShare, doneById, costCenterId]);
+  }, [
+    partnerName,
+    fromAccount,
+    contributionPaymentStatus,
+    minContribution,
+    maxContribution,
+    minPaid,
+    maxPaid,
+    minBalance,
+    maxBalance,
+    minProfitShare,
+    maxProfitShare,
+    doneById,
+    costCenterId,
+  ]);
 
   const handleRefresh = useCallback(() => {
     // Reset local UI states
@@ -453,7 +520,8 @@ const PartnershipReport = () => {
     });
 
     // Reset Central State
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       page: 1,
       page_size: 10,
       partner_name: "",
@@ -506,35 +574,43 @@ const PartnershipReport = () => {
     setIsEditViewModalOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (id) => {
-    try {
-      await deletePartnership(id);
-      showToast({
-        crudItem: CRUDITEM.PARTNERSHIP,
-        crudType: CRUDTYPE.DELETE_SUCCESS,
-      });
-      refetch();
-    } catch (error) {
-      showToast({
-        crudItem: CRUDITEM.PARTNERSHIP,
-        crudType: CRUDTYPE.DELETE_ERROR,
-      });
-    }
-  }, [deletePartnership, refetch, showToast]);
+  const handleDelete = useCallback(
+    async (id) => {
+      try {
+        await deletePartnership(id);
+        showToast({
+          crudItem: CRUDITEM.PARTNERSHIP,
+          crudType: CRUDTYPE.DELETE_SUCCESS,
+        });
+        refetch();
+      } catch (error) {
+        showToast({
+          crudItem: CRUDITEM.PARTNERSHIP,
+          crudType: CRUDTYPE.DELETE_ERROR,
+        });
+      }
+    },
+    [deletePartnership, refetch, showToast],
+  );
 
-  const rowHandlers = useMemo(() => ({
-    onView: handleViewClick,
-    onEdit: handleEditClick,
-    onDelete: handleDelete,
-  }), [handleViewClick, handleEditClick, handleDelete]);
+  const rowHandlers = useMemo(
+    () => ({
+      onView: handleViewClick,
+      onEdit: handleEditClick,
+      onDelete: handleDelete,
+    }),
+    [handleViewClick, handleEditClick, handleDelete],
+  );
 
-
-  const searchOptions = useMemo(() => ([
-    { value: "partner_name", name: "Partner Name"},
-    ...(!isDisableCostCenter
-      ? [{ value: "cost_center_name", name: "Cost Center" }]
-      : []),  
-  ]), [isDisableCostCenter]);
+  const searchOptions = useMemo(
+    () => [
+      { value: "partner_name", name: "Partner Name" },
+      ...(!isDisableCostCenter
+        ? [{ value: "cost_center_name", name: "Cost Center" }]
+        : []),
+    ],
+    [isDisableCostCenter],
+  );
 
   const filterProps = {
     showFilter,
@@ -566,7 +642,7 @@ const PartnershipReport = () => {
     setDoneById,
     costCenterId,
     setCostCenterId,
-    disableCostCenter: isDisableCostCenter
+    disableCostCenter: isDisableCostCenter,
   };
 
   const { startDate, endDate } = dateFilter;
@@ -577,9 +653,9 @@ const PartnershipReport = () => {
     isValid(new Date(endDate));
 
   const dateSubtitle = isDateFilterActive
-    ? `${format(new Date(startDate), "MMM d, yyyy")} → ${format(
+    ? `${format(new Date(startDate), "MMM d, yyyy")} to ${format(
         new Date(endDate),
-        "MMM d, yyyy"
+        "MMM d, yyyy",
       )}`
     : null;
 
@@ -588,55 +664,68 @@ const PartnershipReport = () => {
       <ContainerWrapper>
         {!isMobile ? (
           <>
-              <PageTitleWithBackButton
-                title="Partnerships"
-                subtitle={dateSubtitle}
-              />
+            <PageTitleWithBackButton
+              title="Partnerships"
+              subtitle={dateSubtitle}
+            />
             <TableTopContainer
               summary={
                 <>
-              {!loading && data && (
-                <AmountSummary
-                  total={data.total_contribution}
-                  received={data.total_contribution_paid}
-                  pending={
-                    data.total_contribution - data.total_contribution_paid
-                  }
-                />
-              )}
+                  {!loading && data && (
+                    <div className="summary-with-status">
+                      <HStack>
+                        <AmountSummary
+                          total={data.total_contribution}
+                          received={data.total_contribution_paid}
+                          pending={
+                            data.total_contribution -
+                            data.total_contribution_paid
+                          }
+                        />
+
+                        <StatusFilter
+                          status={state.contribution_payment_status}
+                          handleStatusFilterClick={handleStatusFilterClick}
+                        />
+                      </HStack>
+                    </div>
+                  )}
                 </>
               }
               mainActions={
                 <>
-                <DateFilter
-                  value={dateFilter}
-                  onChange={handleDateFilterChange}
-                />
-                <ListFilter {...filterProps} />
-                <RefreshButton onClick={handleRefresh} />
-                
-                {!loading && (
-                  <ExportMenu 
-                    onExcel={exportToExcel} 
-                    onPdf={exportToPdf} 
-                    onPrint={printDocument} 
-                  />
-                )}
-                 <PopupSearchField
-                  searchKey={searchKey}
-                  setSearchKey={setSearchKey}
-                  searchType={searchType}
-                  setSearchType={setSearchType}
-                  handleSearch={handleSearch}
-                  searchOptions={searchOptions}
-                  searchRef={searchRef}
-                />
-                <Partnership onSuccess={refetch} />
 
+                  <ListFilter {...filterProps} />
+                  <PopupSearchField
+                    searchKey={searchKey}
+                    setSearchKey={setSearchKey}
+                    searchType={searchType}
+                    setSearchType={setSearchType}
+                    handleSearch={handleSearch}
+                    searchOptions={searchOptions}
+                    searchRef={searchRef}
+                  />
+
+                  <Partnership onSuccess={refetch} />
                 </>
               }
-           
-                
+              topRight={
+                <>
+                  <RefreshButton onClick={handleRefresh} />
+                  <DateFilter
+                    value={dateFilter}
+                    onChange={handleDateFilterChange}
+                  />
+
+                  {!loading && (
+                    <ExportMenu
+                      onExcel={exportToExcel}
+                      onPdf={exportToPdf}
+                      onPrint={printDocument}
+                    />
+                  )}
+                </>
+              }
             />
             {isLoading ? (
               <Loader />
@@ -673,7 +762,7 @@ const PartnershipReport = () => {
                               onSearch={() =>
                                 handleHeaderSearch(
                                   "partner_name",
-                                  headerFilters.partner_name
+                                  headerFilters.partner_name,
                                 )
                               }
                             >
@@ -715,7 +804,7 @@ const PartnershipReport = () => {
                                 onChange={(e) =>
                                   handleHeaderSearch(
                                     "done_by_id",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 is_edit={false}
@@ -744,7 +833,7 @@ const PartnershipReport = () => {
                                 onChange={(e) =>
                                   handleHeaderSearch(
                                     "cost_center_id",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 is_edit={false}
@@ -768,7 +857,10 @@ const PartnershipReport = () => {
                                 name="header_status"
                                 value={headerStatus}
                                 onChange={(e) =>
-                                  handleHeaderSearch("contribution_payment_status", e.target.value)
+                                  handleHeaderSearch(
+                                    "contribution_payment_status",
+                                    e.target.value,
+                                  )
                                 }
                               />
                             </ThSearchOrFilterPopover>
@@ -791,7 +883,7 @@ const PartnershipReport = () => {
                               onSearch={() =>
                                 handleHeaderSearch(
                                   "contribution",
-                                  headerFilters.contribution
+                                  headerFilters.contribution,
                                 )
                               }
                             >
@@ -830,7 +922,7 @@ const PartnershipReport = () => {
                               onSearch={() =>
                                 handleHeaderSearch(
                                   "contribution_payment_paid",
-                                  headerFilters.contribution_payment_paid
+                                  headerFilters.contribution_payment_paid,
                                 )
                               }
                             >
@@ -847,7 +939,7 @@ const PartnershipReport = () => {
                                 onKeyDown={(e) =>
                                   handleHeaderKeyDown(
                                     e,
-                                    "contribution_payment_paid"
+                                    "contribution_payment_paid",
                                   )
                                 }
                                 isLabel={false}
@@ -883,7 +975,10 @@ const PartnershipReport = () => {
                                 name="header_from_account"
                                 value={headerFromAccount}
                                 onChange={(e) =>
-                                  handleHeaderSearch("from_account", e.target.value)
+                                  handleHeaderSearch(
+                                    "from_account",
+                                    e.target.value,
+                                  )
                                 }
                               />
                             </ThSearchOrFilterPopover>
@@ -932,9 +1027,6 @@ const PartnershipReport = () => {
             <ScrollContainer>
               <PageHeader>
                 <HStack>
-                  <Partnership onSuccess={refetch} className="w-100" />
-                </HStack>
-                <HStack>
                   <DateFilter
                     value={dateFilter}
                     onChange={handleDateFilterChange}
@@ -942,11 +1034,11 @@ const PartnershipReport = () => {
                   <ListFilter {...filterProps} />
                   <RefreshButton onClick={handleRefresh} />
 
-                   {!loading && (
-                    <ExportMenu 
-                      onExcel={exportToExcel} 
-                      onPdf={exportToPdf} 
-                      onPrint={printDocument} 
+                  {!loading && (
+                    <ExportMenu
+                      onExcel={exportToExcel}
+                      onPdf={exportToPdf}
+                      onPrint={printDocument}
                     />
                   )}
 
@@ -960,11 +1052,11 @@ const PartnershipReport = () => {
                     searchRef={searchRef}
                   />
                 </HStack>
+                <HStack>
+                  <Partnership onSuccess={refetch} className="w-100" />
+                </HStack>
               </PageHeader>
-              <StatusFilter
-                status={state.contribution_payment_status}
-                handleStatusFilterClick={handleStatusFilterClick}
-              />
+
               {isLoading ? (
                 <Loader />
               ) : listData.length === 0 ? (
@@ -1061,106 +1153,108 @@ const PartnershipReport = () => {
 export default PartnershipReport;
 
 // Memoized List Filter
-const ListFilter = React.memo(({
-  showFilter,
-  setShowFilter,
-  handleFilter,
-  partnerName,
-  setPartnerName,
-  fromAccount,
-  setFromAccount,
-  contributionPaymentStatus,
-  setContributionPaymentStatus,
-  minContribution,
-  setMinContribution,
-  maxContribution,
-  setMaxContribution,
-  minPaid,
-  setMinPaid,
-  maxPaid,
-  setMaxPaid,
-  minBalance,
-  setMinBalance,
-  maxBalance,
-  setMaxBalance,
-  minProfitShare,
-  setMinProfitShare,
-  maxProfitShare,
-  setMaxProfitShare,
-  doneById,
-  setDoneById,
-  costCenterId,
-  setCostCenterId,
-  disableCostCenter
-}) => {
-  return (
-    <PopUpFilter
-      isOpen={showFilter}
-      setIsOpen={setShowFilter}
-      onApply={handleFilter}
-    >
-      <VStack>
-        <InputField
-          label="Partner Name"
-          value={partnerName}
-          onChange={(e) => setPartnerName(e.target.value)}
-          name="partner_name"
-          type="text"
-        />
-        <AccountAutoComplete
-          name="from_account"
-          value={fromAccount}
-          onChange={(e) => setFromAccount(e.target.value)}
-        />
-        <PaymentStatusSelect
-          name="contribution_payment_status"
-          value={contributionPaymentStatus}
-          onChange={(e) => setContributionPaymentStatus(e.target.value)}
-        />
-        <DoneByAutoComplete
-          placeholder="Done By"
-          value={doneById}
-          onChange={(e) => setDoneById(e.target.value)}
-          name="done_by_id"
-          is_edit={false}
-        />
-        <CostCenterAutoComplete
-          placeholder="Cost Center"
-          value={costCenterId}
-          onChange={(e) => setCostCenterId(e.target.value)}
-          name="cost_center_id"
-          is_edit={false}
-          disabled={disableCostCenter}
-        />
-        <RangeField
-          label="Contribution"
-          minValue={minContribution}
-          maxValue={maxContribution}
-          onMinChange={(value) => setMinContribution(value)}
-          onMaxChange={(value) => setMaxContribution(value)}
-        />
-        <RangeField
-          label="Paid"
-          minValue={minPaid}
-          maxValue={maxPaid}
-          onMinChange={(value) => setMinPaid(value)}
-          onMaxChange={(value) => setMaxPaid(value)}
-        />
-        <RangeField
-          label="Balance"
-          minValue={minBalance}
-          maxValue={maxBalance}
-          onMinChange={(value) => setMinBalance(value)}
-          onMaxChange={(value) => setMaxBalance(value)}
-        />
-        <RangeField
-          label="Profit Share"
-          minValue={minProfitShare}
-          maxValue={maxProfitShare}
-          onMinChange={(value) => setMinProfitShare(value)}
-          onMaxChange={(value) => setMaxProfitShare(value)}
-        />
-      </VStack>
-    </PopUpFilter>
-  );
-});
+const ListFilter = React.memo(
+  ({
+    showFilter,
+    setShowFilter,
+    handleFilter,
+    partnerName,
+    setPartnerName,
+    fromAccount,
+    setFromAccount,
+    contributionPaymentStatus,
+    setContributionPaymentStatus,
+    minContribution,
+    setMinContribution,
+    maxContribution,
+    setMaxContribution,
+    minPaid,
+    setMinPaid,
+    maxPaid,
+    setMaxPaid,
+    minBalance,
+    setMinBalance,
+    maxBalance,
+    setMaxBalance,
+    minProfitShare,
+    setMinProfitShare,
+    maxProfitShare,
+    setMaxProfitShare,
+    doneById,
+    setDoneById,
+    costCenterId,
+    setCostCenterId,
+    disableCostCenter,
+  }) => {
+    return (
+      <PopUpFilter
+        isOpen={showFilter}
+        setIsOpen={setShowFilter}
+        onApply={handleFilter}
+      >
+        <VStack>
+          <InputField
+            label="Partner Name"
+            value={partnerName}
+            onChange={(e) => setPartnerName(e.target.value)}
+            name="partner_name"
+            type="text"
+          />
+          <AccountAutoComplete
+            name="from_account"
+            value={fromAccount}
+            onChange={(e) => setFromAccount(e.target.value)}
+          />
+          <PaymentStatusSelect
+            name="contribution_payment_status"
+            value={contributionPaymentStatus}
+            onChange={(e) => setContributionPaymentStatus(e.target.value)}
+          />
+          <DoneByAutoComplete
+            placeholder="Done By"
+            value={doneById}
+            onChange={(e) => setDoneById(e.target.value)}
+            name="done_by_id"
+            is_edit={false}
+          />
+          <CostCenterAutoComplete
+            placeholder="Cost Center"
+            value={costCenterId}
+            onChange={(e) => setCostCenterId(e.target.value)}
+            name="cost_center_id"
+            is_edit={false}
+            disabled={disableCostCenter}
+          />
+          <RangeField
+            label="Contribution"
+            minValue={minContribution}
+            maxValue={maxContribution}
+            onMinChange={(value) => setMinContribution(value)}
+            onMaxChange={(value) => setMaxContribution(value)}
+          />
+          <RangeField
+            label="Paid"
+            minValue={minPaid}
+            maxValue={maxPaid}
+            onMinChange={(value) => setMinPaid(value)}
+            onMaxChange={(value) => setMaxPaid(value)}
+          />
+          <RangeField
+            label="Balance"
+            minValue={minBalance}
+            maxValue={maxBalance}
+            onMinChange={(value) => setMinBalance(value)}
+            onMaxChange={(value) => setMaxBalance(value)}
+          />
+          <RangeField
+            label="Profit Share"
+            minValue={minProfitShare}
+            maxValue={maxProfitShare}
+            onMinChange={(value) => setMinProfitShare(value)}
+            onMaxChange={(value) => setMaxProfitShare(value)}
+          />
+        </VStack>
+      </PopUpFilter>
+    );
+  },
+);

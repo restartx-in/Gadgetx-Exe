@@ -1,16 +1,18 @@
 const bcrypt = require("bcrypt");
 
 class UserRepository {
-  // constructor removed
-  
+  constructor(db) {
+    this.db = db;
+  }
+
   // ... (countAll, getOrCreateSuperAdminRole are unchanged)
-  async countAll(db) {
-    const result = await db.query(`SELECT COUNT(*) as count FROM "user"`);
+  async countAll() {
+    const result = await this.db.query(`SELECT COUNT(*) FROM "user"`);
     return parseInt(result.rows[0].count, 10);
   }
 
-  async getOrCreateSuperAdminRole(db) {
-    const existing = await db.query(
+  async getOrCreateSuperAdminRole() {
+    const existing = await this.db.query(
       `SELECT * FROM "role" WHERE name = 'super_admin'`
     );
 
@@ -18,20 +20,17 @@ class UserRepository {
       return existing.rows[0];
     }
 
-    const result = await db.query(
+    const result = await this.db.query(
       `INSERT INTO "role" (tenant_id, name, permissions)
-     VALUES (NULL, 'super_admin', '{"full_access": true}')`
+     VALUES (NULL, 'super_admin', '{"full_access": true}')
+     RETURNING *`
     );
-    const roleId = result.lastID;
-    const roleResult = await db.query(`SELECT * FROM "role" WHERE id = $1`, [roleId]);
-    console.log("✅ Super Admin role created automatically.");
-    return roleResult.rows[0];
 
     console.log("✅ Super Admin role created automatically.");
     return result.rows[0];
   }
 
-  async getAll(db, adminUser) {
+  async getAll(adminUser) {
     // This is updated
     let whereClause = '';
     const queryParams = [];
@@ -40,7 +39,7 @@ class UserRepository {
       whereClause = `WHERE u.tenant_id = $1`;
     }
 
-    const { rows } = await db.query(`
+    const { rows } = await this.db.query(`
       SELECT u.id, u.username, u.active, r.name AS role_name, t.name AS tenant_name
       FROM "user" u
       LEFT JOIN "role" r ON u.role_id = r.id
@@ -51,7 +50,7 @@ class UserRepository {
     return rows;
   }
 
-  async getPaginated(db, filters = {}, adminUser = null) {
+  async getPaginated(filters = {}, adminUser = null) {
     // This is updated - Core logic change is here
     const { page = 1, page_size = 10 } = filters;
     const limit = parseInt(page_size, 10);
@@ -76,32 +75,32 @@ class UserRepository {
       ORDER BY u.id
       LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
     `;
-    const dataResult = await db.query(dataQuery, [...queryParams, limit, offset]);
+    const dataResult = await this.db.query(dataQuery, [...queryParams, limit, offset]);
 
-    const countQuery = `SELECT COUNT(*) as count FROM "user" u ${whereClause}`;
-    const countResult = await db.query(countQuery, queryParams);
+    const countQuery = `SELECT COUNT(*) FROM "user" u ${whereClause}`;
+    const countResult = await this.db.query(countQuery, queryParams);
     const totalCount = parseInt(countResult.rows[0].count, 10);
 
     return { user: dataResult.rows, totalCount };
   }
 
   // ... (other methods are unchanged)
-  async getByName(db, username) { 
-    const { rows } = await db.query(
+  async getByName(username) { 
+    const { rows } = await this.db.query(
       `
-      SELECT u.*, r.name AS role_name, t.name AS tenant_name, t.type AS tenant_type
+      SELECT u.*, r.name AS role_name, t.name AS tenant_name,t.type AS tenant_type
       FROM "user" u
       LEFT JOIN "role" r ON u.role_id = r.id
       LEFT JOIN "tenant" t ON u.tenant_id = t.id
-      WHERE LOWER(u.username) = LOWER($1)
+      WHERE u.username = $1
     `, 
       [username]
     );
     return rows[0];
   }
 
-  async getById(db, id) {
-    const { rows } = await db.query(
+  async getById(id) {
+    const { rows } = await this.db.query(
       `
       SELECT u.*, r.name AS role_name, t.name AS tenant_name
       FROM "user" u
@@ -114,27 +113,27 @@ class UserRepository {
     return rows[0];
   }
 
-  async create(db, { username, password, tenant_id, role_id }) { 
+  async create({ username, password, tenant_id, role_id }) { 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     if (!role_id) {
-      const superAdminRole = await this.getOrCreateSuperAdminRole(db);
+      const superAdminRole = await this.getOrCreateSuperAdminRole();
       role_id = superAdminRole.id;
       tenant_id = null;
     }
 
-    const result = await db.query(
+    const { rows } = await this.db.query(
       `
       INSERT INTO "user" (username, password, tenant_id, role_id)
       VALUES ($1, $2, $3, $4)
+      RETURNING id, username, role_id, tenant_id
     `,
       [username, hashedPassword, tenant_id, role_id]
     );
-    const userId = result.lastID;
-    return { id: userId, username, role_id, tenant_id };
+    return rows[0];
   }
 
-  async update(db, id, { username, password }) { 
+  async update(id, { username, password }) { 
     let queryParts = [];
     const params = [];
     let paramIndex = 1;
@@ -149,18 +148,18 @@ class UserRepository {
       params.push(hashed);
     }
 
-    if (queryParts.length === 0) return this.getById(db, id);
+    if (queryParts.length === 0) return this.getById(id);
 
     queryParts.push(`updated_at = CURRENT_TIMESTAMP`);
     const query = `UPDATE "user" SET ${queryParts.join(
       ", "
-    )} WHERE id = $${paramIndex}`;
+    )} WHERE id = $${paramIndex} RETURNING *`;
     params.push(id);
-    await db.query(query, params);
-    return this.getById(db, id);
+    const { rows } = await this.db.query(query, params);
+    return rows[0];
   }
 
-  async updateByAdmin(db, id, { username, role_id, active }) { 
+  async updateByAdmin(id, { username, role_id, active }) { 
     const queryParts = [];
     const params = [];
     let paramIndex = 1;
@@ -178,23 +177,23 @@ class UserRepository {
       params.push(active);
     }
 
-    if (queryParts.length === 0) return this.getById(db, id);
+    if (queryParts.length === 0) return this.getById(id);
 
     queryParts.push(`updated_at = CURRENT_TIMESTAMP`);
     const query = `UPDATE "user" SET ${queryParts.join(
       ", "
-    )} WHERE id = $${paramIndex}`;
+    )} WHERE id = $${paramIndex} RETURNING *`;
     params.push(id);
-    await db.query(query, params);
-    return this.getById(db, id);
+    const { rows } = await this.db.query(query, params);
+    return rows[0];
   }
 
-  async delete(db, id) {
-    await db.query(
-      `DELETE FROM "user" WHERE id = $1`,
+  async delete(id) {
+    const { rows } = await this.db.query(
+      `DELETE FROM "user" WHERE id = $1 RETURNING id`,
       [id]
     );
-    return { id };
+    return rows[0];
   }
 
   async comparePasswords(candidate, hashed) {

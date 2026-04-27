@@ -1,146 +1,170 @@
 $border-light: #eff1f4;
 $text-dark: #0b1017;
+$text-gray: #64748b;
 $separator-color: #64686b;
 $scrollbar-thumb: #cbd5e1;
+$bg-white: var(--app-bg, #fff);
+$brand-color: var(--color-brand-base, #3b82f6); 
+$border-base: var(--color-border-base, #e2e8f0);
+$hover-bg: var(--color-neutral-0, #f8fafc);
 
-/* WRAPPER */
-.custom_select_wrapperr {
+.custom-select-box {
   position: relative;
   width: 100%;
 
-  &.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-/* LABEL */
-.custom_select_label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 0.9rem;
-  color: #64748b;
-}
-
-/* 
-   MUI TEXTFIELD OVERRIDES 
-   Replacing the old .custom_select_headerr styles
-*/
-.custom_select_headerr {
-  &.MuiTextField-root {
+  .MuiTextField-root {
     width: 100%;
 
     .MuiOutlinedInput-root {
-      background-color: var(--app-bg, #fff);
-      border-radius: 6px;
-      padding-right: 14px; /* Adjust for chevron */
+      background-color: $bg-white;
+      border-radius: 8px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
-        fieldset {
-        border-color:#c9c9c9;
+      fieldset {
+        border-color: #c9c9c9;
         transition: border-color 0.2s ease-in-out;
       }
 
-    
-
-      /* Focus */
       &.Mui-focused fieldset {
-       border-color: var(--primary-blue, #1976d2);
+        border-color: $brand-color;
         border-width: 1px;
       }
 
-      /* Disabled */
       &.Mui-disabled {
-        background-color: #f8fafc;
+        background-color: var(--skeleton-light, #f1f5f9);
         fieldset {
           border-color: $border-light;
         }
       }
 
-      /* The Text Input */
       input {
-        color:#64748b;
-        font-size: 1rem;
         padding: 10px 12px;
-        cursor: pointer;
-        
-         &::placeholder {
-            color: var(--sidebar-text, #64748b);
-            opacity: 1; 
+        font-size: 1rem;
+        color: $text-dark;
+        background-color: transparent;
+        cursor: pointer !important; 
+
+        &::placeholder {
+          color: $text-gray;
+          opacity: 1;
         }
+
+        &:disabled {
+          color: #94a3b8;
+          cursor: default !important;
+        }
+      }
+
+      &:focus-within {
+        outline: none;
+      }
+    }
+
+    .MuiInputLabel-root {
+      color: $text-gray;
+
+      &.Mui-focused {
+        color: $brand-color;
+      }
+    }
+  }
+
+  &__dropdown {
+    border: 1px solid $border-base;
+    list-style-type: none;
+    position: absolute;
+    margin-top: 6px;
+    top: 100%; 
+    left: 0;
+    right: 0;
+    padding: 4px 0;
+    background: #fff;
+    border-radius: 12px;
+    z-index: 100;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &__option {
+    border-bottom: 1px solid $border-base;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    font-size: 0.95rem;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &.active {
+      background-color: $hover-bg;
+    }
+
+    &.selected {
+      background-color: $hover-bg;
+      color: $brand-color;
+    }
+
+    &.no-data {
+      cursor: default;
+      color: #94a3b8;
+      text-align: center;
+      padding: 12px;
+    }
+
+    &-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        width: 100%;
+      }
+    }
+  }
+
+  &__chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    margin-right: 4px;
+    transition: transform 0.2s ease;
+
+    .chevron-icon {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid $text-gray;
+      border-bottom: 2px solid $text-gray;
+      transform: rotate(45deg);
+      margin-bottom: 2px;
+    }
+
+    &.open {
+      transform: rotate(180deg);
+
+      .chevron-icon {
+        border-color: $brand-color;
       }
     }
   }
 }
 
-/* CHEVRON ARROW */
-.custom_select_chevronn {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border: solid #5b5959;
-  border-width: 0 2px 2px 0;
-  padding: 0;
-  transform: rotate(45deg);
-  transition: transform 0.3s ease;
-  margin-bottom: 2px;
+@media (max-width: 480px) {
+  .custom-select-box {
 
-  &.open {
-    transform: rotate(-130deg);
-    margin-bottom: -2px;
-  }
-}
+    &__dropdown {
+      border-radius: 8px;
+    }
 
-/* DROPDOWN LIST (Kept exactly as requested) */
-.custom_select_listt {
- border: 1px solid var(--color-border-base);
-    list-style-type: none;
-    position: absolute;
-    margin-top:1px;
-    top: 50px; /* updated to match autocomplete */
-    left: 0;
-    right: 0;
-    padding: 0 5px;
-    background: #fff;
-    border-radius: 12px;
-    z-index: 10;
-    max-height: 180px;
-    overflow-y: auto;
-
-
-}
-
-/* LIST ITEMS */
-.custom_select_list_itemm {
-  padding: 10px 14px;
-  font-size: 1rem;
-  color: $text-dark;
-  cursor: pointer;
-  background-color: #fff;
-      border-bottom: 1px solid $separator-color;
-
-  transition: background-color 0.15s ease;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  /* Active/Hover states */
-  &:hover,
-  &.active,
-  &.selected {
-    background-color: #ffffff;
-    color: #000;
-  }
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-  .custom_select_label {
-    font-size: 14px;
-  }
-  
-  .custom_select_list_itemm {
-    padding: 10px 8px;
-    font-size: 14px;
+    &__option {
+      padding: 12px 14px; 
+    }
   }
 }

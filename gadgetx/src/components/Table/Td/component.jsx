@@ -1,9 +1,11 @@
 import './style.scss'
 
-const Td = ({ children, colSpan = 1 }) => {
+const Td = ({ children, colSpan = 1, style = {} }) => {
   return (
-    <td colSpan={colSpan}  style={{fontFamily:"poppins"}}>
-      <div className="td">{children}</div>
+    <td colSpan={colSpan} style={{ fontFamily: "poppins", ...style }}>
+      <div className="td" style={style?.textAlign === "center" ? { justifyContent: "center" } : {}}>
+        {children}
+      </div>
     </td>
   )
 }

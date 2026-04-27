@@ -1,8 +1,31 @@
-const server = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+// Ensure base URL is always a string (avoid malformed URLs / ERR_NAME_NOT_RESOLVED)
+const raw = import.meta.env.VITE_API_BASE_URL;
+const server =
+  typeof raw === "string" && raw.trim()
+    ? raw.trim().replace(/\/$/, "")
+    : "http://localhost:5000";
 
-export const API_FILES = server;
-export const API_BASE_URL = server + "/api/gadgetx";
+export const API_FILES = server + "/apps/opticals";
+export const API_BASE_URL = server + "/api";
+export const API_UPLOADS_BASE = server;
 
+
+export function buildUploadUrl(base, path) {
+  const b = typeof base === "string" && base.trim() ? base.trim().replace(/\/$/, "") : "";
+  let p = typeof path === "string" && path.trim() ? path.trim() : "";
+  if (!b || !p) return null;
+  if (/[{}]/.test(p)) return null;
+  if (p.startsWith("http")) return p;
+  // p is a relative path like "uploads/{tenantId}/print/{filename}"
+  // or already "/uploads/{tenantId}/print/{filename}"
+  return `${b}${p.startsWith("/") ? p : `/${p}`}`;
+}
+
+
+export function isInvalidImageUrl(url) {
+  if (url == null || typeof url !== "string") return true;
+  return /[{}]/.test(url) || url.includes('""');
+}
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: API_BASE_URL + "/auth/login",
@@ -130,6 +153,14 @@ export const API_ENDPOINTS = {
       return API_BASE_URL + "/category/" + id;
     },
   },
+
+  INVOICE_NUMBER: {
+    BASE: API_BASE_URL + "/invoice-number",
+    NEXT: API_BASE_URL + "/invoice-number/next",
+    BY_ID: function (id) {
+      return API_BASE_URL + "/invoice-number/" + id;
+    },
+  },
   UNITS: {
     BASE: API_BASE_URL + "/units",
     BY_ID: function (id) {
@@ -158,7 +189,7 @@ export const API_ENDPOINTS = {
     PAGINATED: API_BASE_URL + "/ledgers/paginated",
     BY_ID: (id) => API_BASE_URL + `/ledgers/${id}`,
   },
-  
+
   CASH_BOOK: {
     BASE: API_BASE_URL + "/transactions",
     PAGINATED: API_BASE_URL + "/transactions/paginated",
@@ -213,6 +244,7 @@ export const API_ENDPOINTS = {
   PARTY_SUMMARY_REPORT: {
     BASE: API_BASE_URL + "/party-summary",
     PAYMENTS: (party_id) => `/party-summary/payments/${party_id}`,
+    DETAILS: (party_id) => `/party-summary/details/${party_id}`,
   },
   STOCK_DETAILED_REPORT: {
     BASE: API_BASE_URL + "/stock-detailed-report",
@@ -222,28 +254,81 @@ export const API_ENDPOINTS = {
   },
 
   DAILY_PROFIT_REPORT: {
-    BASE: "/daily-profit-report",
+    BASE: API_BASE_URL + "/daily-profit-report",
   },
   PERIODIC_PROFIT_REPORT: {
-    BASE: "/periodic-profit-report",
+    BASE: API_BASE_URL + "/periodic-profit-report",
   },
   BALANCE_SHEET_REPORT: {
-    BASE: "/balance-sheet-report",
+    BASE: API_BASE_URL + "/balance-sheet-report",
   },
   TAX_SUMMARY_REPORT: {
-    BASE: "/tax-summary-report",
+    BASE: API_BASE_URL + "/tax-summary-report",
   },
   STOCK_VALUE_REPORT: {
-    BASE: "/stock-value-report",
+    BASE: API_BASE_URL + "/stock-value-report",
     PAGINATED: API_BASE_URL + "/stock-value-report/paginated", // +++ ADD THIS LINE
   },
+  AGEING_STOCK_REPORT: {
+    BASE: API_BASE_URL + "/ageing-stock-report",
+    PAGINATED: API_BASE_URL + "/ageing-stock-report/paginated",
+  },
   REGISTER_SESSIONS: {
-     BASE: '/register-sessions',
-    PAGINATED: '/register-sessions/paginated',
-    CURRENT: '/register-sessions/current',
-    OPEN: '/register-sessions/open',
-    BY_ID: (id) => `/register-sessions/${id}`,
-    CLOSE: (id) => `/register-sessions/${id}/close`,
+    BASE: API_BASE_URL + "/register-sessions",
+    PAGINATED: API_BASE_URL + "/register-sessions/paginated",
+    CURRENT: API_BASE_URL + "/register-sessions/current",
+    OPEN: API_BASE_URL + "/register-sessions/open",
+    BY_ID: (id) => API_BASE_URL + `/register-sessions/${id}`,
+    CLOSE: (id) => API_BASE_URL + `/register-sessions/${id}/close`,
+  },
+  DASHBOARD: {
+    FINANCIAL_SUMMARY: API_BASE_URL + "/dashboard/financial-summary",
+    WEEKLY_SALES_PURCHASES: API_BASE_URL + "/dashboard/weekly-sales-purchases",
+    TOP_SELLING_PRODUCTS: API_BASE_URL + "/dashboard/top-selling-products",
+    TOP_CUSTOMERS: API_BASE_URL + "/dashboard/top-customers",
+    STOCK_ALERTS: API_BASE_URL + "/dashboard/stock-alerts",
+    RECENT_SALES: API_BASE_URL + "/dashboard/recent-sales",
+    RECENT_PURCHASES: API_BASE_URL + "/dashboard/recent-purchases",
+    RECENT_EXPENSES: API_BASE_URL + "/dashboard/recent-expenses",
+    RECENT_TRANSACTIONS: API_BASE_URL + "/dashboard/recent-transactions",
+  },
+  REPORT_FIELD_PERMISSIONS: {
+    BASE: API_BASE_URL + "/report-field-permissions",
+    BY_ID: (id) => API_BASE_URL + `/report-field-permissions/${id}`,
+  },
+  TRANSACTION_FIELD_PERMISSIONS: {
+    BASE: API_BASE_URL + "/transaction-field-permissions",
+    BY_ID: (id) => API_BASE_URL + `/transaction-field-permissions/${id}`,
+  },
+  FRAME: {
+    BASE: API_BASE_URL + "/frames",
+    PAGINATED: API_BASE_URL + "/frames/paginated",
+    BY_ID: (id) => API_BASE_URL + `/frames/${id}`,
+  },
+  SERVICES: {
+    BASE: API_BASE_URL + "/services",
+    PAGINATED: API_BASE_URL + "/services/paginated",
+    BY_ID: (id) => API_BASE_URL + `/services/${id}`,
+  },
+
+ FRAME_VARIANT: {
+    BASE: API_BASE_URL + "/frame-variants",
+    PAGINATED: API_BASE_URL + "/frame-variants/paginated",
+    BY_ID: (id) => API_BASE_URL + "/frame-variants/" + id,
+  },
+  LENS_ADDONS: {
+    BASE: API_BASE_URL + "/lens-addons",
+    BY_ID: (id) => API_BASE_URL + `/lens-addons/${id}`,
+  },
+  LENSES: {
+    BASE: API_BASE_URL + "/lenses",
+    PAGINATED: API_BASE_URL + "/lenses/paginated",
+    BY_ID: (id) => API_BASE_URL + `/lenses/${id}`,
+  },
+  PRESCRIPTIONS: {
+    BASE: API_BASE_URL + "/prescriptions",
+    PAGINATED: API_BASE_URL + "/prescriptions/paginated",
+    BY_ID: (id) => API_BASE_URL + `/prescriptions/${id}`,
   },
 };
 
@@ -275,7 +360,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 api.interceptors.response.use(
@@ -285,7 +370,7 @@ api.interceptors.response.use(
       console.error("Unauthorized, redirecting to login...", error.response);
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

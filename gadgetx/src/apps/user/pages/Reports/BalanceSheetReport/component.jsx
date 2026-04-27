@@ -1,24 +1,18 @@
-import {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useReducer,
-} from "react";
+import { useState, useEffect, useMemo, useCallback, useReducer } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, isValid } from "date-fns";
 
-import useBalanceSheetReport from "@/hooks/api/balanceSheetReport/useBalanceSheetReport";
+import useBalanceSheetReport from "@/apps/user/hooks/api/balanceSheetReport/useBalanceSheetReport";
 import { useIsMobile } from "@/utils/useIsMobile";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
 
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import RefreshButton from "@/components/RefreshButton";
 import Loader from "@/components/Loader";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PageHeader from "@/components/PageHeader";
 import HStack from "@/components/HStack/component.jsx";
 import DateField from "@/components/DateField";
@@ -61,7 +55,7 @@ const BalanceSheetReport = () => {
   }, [state.as_of_date]);
 
   const reportData = useMemo(() => data, [data]);
-  
+
   const handleDateChange = useCallback((date) => {
     setAsOfDate(date);
     setState({ as_of_date: date ? format(date, "yyyy-MM-dd") : "" });
@@ -81,13 +75,14 @@ const BalanceSheetReport = () => {
 
   const hasData = useMemo(() => assets && liabilities, [assets, liabilities]);
 
-  const dateSubtitle = useMemo(
-    () =>
-      responseDate
-        ? `As of: ${format(new Date(responseDate), "MMM d, yyyy")}`
-        : "Showing latest data...",
-    [responseDate]
-  );
+  const dateSubtitle = useMemo(() => {
+    if (!responseDate) return "Showing latest data...";
+
+    const parsed = new Date(responseDate);
+    if (!isValid(parsed)) return "Showing latest data...";
+
+    return `As of: ${format(parsed, "MMM d, yyyy")}`;
+  }, [responseDate]);
 
   const formatNumber = useCallback((value) => {
     if (value === null || value === undefined) return "0.00";
@@ -106,7 +101,7 @@ const BalanceSheetReport = () => {
             subtitle={dateSubtitle}
           />
           <TableTopContainer
-            isMargin={true}
+            //isMargin={true}
             mainActions={
               <>
                 <DateField
@@ -184,9 +179,7 @@ const BalanceSheetReport = () => {
                     </Tr>
                     <Tr>
                       <Th>Total Liabilities</Th>
-                      <Th>
-                        {formatNumber(liabilities.total_liabilities)}
-                      </Th>
+                      <Th>{formatNumber(liabilities.total_liabilities)}</Th>
                     </Tr>
 
                     <Tr>
@@ -250,8 +243,7 @@ const BalanceSheetReport = () => {
                       <div>Bank: {formatNumber(assets.bank_balance)}</div>
                       <div>Stock: {formatNumber(assets.stock_value)}</div>
                       <div>
-                        Receivables:{" "}
-                        {formatNumber(assets.accounts_receivable)}
+                        Receivables: {formatNumber(assets.accounts_receivable)}
                       </div>
                     </>
                   }
@@ -262,8 +254,7 @@ const BalanceSheetReport = () => {
                     <>
                       <div>
                         <strong>
-                          Total:{" "}
-                          {formatNumber(liabilities.total_liabilities)}
+                          Total: {formatNumber(liabilities.total_liabilities)}
                         </strong>
                       </div>
                       <div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
-import { useCostCenters } from "@/hooks/api/costCenter/useCostCenters";
+import { useCostCenters } from "@/apps/user/hooks/api/costCenter/useCostCenters";
 import AddCostCenter from "@/apps/user/pages/List/CostCenterList/components/AddCostCenter";
 import { HiPencil } from "react-icons/hi2";
 
@@ -144,7 +144,8 @@ const CostCenterAutoCompleteWithAddOption = forwardRef(
   }
 );
 
-CostCenterAutoCompleteWithAddOption.displayName = "CostCenterAutoCompleteWithAddOption";
+CostCenterAutoCompleteWithAddOption.displayName =
+  "CostCenterAutoCompleteWithAddOption";
 
 export default CostCenterAutoCompleteWithAddOption;
 
@@ -171,7 +172,7 @@ const CostCenterSelectAutocompleteInput = forwardRef(
     const [showDropdown, setShowDropdown] = useState(false);
     const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // REMOVED: dropdownRef and scrolling useEffect
     const hasBeenFocused = useRef(false);
 
@@ -271,9 +272,9 @@ const CostCenterSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
-        // className={`costcenterinputs-select ${className}`} 
-        style={{ ...style, position: 'relative' }}
+      <div
+        // className={`costcenterinputs-select ${className}`}
+        style={{ ...style, position: "relative" }}
       >
         <CustomTextField
           ref={ref}
@@ -348,4 +349,5 @@ const CostCenterSelectAutocompleteInput = forwardRef(
     );
   }
 );
-CostCenterSelectAutocompleteInput.displayName = "CostCenterSelectAutocompleteInput";
+CostCenterSelectAutocompleteInput.displayName =
+  "CostCenterSelectAutocompleteInput";

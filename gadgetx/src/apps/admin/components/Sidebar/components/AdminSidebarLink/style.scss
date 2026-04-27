@@ -1,62 +1,80 @@
-.admin_sidebar_link {
-  &__item {
-    padding: 0;
-    margin: 0 0 2px 0;
-    list-style: none;
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin SidebarLink · OptiVision Theme
+// ─────────────────────────────────────────────────────────────────────────────
+
+$gold-light:   #e8cc7a;
+$gold-mid:     #c9a84c;
+$cream:        #faf6ee;
+$surface:      #141414;
+$muted:        #c1bcbc;
+$muted-hover:  rgba(255, 255, 255, 0.75);
+$hover-bg:  rgba(201, 168, 76, 0.14);
+$active-bg: rgba(201, 168, 76, 0.22);
+$radius-sm:    6px;
+$transition:   0.18s cubic-bezier(0.4, 0, 0.2, 1);
+
+$font-body:    'DM Sans', 'Helvetica Neue', sans-serif;
+
+.admin-sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  color: $muted;
+  text-decoration: none;
+  border-radius: $radius-sm;
+  transition: background $transition, color $transition;
+  white-space: nowrap;
+  position: relative;
+  margin-bottom: 1px;
+  font-family: $font-body;
+
+  &__icon {
+    width: 28px;
+    min-width: 28px;
     display: flex;
     align-items: center;
-    border-left: 4px solid transparent;
-    transition:
-      background 0.2s,
-      border-color 0.2s,
-      color var(--sidbar-bg);
-    background: none;
-    position: relative;
-    &:has(.sidebar-link.active) {
-      border-left: 4px solid var(--sidebar-hover-text);
-    }
-    &-link {
-      text-decoration: none !important;
-      display: flex;
-      align-items: center;
-      width: 100%;
-      text-decoration: none;
-      color: var(--sidebar-text);
-      padding: 10px 20px 10px 24px;
-      transition:
-        background 0.2s,
-        color 0.2s;
-      &.active {
-        color: var(--sidebar-hover-text);
-        background: var(--sidebar-hover);
-        border-left: var(--sidebar-hover-text) solid 4px;
-        padding-left: 20px;
-      }
-      &:active {
-        background: var(--sidebar-hover);
-        color: var(--sidebar-hover-text);
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color $transition;
+  }
 
-        text-decoration: none !important;
-      }
-      &:focus {
-        text-decoration: none !important;
-      }
-      &:hover {
-        text-decoration: none !important;
-        background: var(--sidebar-hover);
-        color: var(--sidebar-hover-text);
-      }
+  &__label {
+    margin-left: 12px;
+    flex-grow: 1;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.1px;
+  }
 
-      &-label:hover {
-        color: var(--sidebar-hover-text);
-      }
-      &-icon {
-        margin-right: 16px;
-        transition: color 0.2s;
-      }
-    }
+  // ── States ───────────────────────────────────────────────────────────────
+
+  &:focus { outline: none; text-decoration: none; }
+
+  &:hover {
+    text-decoration: none;
+    color: $muted-hover;
+    background: $hover-bg;
+
+    .admin-sidebar-link__icon { color: $muted-hover; }
+  }
+
+  &.active {
+    color: $cream;
+    background: $active-bg;
+
+    .admin-sidebar-link__icon { color: $gold-mid; }
+  }
+
+  // Top-level active: narrow gold pill on left edge
+  &.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 18px;
+    background: linear-gradient(to bottom, $gold-light, $gold-mid);
+    border-radius: 0 3px 3px 0;
   }
 }
-
-
-

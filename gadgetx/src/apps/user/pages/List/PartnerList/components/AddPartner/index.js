@@ -1,2 +1,2 @@
-import AddPartner from './component.jsx'
+import AddPartner from './component'
 export default AddPartner

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { IoCalculator } from 'react-icons/io5';
 import { BsArrowReturnLeft } from 'react-icons/bs';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -9,16 +9,19 @@ import CustomScrollbar from '@/components/CustomScrollbar';
 
 import './style.scss';
 
-const InputFieldWithCalculator = ({
+const InputFieldWithCalculator = forwardRef(({
   value: valueProp,
   onChange,
   name,
+  onBlur,
+  error,
+  inputRef,
   label,
   disabled = false,
   maxLength = 11,
   decimalLength = 2,
   ...rest
-}) => {
+}, ref) => {
   const [calc, setCalc] = useState('');
   const [showPopover, setShowPopover] = useState(false);
 
@@ -34,7 +37,7 @@ const InputFieldWithCalculator = ({
   const handleCalculate = () => {
     if (calc.trim() === '') return;
     try {
-      // eslint-disable-next-line no-eval
+       
       const result = eval(calc);
       if (typeof result === 'number' && !isNaN(result)) {
         const formattedResult = Number(result.toFixed(decimalLength)).toString();
@@ -114,11 +117,15 @@ const InputFieldWithCalculator = ({
     >
       <CustomTextField
         {...rest}
+        inputRef={inputRef || ref}
         label={label}
         name={name}
         id={name}
         value={valueProp ?? ''}
         onChange={handleMainChange}
+        onBlur={onBlur}
+        error={!!error}
+        helperText={error?.message}
         disabled={disabled}
         fullWidth
         variant="outlined"
@@ -185,6 +192,6 @@ const InputFieldWithCalculator = ({
       )}
     </div>
   );
-};
+});
 
 export default InputFieldWithCalculator;

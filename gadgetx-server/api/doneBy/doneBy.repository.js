@@ -1,6 +1,5 @@
 class DoneByRepository {
-  
-  // RENAMED from getAllByUserId for clarity
+
   async getAllByTenantId(db, tenantId) {
     const { rows } = await db.query(
       `SELECT * FROM "done_by" WHERE tenant_id = $1 ORDER BY created_at DESC`,
@@ -18,7 +17,6 @@ class DoneByRepository {
     return rows[0];
   }
 
-  // MODIFIED to handle optional tenantId
   async getById(db, id, tenantId = null) {
     let query = `SELECT * FROM "done_by" WHERE id = $1`;
     const params = [id];
@@ -32,13 +30,12 @@ class DoneByRepository {
     return rows[0];
   }
 
-  // MODIFIED to handle optional tenantId
   async update(db, id, tenantId = null, data) {
     const fields = Object.keys(data);
     const values = Object.values(data);
 
     if (fields.length === 0) {
-      return this.getById(db, id, tenantId);
+      return this.getById(db, id, tenantId);  
     }
 
     const setClause = fields.map((field, index) => `"${field}" = $${index + 1}`).join(", ");
@@ -56,7 +53,6 @@ class DoneByRepository {
     return rows[0];
   }
 
-  // MODIFIED to handle optional tenantId
   async delete(db, id, tenantId = null) {
     let query = `DELETE FROM "done_by" WHERE id = $1`;
     const params = [id];

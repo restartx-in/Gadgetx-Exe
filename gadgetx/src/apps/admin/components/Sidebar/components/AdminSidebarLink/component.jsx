@@ -1,20 +1,27 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import './style.scss';
 
-const AdminSidebarLink = ({ to, icon, label, end = false }) => {
+const AdminSidebarLink = ({ to, icon, label, end = false, showLabel = true, onClick }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
+
   return (
-    <div className='admin_sidebar_link'>
-    <li className="admin_sidebar_link__item">
-      <NavLink
-        to={to}
-        end={end}
-        className={({ isActive }) => "admin_sidebar_link__item-link fs16" + (isActive ? " active" : "")}
-      >
-        <span className="admin_sidebar_link__item-link-icon">{icon}</span>
-        <span className="admin_sidebar_link__item-link-label">{label}</span>
-      </NavLink>
-    </li>
-    </div>
+    <NavLink
+      to={to}
+      end={end}
+      onClick={onClick}
+      className={({ isActive: navActive }) =>
+        `admin-sidebar-link ${(isActive || navActive) ? "active" : ""}`
+      }
+      title={label}
+    >
+      <span className="admin-sidebar-link__icon">
+        {icon}
+      </span>
+      {showLabel && (
+        <span className="admin-sidebar-link__label">{label}</span>
+      )}
+    </NavLink>
   );
 };
 

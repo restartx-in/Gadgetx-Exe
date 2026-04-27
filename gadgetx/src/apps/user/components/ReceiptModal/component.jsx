@@ -1,104 +1,128 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { useReactToPrint } from 'react-to-print'
-import { pdf } from '@react-pdf/renderer' // Import pdf generator
-import { API_FILES as server } from '@/config/api'
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useReactToPrint } from "react-to-print";
+import { FaPrint } from "react-icons/fa";
 
-import CancelButton from '@/apps/user/components/CancelButton'
-import SubmitButton from '@/apps/user/components/SubmitButton'
-import ThermalReceiptInvoice from '@/apps/user/components/PrintingModels/ThermalReceiptInvoice'
-import ReceiptInvoice from '@/apps/user/components/PrintingModels/ReceiptInvoice' // Import A4 Model
-import './style.scss'
+import CancelButton from "@/components/CancelButton";
+import Button from "@/components/Button";
+import ThermalReceiptInvoice from "@/apps/user/components/PrintingModels/ThermalReceiptInvoice";
+import ReceiptInvoice from "@/apps/user/components/PrintingModels/ReceiptInvoice";
 
-const ReceiptModal = ({ isOpen, onClose, transactionData }) => {
-  const printRef = useRef()
-  const [data, setData] = useState(null)
-  const [printType, setPrintType] = useState('thermal') // State for print type
+import "./style.scss";
 
-  // 1. Setup Thermal Print Hook
-  const triggerThermalPrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: `Receipt-${data?.id || 'sale'}`,
-    pageStyle: `
-      @page { size: auto; margin: 0mm; } 
-      @media print { body { -webkit-print-color-adjust: exact; } }
+const ReceiptModal = ({ isOpen, onClose, transactionData, forcedPrintType }) => {
+  const printRef = useRef();
+  const [data, setData] = useState(null);
+  const [printType, setPrintType] = useState("thermal");
+
+  const toNumber = (value, fallback) => {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const thermalPaperWidth = Math.min(
+    120,
+    Math.max(58, toNumber(data?.store?.paper_width_mm, 80)),
+  );
+  const thermalPageMargin = Math.min(
+    10,
+    Math.max(0, toNumber(data?.store?.print_margin_mm, 0)),
+  );
+
+  const computedPageStyle =
+    printType === "thermal"
+      ? `
+      @page { size: ${thermalPaperWidth}mm auto; margin: ${thermalPageMargin}mm; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     `
-  })
+      : `
+      @page { size: auto; margin: 10mm; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    `;
 
-  // 2. Main Print Handler (Decides based on settings)
-  const handlePrintClick = async () => {
-    if (printType === 'a4') {
-      // --- A4 Logic: Generate PDF and Open ---
-      try {
-        const doc = <ReceiptInvoice transactionData={data} />
-        const asPdf = pdf(doc) // Create PDF instance
-        const blob = await asPdf.toBlob() // Generate Blob
-        const url = URL.createObjectURL(blob)
-        window.open(url, '_blank') // Open in new tab to print
-      } catch (error) {
-        console.error('Error generating PDF:', error)
-      }
-    } else {
-      // --- Thermal Logic: Use existing hook ---
-      triggerThermalPrint()
-    }
-  }
+  const triggerPrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Receipt-${data?.id || "sale"}`,
+    onAfterPrint: onClose,
+    pageStyle: computedPageStyle,
+  });
+
+  const handlePrintClick = useCallback(() => {
+    triggerPrint();
+  }, [triggerPrint]);
 
   useEffect(() => {
-    if (!transactionData) return
+    if (!isOpen || !data) return;
 
-    const printSettingsString = localStorage.getItem('PRINT_SETTINGS')
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter" || e.key === "NumpadEnter") {
+        e.preventDefault();
+        handlePrintClick();
+      }
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, data, handlePrintClick, onClose]);
+
+  useEffect(() => {
+    if (!transactionData) return;
+
+    const printSettingsString = localStorage.getItem("PRINT_SETTINGS");
+    const store = transactionData.store || {};
 
     if (printSettingsString) {
-      const settings = JSON.parse(printSettingsString)
-      
-      // Get Print Type
-      setPrintType(settings.print_type || 'thermal')
-
-      // Build full URLs
-      if (settings.header_image_url) {
-        settings.full_header_image_url = `${server}${settings.header_image_url}`
-      }
-      if (settings.qr_image_url) {
-        settings.full_qr_image_url = `${server}${settings.qr_image_url}`
-      }
+      const settings = JSON.parse(printSettingsString);
+      setPrintType(forcedPrintType || settings.print_type || "thermal");
 
       setData({
         ...transactionData,
-        store: { ...transactionData.store, ...settings },
-      })
+        store: { ...store, ...settings },
+      });
     } else {
-      setData(transactionData)
+      setPrintType(forcedPrintType || "thermal");
+      setData(transactionData);
     }
-  }, [transactionData, isOpen])
+  }, [transactionData, isOpen, forcedPrintType]);
 
-  if (!isOpen || data === null) return null
+  if (!isOpen || data === null) return null;
 
   return createPortal(
-    <div className="custom-modal__overlay">
-      <div className="custom-modal__container">
+    <div className="gadgetx_custom-modal__overlay">
+      <div
+  className={`gadgetx_custom-modal__container ${
+    printType === "a4" ? "modal-a4" : "modal-thermal"
+  }`}
+>
 
-        {/* Close Button */}
         <button className="modal-close-x" onClick={onClose}>
           ✖
         </button>
 
-        {/* Preview Section - ALWAYS shows Thermal View (Cleaner UI) */}
         <div className="preview-container">
-          <ThermalReceiptInvoice ref={printRef} transactionData={data} />
+          {printType === "thermal" ? (
+            <ThermalReceiptInvoice ref={printRef} transactionData={data} />
+          ) : (
+            <ReceiptInvoice ref={printRef} transactionData={data} />
+          )}
         </div>
 
-        {/* Footer */}
-        <div className="custom-modal__footer">
+        <div className="gadgetx_custom-modal__footer">
           <CancelButton onClick={onClose} />
-
-          {/* This button decides what to print based on settings */}
-          <SubmitButton label="Print" onClick={handlePrintClick} />
+          <Button onClick={handlePrintClick} title="Enter" autoFocus>
+            <FaPrint style={{ marginRight: "8px" }} />
+            Print & Close (Enter)
+          </Button>
         </div>
       </div>
     </div>,
-    document.body,
-  )
-}
+    document.body
+  );
+};
 
-export default ReceiptModal
+export default ReceiptModal;

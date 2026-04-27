@@ -3,17 +3,17 @@
 module.exports = async (client) => {
   try {
     const result = await client.query(`
-      SELECT name FROM sqlite_master WHERE type='table' AND name='item';
+      SELECT to_regclass('public.item') AS table_name;
     `)
 
-    const tableExists = result.rows.length > 0
+    const tableExists = result.rows[0].table_name !== null
 
     if (tableExists) {
       console.log('ℹ️ "item" table already exists.')
     } else {
       await client.query(`
        CREATE TABLE item (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             tenant_id INTEGER REFERENCES "tenant"(id) ON DELETE CASCADE, 
             done_by_id INTEGER REFERENCES "done_by"(id) ON DELETE SET NULL,
             cost_center_id INTEGER REFERENCES "cost_center"(id) ON DELETE SET NULL,
@@ -22,7 +22,6 @@ module.exports = async (client) => {
             category_id INTEGER REFERENCES category(id),
             sku VARCHAR(255) NOT NULL,
             brand_id INTEGER REFERENCES brand(id),
-            unit_id INTEGER REFERENCES unit(id),
             bar_code VARCHAR(255),
             stock_quantity INTEGER NOT NULL DEFAULT 0,
             purchase_price DECIMAL(30, 2) NOT NULL,
@@ -32,7 +31,8 @@ module.exports = async (client) => {
             party_id INTEGER REFERENCES party(id) ON DELETE SET NULL, 
             tax DECIMAL(5, 2) NOT NULL DEFAULT 0.00,
             image VARCHAR(255),
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (tenant_id, name)
             );
       `)
       console.log('✅ "item" table has been created.')
@@ -43,7 +43,6 @@ module.exports = async (client) => {
         `CREATE INDEX idx_item_category_id ON item(category_id);`
       )
       await client.query(`CREATE INDEX idx_item_brand_id ON item(brand_id);`)
-      await client.query(`CREATE INDEX idx_item_unit_id ON item(unit_id);`)
       await client.query(
         `CREATE INDEX idx_item_done_by_id ON item(done_by_id);`
       )

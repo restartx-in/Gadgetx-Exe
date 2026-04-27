@@ -1,5 +1,5 @@
 /* Fullscreen overlay */
-.custom-modal__overlay {
+.gadgetx_custom-modal__overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -10,7 +10,7 @@
 }
 
 /* Centered modal box */
-.custom-modal__container {
+.gadgetx_custom-modal__container {
   background: #fff;
   width: 20%;
   max-height: 90vh;
@@ -94,5 +94,15 @@
     left: 0;
     top: 0;
     width: 100%;
+  }
+}
+
+.invoice-modal__barcode {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 6px;
+
+  svg {
+    max-width: 100%;
   }
 }

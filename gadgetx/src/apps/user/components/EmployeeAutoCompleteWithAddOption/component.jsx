@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef, forwardRef, useMemo } from 'react';
-import useEmployees from '@/hooks/api/employee/useEmployees';
-import AddEmployee from '@/apps/user/pages/List/EmployeeList/components/AddEmployee'; 
-import { HiPencil } from 'react-icons/hi2';
-import { useToast } from '@/context/ToastContext';
+import React, { useState, useEffect, useRef, forwardRef, useMemo } from "react";
+import useEmployees from "@/apps/user/hooks/api/employee/useEmployees";
+import AddEmployee from "@/apps/user/pages/List/EmployeeList/components/AddEmployee";
+import { HiPencil } from "react-icons/hi2";
+import { useToast } from "@/context/ToastContext";
 
 // 1. Import Custom Components
-import CustomTextField from '@/components/CustomTextField';
-import CustomScrollbar from '@/components/CustomScrollbar';
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
 
-import './style.scss';
+import "./style.scss";
 
 const EmployeeAutoCompleteWithAddOption = forwardRef(
   (
@@ -16,14 +16,14 @@ const EmployeeAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label='Employee',
-      placeholder = 'Select or add an employee',
+      label = "Employee",
+      placeholder = "Select or add an employee",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       filters = {},
       is_edit = true,
-      style = {}
+      style = {},
     },
     ref
   ) => {
@@ -34,12 +34,12 @@ const EmployeeAutoCompleteWithAddOption = forwardRef(
       error,
       refetch,
     } = useEmployees(filters);
-    
+
     const showToast = useToast();
 
     const [employeeOptions, setEmployeeOptions] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('add');
+    const [modalMode, setModalMode] = useState("add");
     const [selectedEmployeeInModal, setSelectedEmployeeInModal] =
       useState(null);
 
@@ -54,8 +54,8 @@ const EmployeeAutoCompleteWithAddOption = forwardRef(
     }, [employees]);
 
     const handleAddNew = (typedValue) => {
-      setSelectedEmployeeInModal({ name: typedValue }); 
-      setModalMode('add');
+      setSelectedEmployeeInModal({ name: typedValue });
+      setModalMode("add");
       setIsModalOpen(true);
     };
 
@@ -65,13 +65,13 @@ const EmployeeAutoCompleteWithAddOption = forwardRef(
       );
       if (employeeToEdit) {
         setSelectedEmployeeInModal(employeeToEdit);
-        setModalMode('edit');
+        setModalMode("edit");
         setIsModalOpen(true);
       } else {
-         showToast({
-            type: 'GENARAL',
-            message: 'Employee data not found for editing.',
-            status: 'ERROR',
+        showToast({
+          type: "GENARAL",
+          message: "Employee data not found for editing.",
+          status: "ERROR",
         });
       }
     };
@@ -83,9 +83,9 @@ const EmployeeAutoCompleteWithAddOption = forwardRef(
 
     const handleSuccess = (responseData) => {
       refetch();
-      
-      if (responseData && responseData.id && modalMode === 'add') {
-        onChange({ target: { name, value: responseData.id } }); 
+
+      if (responseData && responseData.id && modalMode === "add") {
+        onChange({ target: { name, value: responseData.id } });
       }
       handleCloseModal();
     };
@@ -93,7 +93,7 @@ const EmployeeAutoCompleteWithAddOption = forwardRef(
     if (isLoading) {
       return (
         <div className="employeeinput-select">
-          <CustomTextField 
+          <CustomTextField
             label={label}
             placeholder="Loading employees..."
             disabled
@@ -105,10 +105,10 @@ const EmployeeAutoCompleteWithAddOption = forwardRef(
     }
 
     if (isError) {
-      console.error('Failed to load employees:', error);
+      console.error("Failed to load employees:", error);
       return (
         <div className="employeeinput-select">
-          <CustomTextField 
+          <CustomTextField
             label={label}
             placeholder="Error loading employees"
             disabled
@@ -149,7 +149,8 @@ const EmployeeAutoCompleteWithAddOption = forwardRef(
     );
   }
 );
-EmployeeAutoCompleteWithAddOption.displayName = 'EmployeeAutoCompleteWithAddOption';
+EmployeeAutoCompleteWithAddOption.displayName =
+  "EmployeeAutoCompleteWithAddOption";
 
 export default EmployeeAutoCompleteWithAddOption;
 
@@ -161,10 +162,10 @@ const EmployeeSelectAutocompleteInput = forwardRef(
       onChange,
       options,
       label,
-      placeholder = 'Select or add an employee',
+      placeholder = "Select or add an employee",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       onAddNew,
       onEdit,
       is_edit,
@@ -174,15 +175,15 @@ const EmployeeSelectAutocompleteInput = forwardRef(
     ref
   ) => {
     const [showDropdown, setShowDropdown] = useState(false);
-    const [inputValue, setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // Removed: dropdownRef and scrolling useEffect
     const hasBeenFocused = useRef(false);
 
     useEffect(() => {
       const selectedOption = options.find((opt) => opt.value === value);
-      setInputValue(selectedOption ? selectedOption.label : '');
+      setInputValue(selectedOption ? selectedOption.label : "");
     }, [value, options]);
 
     const filteredOptions = useMemo(() => {
@@ -211,7 +212,7 @@ const EmployeeSelectAutocompleteInput = forwardRef(
       setShowDropdown(true);
 
       if (currentInput.length === 0) {
-        onChange({ target: { name, value: '' } });
+        onChange({ target: { name, value: "" } });
       }
     };
 
@@ -251,17 +252,17 @@ const EmployeeSelectAutocompleteInput = forwardRef(
       if (itemsCount === 0) return;
 
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           setActiveIndex(
             (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
           );
           break;
-        case 'Enter':
+        case "Enter":
           if (activeIndex < 0) return;
           e.preventDefault();
           if (activeIndex < filteredOptions.length) {
@@ -270,7 +271,7 @@ const EmployeeSelectAutocompleteInput = forwardRef(
             handleAddNew();
           }
           break;
-        case 'Escape':
+        case "Escape":
           setShowDropdown(false);
           break;
         default:
@@ -279,9 +280,7 @@ const EmployeeSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
-        style={{ ...style, position: 'relative' }}
-      >
+      <div style={{ ...style, position: "relative" }}>
         <CustomTextField
           ref={ref}
           id={name}
@@ -318,7 +317,7 @@ const EmployeeSelectAutocompleteInput = forwardRef(
                     handleSelectOption(opt);
                   }}
                   className={`employeeeinputs-select__option ${
-                    index === activeIndex ? 'active' : ''
+                    index === activeIndex ? "active" : ""
                   }`}
                 >
                   <div className="employeeeinputs-select__option-content">
@@ -338,11 +337,11 @@ const EmployeeSelectAutocompleteInput = forwardRef(
             ) : showAddNewOption ? (
               <li
                 onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleAddNew();
+                  e.preventDefault();
+                  handleAddNew();
                 }}
                 className={`employeeeinputs-select__option employeeeinputs-select__option--add ${
-                  activeIndex === 0 ? 'active' : ''
+                  activeIndex === 0 ? "active" : ""
                 }`}
               >
                 + Add "{inputValue}"
@@ -354,4 +353,4 @@ const EmployeeSelectAutocompleteInput = forwardRef(
     );
   }
 );
-EmployeeSelectAutocompleteInput.displayName = 'EmployeeSelectAutocompleteInput';
+EmployeeSelectAutocompleteInput.displayName = "EmployeeSelectAutocompleteInput";

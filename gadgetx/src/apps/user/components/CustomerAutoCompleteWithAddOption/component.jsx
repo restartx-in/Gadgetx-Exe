@@ -1,7 +1,7 @@
 import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
-import { useCustomers } from "@/hooks/api/customer/useCustomers";
+import { useCustomers } from "@/apps/user/hooks/api/customer/useCustomers";
 import AddCustomer from "@/apps/user/pages/List/CustomerList/components/AddCustomer";
-import { HiPencil } from "react-icons/hi2";
+import { HiPencil, HiUser, HiPhone, HiCalendarDays } from "react-icons/hi2";
 
 import CustomTextField from "@/components/CustomTextField";
 import CustomScrollbar from "@/components/CustomScrollbar";
@@ -44,6 +44,9 @@ const CustomerAutoCompleteWithAddOption = forwardRef(
         const options = customers.map((customer) => ({
           value: customer.id,
           label: customer.name,
+          phone: customer.phone || "No phone",
+          serial: customer.serial_number || customer.id,
+          date: customer.updated_at || customer.created_at,
         }));
         setCustomerOptions(options);
       }
@@ -56,9 +59,7 @@ const CustomerAutoCompleteWithAddOption = forwardRef(
     };
 
     const handleEdit = (option) => {
-      const customerToEdit = customers.find(
-        (customer) => customer.id === option.value
-      );
+      const customerToEdit = customers.find((c) => c.id === option.value);
       if (customerToEdit) {
         setSelectedCustomerInModal(customerToEdit);
         setModalMode("edit");
@@ -72,50 +73,25 @@ const CustomerAutoCompleteWithAddOption = forwardRef(
     };
 
     const handleCustomerCreated = (newCustomer) => {
-      if (newCustomer && newCustomer.id) {
+      if (newCustomer?.id) {
         refetch();
         onChange({ target: { name, value: newCustomer.id } });
       }
       handleCloseModal();
     };
 
-    const handleCustomerUpdated = () => {
-      refetch();
-      handleCloseModal();
-    };
-
-    if (isLoading) {
+    if (isLoading)
       return (
-        <div className="customersinput-select">
-          <CustomTextField
-            label="Customer (Loading)"
-            placeholder="Loading customers..."
-            disabled
-            fullWidth
-            variant="outlined"
-          />
-        </div>
+        <CustomTextField
+          label="Customer"
+          placeholder="Loading..."
+          disabled
+          fullWidth
+        />
       );
-    }
-
-    if (isError) {
-      console.error("Failed to load customers:", error);
-      return (
-        <div className="customersinput-select">
-          <CustomTextField
-            label={label}
-            placeholder="Error loading customers"
-            disabled
-            fullWidth
-            variant="outlined"
-            error
-          />
-        </div>
-      );
-    }
 
     return (
-      <>
+      <div className="customersinput-select-container">
         <CustomerSelectAutocompleteInput
           ref={ref}
           name={name}
@@ -133,21 +109,21 @@ const CustomerAutoCompleteWithAddOption = forwardRef(
           style={style}
         />
         <AddCustomer
+         key={selectedCustomerInModal ? selectedCustomerInModal.name : 'new'} 
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           mode={modalMode}
           selectedCustomer={selectedCustomerInModal}
           onCustomerCreated={handleCustomerCreated}
-          onCustomerUpdated={handleCustomerUpdated}
+          onCustomerUpdated={() => {
+            refetch();
+            handleCloseModal();
+          }}
         />
-      </>
+      </div>
     );
   }
 );
-CustomerAutoCompleteWithAddOption.displayName =
-  "CustomerAutoCompleteWithAddOption";
-
-export default CustomerAutoCompleteWithAddOption;
 
 const CustomerSelectAutocompleteInput = forwardRef(
   (
@@ -160,7 +136,6 @@ const CustomerSelectAutocompleteInput = forwardRef(
       placeholder = "",
       required = false,
       disabled = false,
-      className = "",
       onAddNew,
       onEdit,
       is_edit,
@@ -172,19 +147,17 @@ const CustomerSelectAutocompleteInput = forwardRef(
     const [showDropdown, setShowDropdown] = useState(false);
     const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
-    // Removed: dropdownRef and the manual scroll useEffect
     const hasBeenFocused = useRef(false);
 
     useEffect(() => {
-      const selectedOption = options.find((opt) => opt.value === value);
+      const selectedOption = options.find(
+        (opt) => String(opt.value) === String(value)
+      );
       setInputValue(selectedOption ? selectedOption.label : "");
     }, [value, options]);
 
     const filteredOptions = useMemo(() => {
-      if (!inputValue) {
-        return options;
-      }
+      if (!inputValue) return options;
       return options.filter((opt) =>
         opt.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -200,14 +173,26 @@ const CustomerSelectAutocompleteInput = forwardRef(
 
     const showAddNewOption = inputValue && !exactMatchExists && onAddNew;
 
-    const handleInputChange = (e) => {
-      const currentInput = e.target.value;
-      setInputValue(currentInput);
-      setActiveIndex(-1);
-      setShowDropdown(true);
+    const handleKeyDown = (e) => {
+      if (disabled || !showDropdown) return;
+      const totalItems = filteredOptions.length + (showAddNewOption ? 1 : 0);
 
-      if (currentInput.length === 0) {
-        onChange({ target: { name, value: "" } });
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((prev) => (prev + 1) % totalItems);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((prev) => (prev - 1 + totalItems) % totalItems);
+      } else if (e.key === "Enter" && activeIndex >= 0) {
+        e.preventDefault();
+        if (activeIndex < filteredOptions.length) {
+          handleSelectOption(filteredOptions[activeIndex]);
+        } else {
+          onAddNew(inputValue);
+          setShowDropdown(false);
+        }
+      } else if (e.key === "Escape") {
+        setShowDropdown(false);
       }
     };
 
@@ -217,140 +202,116 @@ const CustomerSelectAutocompleteInput = forwardRef(
       setShowDropdown(false);
     };
 
-    const handleAddNewClick = () => {
-      if (onAddNew) {
-        onAddNew(inputValue);
-      }
-      setShowDropdown(false);
-    };
-
-    const handleEditClick = (e, option) => {
-      e.preventDefault(); // Prevent input blur
-      e.stopPropagation();
-      if (onEdit) {
-        onEdit(option);
-        setShowDropdown(false);
-      }
-    };
-
-    const handleFocus = () => {
-      if (hasBeenFocused.current) {
-        setShowDropdown(true);
-      }
-      hasBeenFocused.current = true;
-    };
-
-    const handleKeyDown = (e) => {
-      if (disabled || !showDropdown) return;
-
-      const itemsCount = filteredOptions.length + (showAddNewOption ? 1 : 0);
-      if (itemsCount === 0) return;
-
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          setActiveIndex(
-            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
-          );
-          break;
-        case "Enter":
-          if (activeIndex < 0) return;
-          e.preventDefault();
-          if (activeIndex < filteredOptions.length) {
-            handleSelectOption(filteredOptions[activeIndex]);
-          } else if (showAddNewOption) {
-            handleAddNewClick();
-          }
-          break;
-        case "Escape":
-          setShowDropdown(false);
-          break;
-        default:
-          break;
-      }
+    const formatDate = (dateStr) => {
+      if (!dateStr) return "N/A";
+      return new Date(dateStr).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
     };
 
     return (
-      <div 
-        style={{ ...style, position: 'relative' }}
+      <div
+        className="customersinput-select"
+        style={{ ...style, position: "relative" }}
       >
         <CustomTextField
           ref={ref}
-          id={name}
           name={name}
           label={label}
           value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          onClick={() => {
+          onChange={(e) => {
+            setInputValue(e.target.value);
             setShowDropdown(true);
+            if (!e.target.value) onChange({ target: { name, value: "" } });
           }}
+          onKeyDown={handleKeyDown}
+          onFocus={() => {
+            if (hasBeenFocused.current) setShowDropdown(true);
+            hasBeenFocused.current = true;
+          }}
+          onClick={() => setShowDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
           placeholder={placeholder}
           required={required}
           disabled={disabled}
           autoComplete="off"
           fullWidth
-          onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
           {...rest}
         />
 
         {showDropdown && (
-          <CustomScrollbar
-            className="customersinput-select__dropdown"
-            activeIndex={activeIndex}
-            as="ul"
-          >
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt, index) => (
-                <li
-                  key={opt.value}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleSelectOption(opt);
-                  }}
-                  className={`customersinput-select__option ${
-                    index === activeIndex ? "active" : ""
-                  }`}
-                >
-                  <div className="customersinput-select__option-content">
-                    <span>{opt.label}</span>
-                    {is_edit && !disabled && (
-                      <button
-                        type="button"
-                        className="customersinput-select__edit-button"
-                        onMouseDown={(e) => handleEditClick(e, opt)}
-                      >
-                        <HiPencil size={16} />
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))
-            ) : null}
-            
-            {showAddNewOption && (
-              <li
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleAddNewClick();
-                }}
-                className={`customersinput-select__option customersinput-select__option--add ${
-                  activeIndex === filteredOptions.length ? "active" : ""
-                }`}
-              >
-                + Add "{inputValue}"
-              </li>
-            )}
-          </CustomScrollbar>
+          <div className="customersinput-select__dropdown-wrapper">
+            <div className="dropdown-header-info">
+              <span>RECENTLY SAVED CUSTOMERS</span>
+              <span className="count">{filteredOptions.length} found</span>
+            </div>
+            <CustomScrollbar className="dropdown-scroll-area" as="div">
+              <ul className="dropdown-list">
+                {filteredOptions.map((opt, index) => (
+                  <li
+                    key={opt.value}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelectOption(opt);
+                    }}
+                    className={`customersinput-select__option ${
+                      index === activeIndex ? "active" : ""
+                    }`}
+                  >
+                    <div className="customersinput-select__row">
+                      <div className="customer-avatar">
+                        <HiUser size={18} />
+                      </div>
+                      <div className="customer-info-main">
+                        <div className="customer-name">{opt.label}</div>
+                        <div className="customer-phone">
+                          <HiPhone size={11} /> {opt.phone}
+                        </div>
+                      </div>
+                      <div className="customer-meta">
+                        <div className="serial-badge">ID: {opt.serial}</div>
+                        <div className="last-seen">
+                          <HiCalendarDays size={11} /> {formatDate(opt.date)}
+                        </div>
+                      </div>
+                      {is_edit && (
+                        <button
+                          type="button"
+                          className="customersinput-select__edit-button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            onEdit(opt);
+                          }}
+                        >
+                          <HiPencil size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+                {showAddNewOption && (
+                  <li
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      onAddNew(inputValue)
+                      setShowDropdown(false);
+                    }}
+                    className={`customersinput-select__option--add ${
+                      activeIndex === filteredOptions.length ? "active" : ""
+                    }`}
+                  >
+                     Add New Customer : <strong>{inputValue}</strong>
+                  </li>
+                )}
+              </ul>
+            </CustomScrollbar>
+          </div>
         )}
       </div>
     );
   }
 );
 
-CustomerSelectAutocompleteInput.displayName = "CustomerSelectAutocompleteInput";
+export default CustomerAutoCompleteWithAddOption;

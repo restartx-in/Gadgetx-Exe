@@ -1,0 +1,23 @@
+.text-overflow {
+  position: relative;
+  max-width: 98%;
+  &__content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__tooltip {
+    position: fixed;
+    z-index: 9999;
+    background-color: var(--contend);
+    border: 1px solid var(--border-color);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    max-width: 300px;
+    word-break: break-word;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+  }
+}

@@ -1,0 +1,55 @@
+.ageing-stock-summary-box {
+  padding: 7px;
+  border-radius: 6px;
+  background-color: var(--color-hover);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ageing-stock-select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #ccc);
+  background-color: var(--color-bg, #fff);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-primary, #3b82f6);
+  }
+}
+
+.ageing-stock-input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #ccc);
+  background-color: var(--color-bg, #fff);
+  font-size: 14px;
+  min-width: 110px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-primary, #3b82f6);
+  }
+
+  &.ageing-stock-search {
+    min-width: 180px;
+  }
+}
+
+.ageing-stock-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.ageing-stock-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}

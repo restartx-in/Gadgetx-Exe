@@ -1,160 +1,337 @@
-$tablet-width: 768px;
-$desktop-width: 1024px;
-$card-padding: 1.25rem;
-$grid-gap: 1.5rem;
+/* ===== ROOT VARIABLES ===== */
+:root {
+  --bg-main: #ffffff;
+  --bg-card: #ffffff;
+  --bg-soft: #ffffff;
 
-.dashboard {
-  // background-color: #f8f9fa;
-  box-sizing: border-box;
-  overflow-x: hidden;
+  --border-color: rgba(255, 255, 255, 0.05);
+
+  --text-primary: #000000;
+  --text-secondary: #a0aec0;
+  --text-muted: #718096;
+
+  --gold: #c9a84c;
+  --gold-light: #e8cc7a;
+
+  --green: #38a169;
+  --red: #e53e3e;
+  --blue: #4c51bf;
+  --purple: #805ad5;
+  --orange: #dd6b20;
+
+  --hover-bg: rgba(201, 168, 76, 0.08);
 }
 
-.dashboard__stats-grid-8 {
-  display: grid;
-  gap: $grid-gap;
-  margin-bottom: $grid-gap;
-  grid-template-columns: 1fr;
-
-  @media (min-width: 640px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (min-width: $desktop-width) {
-    grid-template-columns: repeat(3, 1fr);
-  }
+/* ===== MAIN DASHBOARD ===== */
+.dashboard--optical {
+  padding:8px;
+  margin-top:-15px;
+  background: var(--bg-main);
+  min-height: 100vh;
+  color: var(--text-primary);
+  font-family: "Inter", sans-serif;
 }
 
-.dashboard__main-content {
-  display: grid;
-  gap: $grid-gap;
-  grid-template-columns: 1fr; // Mobile-first default
-
-  @media (min-width: $desktop-width) {
-    // This was incorrect for a 3-column layout, let's fix it for 2 pie charts + 1 bar chart
-    grid-template-columns: 1fr 1fr;
-  }
-
-  // A better layout for 3 charts might be:
-  @media (min-width: 1200px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.card-widget {
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+/* ===== HEADER ===== */
+.dashboard__header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
 
-  &.full-width {
-    // Make sure full-width spans all columns correctly
-    @media (min-width: $desktop-width) {
-      grid-column: 1 / -1;
-    }
-    @media (min-width: 1200px) {
-      grid-column: 1 / -1;
-    }
+  .dashboard__title {
+    font-size: 24px;
+    font-weight: 700;
   }
 
-  &__header {
+  .dashboard__subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .header-actions {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: $card-padding;
-    border-bottom: 1px solid #eef2f7;
+    gap: 12px;
+  }
+}
 
-    h3 {
-      margin: 0;
-      font-size: 1rem;
+/* ===== PERIOD TOGGLE ===== */
+.period-toggle-clean {
+  display: flex;
+  background: var(--bg-soft);
+  border-radius: 8px;
+  padding: 4px;
+
+  button {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+
+    &.active {
+      background: var(--gold);
+      color: #121212;
       font-weight: 600;
-      color: #333;
+    }
+
+    &:hover {
+      background: var(--hover-bg);
+    }
+  }
+}
+
+/* ===== BUTTON ===== */
+.btn-primary-clean {
+  background: var(--gold);
+  color: #121212;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--gold-light);
+  }
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* ===== KPI GRID ===== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  transition: 0.2s;
+
+  &:hover {
+    transform: translateY(-3px);
+    background: var(--bg-soft);
+  }
+
+  .kpi-content {
+    .label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .value {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 6px 0;
+    }
+
+    .subtext {
+      font-size: 11px;
+      color: var(--text-muted);
     }
   }
 
-  &__view-all {
-    color: #4a90e2;
-    text-decoration: none;
-    font-weight: 500;
-  }
-
-  &__body {
-    // --- THIS IS THE FIX ---
-    flex: 1; // Allows this element to grow and fill the available vertical space
-    // ----------------------
-
-    overflow-x: auto;
-    display: flex; // Helps center the "no data" message
+  .kpi-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    display: flex;
     align-items: center;
     justify-content: center;
 
-    .recharts-responsive-container {
-      min-width: 250px;
+    &.blue {
+      background: rgba(76, 81, 191, 0.15);
+      color: var(--blue);
+    }
+    &.green {
+      background: rgba(56, 161, 105, 0.15);
+      color: var(--green);
+    }
+    &.orange {
+      background: rgba(221, 107, 32, 0.15);
+      color: var(--orange);
+    }
+    &.purple {
+      background: rgba(128, 90, 213, 0.15);
+      color: var(--purple);
     }
   }
 }
 
-.responsive-table {
+/* ===== GRID CONTENT ===== */
+.dashboard-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* ===== PANEL CARD ===== */
+.panel-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+/* ===== PANEL HEADER ===== */
+.panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
+/* ===== PANEL BODY ===== */
+.panel-body {
+  padding: 20px;
+}
+
+/* ===== TABLE ===== */
+.clean-table {
   width: 100%;
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  thead {
-    background-color: #f9fafb;
-  }
-
-  th,
-  td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    font-size: 0.875rem;
-    border-bottom: 1px solid #eef2f7;
-  }
+  border-collapse: collapse;
 
   th {
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
+    text-align: left;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 10px 0;
   }
 
-  tbody tr:last-child td {
-    border-bottom: none;
+  td {
+    padding: 12px 0;
+    font-size: 13px;
+    border-top: 1px solid var(--border-color);
   }
 
-  @media (max-width: #{$tablet-width - 1px}) {
-    thead {
-      display: none;
-    }
-    tr {
-      display: block;
-      border: 1px solid #eef2f7;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-    td {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.5rem 0;
-      border-bottom: none;
+  tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+}
 
-      &::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #333;
-        margin-right: 1rem;
-      }
+/* ===== STATUS PILL ===== */
+.pill-status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  text-transform: capitalize;
+
+  &.paid {
+    background: rgba(56, 161, 105, 0.15);
+    color: var(--green);
+  }
+
+  &.pending {
+    background: rgba(221, 107, 32, 0.15);
+    color: var(--orange);
+  }
+
+  &.due {
+    background: rgba(229, 62, 62, 0.15);
+    color: var(--red);
+  }
+}
+
+/* ===== EXPENSE BOX ===== */
+.expense-summary-box {
+  background: var(--bg-soft);
+  border-radius: 10px;
+  padding: 14px;
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+
+    .label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .value {
+      font-weight: 600;
+    }
+
+    .text-danger {
+      color: var(--red);
+    }
+
+    .text-success {
+      color: var(--green);
     }
   }
 }
 
-// Added for the no data message styling
-.no-data-message {
-  color: #6b7280;
-  padding: 2rem;
-  text-align: center;
+/* ===== STOCK BADGE ===== */
+.stock-badge {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+
+  &.low {
+    background: rgba(229, 62, 62, 0.15);
+    color: var(--red);
+  }
+}
+
+/* ===== FOOTER ===== */
+.dashboard-footer-clean {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .dashboard__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .dashboard-content-grid {
+    grid-template-columns: 1fr;
+  }
 }

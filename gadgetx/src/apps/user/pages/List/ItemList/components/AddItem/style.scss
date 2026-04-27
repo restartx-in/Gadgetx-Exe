@@ -1,3 +1,24 @@
+
+.custom-fields-section {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+
+  &__title {
+    color: var(--navy);
+    border-bottom: 1px solid var(--color-border-base);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+
+  &__inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; // Gap between dynamic fields
+    
+  }
+}
+
 .add_account {
   background: var(--color-surface);
   border-radius: var(--border-radius-lg);
@@ -86,9 +107,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 
   &__input-wrapper {
     flex: 1;
+    min-width: 200px;
   }
 
   &__button {

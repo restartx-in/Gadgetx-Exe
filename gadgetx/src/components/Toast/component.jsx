@@ -1,33 +1,29 @@
-import { useEffect } from 'react'
-import { TOASTSTATUS } from '@/constants/object/toastType'
-import './style.scss'
+import { useEffect } from "react";
+import { TOASTSTATUS } from "@/constants/object/toastType";
+import "./style.scss";
 
 export default function Toast({ isOpen, message, status, onClose }) {
   useEffect(() => {
     const timer = setTimeout(() => {
-      onClose && onClose()
-    }, 3000)
-    return () => clearTimeout(timer)
-  }, [onClose])
+      onClose && onClose();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const getToastClass = () => {
     switch (status) {
       case TOASTSTATUS.SUCCESS:
-        return 'success'
+        return "success";
       case TOASTSTATUS.WARNING:
-        return 'warning'
+        return "warning";
       case TOASTSTATUS.ERROR:
-        return 'error'
+        return "error";
       default:
-        return 'unknown'
+        return "unknown";
     }
-  }
+  };
 
-  return (
-    <div className={`chakra_toast ${getToastClass()}`}>{message}</div>
-  )
+  return <div className={`chakra_toast ${getToastClass()}`}>{message}</div>;
 }
-
-

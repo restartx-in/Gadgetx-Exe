@@ -1,2 +1,2 @@
-import ItemAutoCompleteWithAddOption from './component'
-export default ItemAutoCompleteWithAddOption
+import ItemAutoCompleteWithAddOption from "./component";
+export default ItemAutoCompleteWithAddOption;

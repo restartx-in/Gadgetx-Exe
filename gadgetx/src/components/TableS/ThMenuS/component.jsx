@@ -1,5 +1,6 @@
+import './style.scss'
 const ThMenuS = () => {
-  return <th style={{ width: '125px' }} />
+  return <th className="thmenu_s" />
 }
 
 export default ThMenuS

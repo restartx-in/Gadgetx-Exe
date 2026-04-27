@@ -1,14 +1,11 @@
 import './style.scss'
 
-const TdSLS = ({ page = 1, pageSize = 0, index = 0 }) => {
-  const currentPage = page > 0 ? page : 1
-  const size = pageSize > 0 ? pageSize : 0
-
-  const serialNumber = (currentPage - 1) * size + index + 1
-
+const TdSLS = ({ page = 0, pageSize = 0, index }) => {
   return (
     <td className="td_sl fs16">
-      <div className="td_sl-content">{serialNumber}</div>
+      <div className="td_sl-content">
+        {((page || 1) - 1) * pageSize + index + 1}
+      </div>
     </td>
   )
 }

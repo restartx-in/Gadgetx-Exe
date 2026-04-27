@@ -1,14 +1,14 @@
-import React from 'react';
-import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/Modal';
-import AmountSymbol from '@/components/AmountSymbol';
+import React from "react";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/Modal";
+import AmountSymbol from "@/apps/user/components/AmountSymbol";
 
 const RegisterDetailsModal = ({ isOpen, onClose, registerData }) => {
   if (!registerData) return null;
 
-  const formattedDate = new Date().toLocaleDateString('en-US', {
-    month: 'long',
-    day: '2-digit',
-    year: 'numeric',
+  const formattedDate = new Date().toLocaleDateString("en-US", {
+    month: "long",
+    day: "2-digit",
+    year: "numeric",
   });
 
   return (
@@ -56,9 +56,7 @@ const RegisterDetailsModal = ({ isOpen, onClose, registerData }) => {
               <tr className="table-header">
                 <td>Total Payment:</td>
                 <td>
-                  <AmountSymbol>
-                    {registerData?.totalPayment ?? 0}
-                  </AmountSymbol>
+                  <AmountSymbol>{registerData?.totalPayment ?? 0}</AmountSymbol>
                 </td>
               </tr>
             </tbody>

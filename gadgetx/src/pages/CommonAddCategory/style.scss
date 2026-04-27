@@ -1,0 +1,118 @@
+.custom-fields-section {
+  width: 100%;
+  margin-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 15px;
+
+  .custom-fields-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 12px;
+  }
+}
+
+.field-table-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: visible;
+
+  table {
+    margin-bottom: 0;
+  }
+
+  .view-row {
+    background: #fff;
+    &:hover {
+      background: #f8fafc;
+    }
+  }
+
+  .add-row {
+    background: #f8fafc;
+    padding: 10px;
+  }
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #0f172a;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.btn-icon {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s;
+
+  &.delete {
+    color: #ef4444;
+    &:hover {
+      background: #fee2e2;
+    }
+  }
+
+  &.add, &.add-header {
+    color: #0f172a;
+    &:hover {
+      background: #f1f5f9;
+    }
+  }
+
+  &.add-header {
+    background: #0f172a;
+    color: #ffffff;
+    border: none;
+    margin-left: auto;
+    &:hover {
+      background: #1e293b;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.add-first-field-btn {
+  background: none;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #475569;
+  }
+}
+
+// Ensure inputs inside table don't have extra margin
+.field-table-container {
+  .custom-input {
+    margin-bottom: 0 !important;
+  }
+
+  .select-field {
+    margin-bottom: 0 !important;
+  }
+}

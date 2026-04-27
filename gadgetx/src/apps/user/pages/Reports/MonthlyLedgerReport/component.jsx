@@ -9,8 +9,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { format, startOfMonth, endOfMonth, parseISO } from "date-fns";
 
 // Hooks
-import { useLedgerReport } from "@/hooks/api/ledger/useLedgerReport";
-import { useLedger } from "@/hooks/api/ledger/useLedger";
+import { useLedgerReport } from "@/apps/user/hooks/api/ledger/useLedgerReport";
+import { useLedger } from "@/apps/user/hooks/api/ledger/useLedger";
 import { useIsMobile } from "@/utils/useIsMobile";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
 
@@ -32,13 +32,13 @@ import {
   ThSearchOrFilterPopover,
 } from "@/components/Table";
 import DateFilter from "@/components/DateFilter";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import Loader from "@/components/Loader";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
 import RefreshButton from "@/components/RefreshButton";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PopUpFilter from "@/components/PopUpFilter";
 import VStack from "@/components/VStack";
 import HStack from "@/components/HStack/component.jsx";
@@ -266,7 +266,7 @@ const MonthlyLedgerReport = () => {
             subtitle={selectedLedgerName}
           />
           <TableTopContainer
-            isMargin={true}
+            //isMargin={true}
             mainActions={
               <>
                 <DateFilter

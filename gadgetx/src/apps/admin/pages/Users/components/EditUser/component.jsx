@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './style.scss';
 
-import useUserById from '@/hooks/api/user/useUserById';
-import useUpdateUserByAdmin from '@/hooks/api/user/useUpdateUserByAdmin'; // <-- Import new hook
-import useDeleteUser from '@/hooks/api/user/useDeleteUser';
+import useUserById from '@/apps/user/hooks/api/user/useUserById';
+import useUpdateUserByAdmin from '@/apps/user/hooks/api/user/useUpdateUserByAdmin'; // <-- Import new hook
+import useDeleteUser from '@/apps/user/hooks/api/user/useDeleteUser';
 
 import HStack from '@/components/HStack';
 import InputField from '@/components/InputField';
@@ -12,7 +12,7 @@ import Select from '@/components/Select';
 import PageTitle from '@/components/PageTitle';
 import { useToast } from '@/context/ToastContext';
 import { CRUDTYPE } from '@/constants/object/crud';
-import IconBackButton from '@/apps/user/components/IconBackButton';
+import IconBackButton from '@/components/IconBackButton';
 
 // User role options
 const userTypeOptions = [

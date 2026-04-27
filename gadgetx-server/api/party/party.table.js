@@ -3,16 +3,16 @@
 module.exports = async (client) => {
   try {
     const result = await client.query(`
-      SELECT name FROM sqlite_master WHERE type='table' AND name='party';
+      SELECT to_regclass('public.party') AS table_name;
     `)
 
-    const tableExists = result.rows.length > 0
+    const tableExists = result.rows[0].table_name !== null
     if (tableExists) {
       console.log('ℹ️ "party" table already exists.')
     } else {
       await client.query(`
       CREATE TABLE party (
-         id INTEGER PRIMARY KEY AUTOINCREMENT,
+         id SERIAL PRIMARY KEY,
          tenant_id INTEGER REFERENCES "tenant"(id) ON DELETE CASCADE, 
          done_by_id INTEGER REFERENCES "done_by"(id) ON DELETE SET NULL,
          cost_center_id INTEGER REFERENCES "cost_center"(id) ON DELETE SET NULL,
@@ -25,7 +25,8 @@ module.exports = async (client) => {
          credit_limit DECIMAL(10, 2) DEFAULT 0.00, -- Specific to customers
          outstanding_balance DECIMAL(10, 2) DEFAULT 0.00, -- Specific to customers
          payment_terms VARCHAR(255), -- Specific to suppliers
-         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         UNIQUE (tenant_id, name ,type)
       );
     `)
       console.log('✅ "party" table created.')

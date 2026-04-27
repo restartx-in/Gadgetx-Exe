@@ -64,6 +64,12 @@ class LedgerRepository {
     return { query, params, paramIndex };
   }
 
+  async linkToParty(db, ledgerId, partyId, tenantId) {
+    const query = `UPDATE party SET ledger_id = $1 WHERE id = $2 AND tenant_id = $3 RETURNING id;`;
+    const { rows } = await db.query(query, [ledgerId, partyId, tenantId]);
+    return rows[0];
+  }
+
   // --- CRUD Operations (Keep existing) ---
   async adjustBalance(db, ledgerId, tenantId, amount) {
     const query = `UPDATE ledger SET balance = balance + $1 WHERE id = $2 AND tenant_id = $3 RETURNING id, balance;`;
@@ -75,7 +81,7 @@ class LedgerRepository {
     const { tenant_id, name, balance, done_by_id, cost_center_id } = ledgerData;
     const { rows } = await db.query(
       `INSERT INTO ledger (tenant_id, name, balance, done_by_id, cost_center_id) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [tenant_id, name, balance, done_by_id || null, cost_center_id || null]
+      [tenant_id, name, balance || 0, done_by_id || null, cost_center_id || null]
     );
     return rows[0];
   }
@@ -106,10 +112,12 @@ class LedgerRepository {
 
   async getById(db, id, tenantId) {
     const query = `
-        SELECT l.*, db.name as done_by_name, cc.name as cost_center_name
+        SELECT l.*, db.name as done_by_name, cc.name as cost_center_name,
+               p.type as party_type, p.created_at as party_created_at, p.id as party_id
         FROM ledger l
         LEFT JOIN "done_by" db ON l.done_by_id = db.id
         LEFT JOIN "cost_center" cc ON l.cost_center_id = cc.id
+        LEFT JOIN "party" p ON l.id = p.ledger_id
         WHERE l.id = $1 AND l.tenant_id = $2;
     `;
     const { rows } = await db.query(query, [id, tenantId]);
@@ -118,10 +126,12 @@ class LedgerRepository {
 
   async getAllByTenantId(db, tenantId, filters = {}) {
     const baseQuery = `
-      SELECT l.*, db.name as done_by_name, cc.name as cost_center_name
+      SELECT l.*, db.name as done_by_name, cc.name as cost_center_name,
+             p.type as party_type, p.created_at as party_created_at, p.id as party_id
       FROM ledger l
       LEFT JOIN "done_by" db ON l.done_by_id = db.id
       LEFT JOIN "cost_center" cc ON l.cost_center_id = cc.id
+      LEFT JOIN "party" p ON l.id = p.ledger_id
       WHERE l.tenant_id = $1`;
     const { query, params } = this._buildQuery(baseQuery, tenantId, filters);
     const { rows } = await db.query(query, params);
@@ -133,10 +143,13 @@ class LedgerRepository {
     const limit = parseInt(page_size, 10);
     const offset = (parseInt(page, 10) - 1) * limit;
     const baseQuery = `
-      SELECT l.*, db.name as done_by_name, cc.name as cost_center_name, COUNT(*) OVER() as total_count 
+      SELECT l.*, db.name as done_by_name, cc.name as cost_center_name, 
+             p.type as party_type, p.created_at as party_created_at, p.id as party_id,
+             COUNT(*) OVER() as total_count 
       FROM ledger l
       LEFT JOIN "done_by" db ON l.done_by_id = db.id
       LEFT JOIN "cost_center" cc ON l.cost_center_id = cc.id
+      LEFT JOIN "party" p ON l.id = p.ledger_id
       WHERE l.tenant_id = $1
     `;
     let { query, params, paramIndex } = this._buildQuery(
@@ -252,8 +265,9 @@ class LedgerRepository {
     };
 
     if (sortMap[key]) {
-      // SQLite does not support NULLS LAST — omit it
-      return sql + ` ORDER BY ${sortMap[key]} ${direction}, v.id DESC`;
+      return (
+        sql + ` ORDER BY ${sortMap[key]} ${direction} NULLS LAST, v.id DESC`
+      );
     }
 
     return sql + ` ORDER BY v.date DESC, v.id DESC`;
@@ -308,8 +322,8 @@ class LedgerRepository {
             tl.name as to_ledger_name,
             db.name as done_by_name,
             cc.name as cost_center_name,
-            (SELECT GROUP_CONCAT(DISTINCT invoice_type) FROM voucher_transactions WHERE voucher_id = v.id) as invoice_type,
-            (SELECT GROUP_CONCAT(DISTINCT CAST(invoice_id AS TEXT)) FROM voucher_transactions WHERE voucher_id = v.id) as invoice_no
+            (SELECT STRING_AGG(DISTINCT invoice_type, ', ') FROM voucher_transactions WHERE voucher_id = v.id) as invoice_type,
+            (SELECT STRING_AGG(DISTINCT invoice_id::text, ', ') FROM voucher_transactions WHERE voucher_id = v.id) as invoice_no
         ${baseQuery}
     `;
 
@@ -407,8 +421,8 @@ class LedgerRepository {
             WHEN v.to_ledger_id = $1 THEN fl.name 
             ELSE tl.name 
           END as particular_name,
-          (SELECT GROUP_CONCAT(DISTINCT invoice_type) FROM voucher_transactions WHERE voucher_id = v.id) as invoice_type,
-          (SELECT GROUP_CONCAT(DISTINCT CAST(invoice_id AS TEXT)) FROM voucher_transactions WHERE voucher_id = v.id) as invoice_no,
+          (SELECT STRING_AGG(DISTINCT invoice_type, ', ') FROM voucher_transactions WHERE voucher_id = v.id) as invoice_type,
+          (SELECT STRING_AGG(DISTINCT invoice_id::text, ', ') FROM voucher_transactions WHERE voucher_id = v.id) as invoice_no,
           (
             SELECT
                 CASE
@@ -419,8 +433,8 @@ class LedgerRepository {
                     ELSE NULL
                 END
             FROM voucher_transactions vt
-            LEFT JOIN sales s ON vt.invoice_type = 'SALE' AND s.id = CAST(vt.invoice_id AS INTEGER)
-            LEFT JOIN purchase p ON vt.invoice_type = 'PURCHASE' AND p.id = CAST(vt.invoice_id AS INTEGER)
+            LEFT JOIN sales s ON vt.invoice_type = 'SALE' AND s.id = vt.invoice_id::integer
+            LEFT JOIN purchase p ON vt.invoice_type = 'PURCHASE' AND p.id = vt.invoice_id::integer
             LEFT JOIN sale_return sr ON vt.invoice_type = 'SALERETURN'
             LEFT JOIN purchase_return pr ON vt.invoice_type = 'PURCHASERETURN'
             WHERE vt.voucher_id = v.id
@@ -455,7 +469,8 @@ class LedgerRepository {
         debit,
         credit,
         balance:
-          row.invoice_balance !== null && typeof row.invoice_balance !== "undefined"
+          row.invoice_balance !== null &&
+          typeof row.invoice_balance !== "undefined"
             ? parseFloat(row.invoice_balance)
             : currentBalance,
         type: debit > 0 ? "Debit" : "Credit",
@@ -493,9 +508,8 @@ class LedgerRepository {
     const { ledger_id, start_date, end_date, sort } = filters;
     let query = `
       SELECT 
-          strftime('%Y-%m', date) as month_key,
-          strftime('%m', date) as month_num,
-          CAST(strftime('%Y', date) AS INTEGER) as year_num,
+          TO_CHAR(date, 'YYYY-MM') as month_key,
+          TO_CHAR(date, 'FMMonth YYYY') as label,
           SUM(CASE WHEN to_ledger_id = $1 THEN amount ELSE 0 END) as total_debit,
           SUM(CASE WHEN from_ledger_id = $1 THEN amount ELSE 0 END) as total_credit
       FROM voucher
@@ -512,7 +526,7 @@ class LedgerRepository {
       query += ` AND date <= $${paramIndex++}`;
       params.push(end_date);
     }
-    query += ` GROUP BY strftime('%Y-%m', date) ORDER BY month_key ASC`;
+    query += ` GROUP BY TO_CHAR(date, 'YYYY-MM'), TO_CHAR(date, 'FMMonth YYYY') ORDER BY month_key ASC`;
     const { rows } = await db.query(query, params);
     let openingBalanceQuery = `
       SELECT COALESCE(SUM(CASE WHEN to_ledger_id = $1 THEN amount WHEN from_ledger_id = $1 THEN -amount ELSE 0 END), 0) as opening_balance
@@ -525,11 +539,7 @@ class LedgerRepository {
     }
     const opRes = await db.query(openingBalanceQuery, opParams);
     let runningBalance = parseFloat(opRes.rows[0].opening_balance);
-    // Build label from month_num + year_num (SQLite has no FMMonth)
-    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     let calculatedRows = rows.map((row) => {
-      const mName = monthNames[parseInt(row.month_num, 10) - 1] || row.month_num;
-      row = { ...row, label: `${mName} ${row.year_num}` };
       const debit = parseFloat(row.total_debit);
       const credit = parseFloat(row.total_credit);
       runningBalance = runningBalance + debit - credit;

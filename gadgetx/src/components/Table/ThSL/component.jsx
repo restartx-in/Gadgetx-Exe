@@ -1,8 +1,8 @@
 import './style.scss'
 const ThSL = () => {
   return (
-    <th className="thsl fs18">
-      <div>
+    <th >
+      <div className="thsl">
         SL
       </div>
     </th>

@@ -1,7 +1,7 @@
-@use 'sass:list';
+@use "sass:list";
 
 :root {
-  --color-hover: #e8ecf7;
+  --color-hover: #e0e7ff;
   /* Typography */
   --line-height-base: 1.5;
   --font-weight-400: 400;
@@ -18,6 +18,7 @@
   --color-primary-700: #4338ca;
   --color-primary-800: #3730a3;
   --color-primary-900: #312e81;
+  --skeleton-light: #f0f0f0;
 
   --color-neutral-0: #ffffff;
   --color-neutral-50: #f9fafb;
@@ -31,15 +32,12 @@
   --color-neutral-800: #1f2937;
   --color-neutral-900: #111827;
   --color-neutral-1000: #0f172a;
-  --text-field-active-color:#1976d2;
-  --border-color:#c9c9c9;
 
   /* Status Colors */
   --color-success: #10b981;
-  --color-danger: #f60b0b;
+  --color-danger: #ef4444;
   --color-warning: #f59e0b;
   --color-info: #0ea5e9;
-  --skeleton-light: #f0f0f0;
 
   /* Spacing Scale */
   --space-0: 0;
@@ -75,6 +73,40 @@
   --z-index-40: 40; /* Modal Dialog */
   --z-index-50: 50; /* Notifications */
 }
+:root {
+  --colour-white: #fff;
+  --colour-disabled-bg: #f3f4f6;
+  --colour-disabled-border: #d1d5db;
+  --colour-disabled-text: #6b7280;
+
+  // Selected State Colours
+  --colour-selected-bg: #150f35; // Dark Slate/Navy
+  --colour-selected-text: #fff;
+
+  // "All" Status Colours
+  --colour-all-bg: #e7f3fd;
+  --colour-all-text: #3566b1;
+
+  // "Available" Status Colours
+  --colour-available-bg: #d1fae5; // Light Green
+  --colour-available-text: #059669; // Medium Green
+
+  // "Maintenance" Status Colours
+  --colour-maintenance-bg: #fbf1e5; // Light Amber/Yellow
+  --colour-maintenance-text: #da9973; // Medium Amber
+
+  // "Sold" Status Colours
+  --colour-sold-bg: #ffefeb; // Light Red
+  --colour-sold-text: #ed8d90; // Medium Red
+
+  // Base Button Styles
+  --radius-md: 8px;
+  --fs-sm: 0.85rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.1rem;
+  --fw-500: 500;
+  --transition-fast: 150ms ease-in-out;
+}
 
 :root {
   /* Colors */
@@ -91,7 +123,8 @@
   --color-neutral-200: #e5e7eb;
   --color-neutral-100: #f3f4f6;
   --color-success: #22c55e;
-  --color-danger: #f60b0b;
+  --color-danger: #e11d48;
+  --color-danger: #dc2626;
   --color-warning: #f59e42;
   --color-info: #2563eb;
   --color-bg-base: #f7f9fb;
@@ -109,11 +142,7 @@
   --maroon-red: #fb003f;
   --olive-green: #006d5a;
   --primary-blue: #92b4ef;
-
-  --border-light: #eff1f4;
-  --text-dark: #0b1017;
-  --separator-color: #64686b;
-  --scrollbar-thumb: #cbd5e1;
+  --text-field-active-color: #1976d2;
 }
 
 :root {
@@ -139,7 +168,7 @@
   --border-radius-md: 8px;
   --border-width-base: 1px;
 
-  --font-family-base: 'Poppins';
+  --font-family-base: "Poppins";
   --font-weight-500: 500;
   --font-weight-600: 600;
   --font-weight-700: 700;
@@ -170,6 +199,7 @@
 html,
 body,
 * {
+  font-family: "Poppins";
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -221,7 +251,7 @@ body::-webkit-scrollbar,
   {
     .fs#{$size} {
       font-size: var(--fs#{$size}) !important;
-      font-family: 'poppins';
+      font-family: "poppins";
     }
   }
 }
@@ -1272,5 +1302,4 @@ body::-webkit-scrollbar,
 }
 body {
   margin: 0;
-  font-family: 'poppins';
 }

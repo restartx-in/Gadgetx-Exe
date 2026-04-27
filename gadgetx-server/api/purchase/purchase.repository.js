@@ -1,4 +1,5 @@
 const PurchaseItemRepository = require("../purchaseItem/purchaseItem.repository");
+// Removed TransactionPaymentsRepository
 
 class PurchaseRepository {
   constructor() {
@@ -20,9 +21,12 @@ class PurchaseRepository {
         invoice_number,
       } = purchaseData;
 
+      const initialPaid = 0;
+      const initialStatus = "unpaid";
+
       const insertPurchaseQuery = `
         INSERT INTO purchase(tenant_id, party_id, done_by_id, cost_center_id, total_amount, paid_amount, discount, date, invoice_number, status)
-        VALUES ($1, $2, $3, $4, $5, 0, $6, $7, $8, 'unpaid')
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *;
       `;
       const purchaseResult = await client.query(insertPurchaseQuery, [
@@ -31,9 +35,11 @@ class PurchaseRepository {
         done_by_id,
         cost_center_id,
         total_amount,
+        initialPaid,
         discount,
         date,
         invoice_number,
+        initialStatus,
       ]);
       const newPurchase = purchaseResult.rows[0];
 
@@ -41,7 +47,7 @@ class PurchaseRepository {
         client,
         newPurchase.id,
         items,
-        tenant_id
+        tenant_id,
       );
 
       await client.query("COMMIT");
@@ -72,8 +78,7 @@ class PurchaseRepository {
         UPDATE purchase
         SET party_id = $1, total_amount = $2,
             discount = $3, date = $4, done_by_id = $5, cost_center_id = $6, invoice_number = $7
-        WHERE id = $8 AND tenant_id = $9
-        RETURNING *;
+        WHERE id = $8 AND tenant_id = $9;
       `;
       await client.query(updatePurchaseQuery, [
         party_id,
@@ -101,90 +106,91 @@ class PurchaseRepository {
   }
 
   async getById(db, id, tenantId) {
-    const query = `
-      SELECT 
+    const { rows } = await db.query(
+      `SELECT 
          p.*, 
          pa.name as party_name,
-         pa.ledger_id as party_ledger_id,
+         pa.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
          db.name as done_by_name,
          cc.name as cost_center_name,
          (
-           SELECT json_group_array(
-             json_object(
-               'id', pi.id,
-               'item_id', pi.item_id,
-               'item_name', i.name,
-               'item_tax', i.tax,
-               'quantity', pi.quantity,
-               'unit_price', pi.unit_price,
-               'total_price', pi.total_price
-             )
-           )
-           FROM purchase_item pi
-           JOIN item i ON pi.item_id = i.id
-           WHERE pi.purchase_id = p.id
+           SELECT json_agg(pi_agg)
+           FROM (
+             SELECT
+               pi.id,
+               pi.item_id,
+               i.name as item_name,
+               i.tax as item_tax,
+               pi.quantity,
+               pi.unit_price,
+               pi.total_price
+             FROM purchase_item pi
+             JOIN item i ON pi.item_id = i.id
+             WHERE pi.purchase_id = p.id
+           ) as pi_agg
          ) as items,
          (
-          SELECT json_group_array(
-            json_object(
-              'account_id', v.from_ledger_id,
-              'account_name', l.name,
-              'amount', vt.received_amount,
-              'mode_of_payment_id', v.mode_of_payment_id,
-              'voucher_no', v.voucher_no,
-              'payment_date', v.date
-            )
-          )
-          FROM voucher_transactions vt
-          JOIN voucher v ON vt.voucher_id = v.id
-          JOIN ledger l ON v.from_ledger_id = l.id
-          WHERE CAST(vt.invoice_id AS INTEGER) = p.id 
-            AND vt.invoice_type = 'PURCHASE'
-            AND v.tenant_id = $2
+          SELECT json_agg(payment_agg)
+          FROM (
+            SELECT
+              v.id as voucher_id, -- Make sure this is selected!
+              v.from_ledger_id as account_id,
+              l.name as account_name,
+              vt.received_amount as amount,
+              v.mode_of_payment_id,
+              v.voucher_no,
+              v.date as payment_date
+            FROM voucher_transactions vt
+            JOIN voucher v ON vt.voucher_id = v.id
+            JOIN ledger l ON v.from_ledger_id = l.id
+            WHERE vt.invoice_id::integer = p.id 
+              AND vt.invoice_type = 'PURCHASE'
+              AND v.tenant_id = $2
+          ) as payment_agg
         ) as payment_methods
        FROM purchase p
        LEFT JOIN party pa ON p.party_id = pa.id
        LEFT JOIN "done_by" db ON p.done_by_id = db.id
        LEFT JOIN "cost_center" cc ON p.cost_center_id = cc.id
-       WHERE p.id = $1 AND p.tenant_id = $2;
-    `;
-    const { rows } = await db.query(query, [id, tenantId]);
+       WHERE p.id = $1 AND p.tenant_id = $2`,
+      [id, tenantId],
+    );
     return rows[0];
   }
 
   async delete(db, id, tenantId) {
     const { rows } = await db.query(
       "DELETE FROM purchase WHERE id = $1 AND tenant_id = $2 RETURNING id",
-      [id, tenantId]
+      [id, tenantId],
     );
     return rows[0];
   }
 
   async getByUserId(db, tenantId, filters = {}) {
-    const { sort, searchType, searchKey, ids, ...otherFilters } = filters;
+    const { sort, searchType, searchKey, ids, ...otherFilters } = filters; // <<< MODIFIED: ADD ids
     const statusColumn = `p.status`;
 
     let query = `
             SELECT 
                 p.*, 
                 pa.name as party_name,
-                pa.ledger_id as party_ledger_id,
+                pa.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
                 db.name as done_by_name,
                 cc.name as cost_center_name,
                 (
-                  SELECT json_group_array(
-                    json_object(
-                      'account_id', v.from_ledger_id,
-                      'account_name', l.name,
-                      'amount', vt.received_amount,
-                      'mode_of_payment_id', v.mode_of_payment_id
-                    )
-                  )
-                  FROM voucher_transactions vt
-                  JOIN voucher v ON vt.voucher_id = v.id
-                  JOIN ledger l ON v.from_ledger_id = l.id
-                  WHERE CAST(vt.invoice_id AS INTEGER) = p.id 
-                    AND vt.invoice_type = 'PURCHASE'
+                  SELECT json_agg(payment_agg)
+                  FROM (
+                    SELECT
+                      v.from_ledger_id as account_id,
+                      l.name as account_name,
+                      vt.received_amount as amount,
+                      v.mode_of_payment_id
+                    FROM voucher_transactions vt
+                    JOIN voucher v ON vt.voucher_id = v.id
+                    JOIN ledger l ON v.from_ledger_id = l.id
+                    WHERE vt.invoice_id::integer = p.id 
+                      AND vt.invoice_type = 'PURCHASE'
+                  ) as payment_agg
                 ) as payment_methods
             FROM purchase p
             LEFT JOIN party pa ON p.party_id = pa.id 
@@ -219,16 +225,18 @@ class PurchaseRepository {
           query += ` AND EXISTS (
             SELECT 1 FROM voucher_transactions vt
             JOIN voucher v ON vt.voucher_id = v.id
-            WHERE CAST(vt.invoice_id AS INTEGER) = p.id 
+            WHERE vt.invoice_id::integer = p.id 
             AND vt.invoice_type = 'PURCHASE' 
-            AND v.from_ledger_id = $${paramIndex++}
+            AND v.from_ledger_id = $${paramIndex}
           )`;
           params.push(otherFilters[key]);
+          paramIndex++;
         } else if (key === "status") {
-          const statuses = otherFilters[key].split(",").map((s) => s.trim());
-          const placeholders = statuses.map(() => `$${paramIndex++}`).join(", ");
-          query += ` AND ${statusColumn} IN (${placeholders})`;
-          params.push(...statuses);
+          const statuses = otherFilters[key]
+            .split(",")
+            .map((s) => s.trim().toLowerCase());
+          query += ` AND ${filterConfig.status.column} = ANY($${paramIndex++})`;
+          params.push(statuses);
         } else {
           const { operator, column } = filterConfig[key];
           query += ` AND ${column} ${operator} $${paramIndex++}`;
@@ -236,32 +244,35 @@ class PurchaseRepository {
         }
       }
     });
-    
-    if (ids) {
-        let idArray = [];
-        if (Array.isArray(ids)) {
-            idArray = ids.map(id => parseInt(id)).filter(id => !isNaN(id));
-        } else if (typeof ids === 'string') {
-            idArray = ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-        }
 
-        if (idArray.length > 0) {
-            const placeholders = idArray.map(() => `$${paramIndex++}`).join(", ");
-            query += ` AND p.id IN (${placeholders})`;
-            params.push(...idArray);
-        }
+    // Logic for the 'ids' filter <<< NEW LOGIC
+    if (ids) {
+      let idArray = [];
+      if (Array.isArray(ids)) {
+        idArray = ids.map((id) => parseInt(id)).filter((id) => !isNaN(id));
+      } else if (typeof ids === "string") {
+        idArray = ids
+          .split(",")
+          .map((id) => parseInt(id.trim()))
+          .filter((id) => !isNaN(id));
+      }
+
+      if (idArray.length > 0) {
+        query += ` AND p.id = ANY($${paramIndex++})`;
+        params.push(idArray);
+      }
     }
 
     if (searchType && searchKey != null && searchKey !== "") {
       const searchConfig = {
-        party_name: { operator: "LIKE", column: "pa.name" },
+        party_name: { operator: "ILIKE", column: "pa.name" },
         total_amount: { operator: "=", column: "p.total_amount" },
-        invoice_number: { operator: "LIKE", column: "p.invoice_number" },
-        status: { operator: "LIKE", column: statusColumn },
+        invoice_number: { operator: "ILIKE", column: "p.invoice_number" },
+        status: { operator: "ILIKE", column: statusColumn },
       };
       if (searchConfig[searchType]) {
         const { operator, column } = searchConfig[searchType];
-        const value = operator === "LIKE" ? `%${searchKey}%` : searchKey;
+        const value = operator === "ILIKE" ? `%${searchKey}%` : searchKey;
         query += ` AND ${column} ${operator} $${paramIndex++}`;
         params.push(value);
       }
@@ -287,7 +298,9 @@ class PurchaseRepository {
       RETURNING id, paid_amount, total_amount, status;
     `;
     const { rows } = await client.query(query, [amountChange, id]);
-    if (rows.length === 0) throw new Error(`Purchase with ID ${id} not found.`);
+    if (rows.length === 0) {
+      throw new Error(`Purchase with ID ${id} not found for payment update.`);
+    }
     return rows[0];
   }
 
@@ -339,16 +352,20 @@ class PurchaseRepository {
           whereClause += ` AND EXISTS (
             SELECT 1 FROM voucher_transactions vt
             JOIN voucher v ON vt.voucher_id = v.id
-            WHERE CAST(vt.invoice_id AS INTEGER) = p.id 
+            WHERE vt.invoice_id::integer = p.id 
             AND vt.invoice_type = 'PURCHASE' 
-            AND v.from_ledger_id = $${paramIndex++}
+            AND v.from_ledger_id = $${paramIndex}
           )`;
           params.push(otherFilters[key]);
+          paramIndex++;
         } else if (key === "status") {
-          const statuses = otherFilters[key].split(",").map((s) => s.trim());
-          const placeholders = statuses.map(() => `$${paramIndex++}`).join(", ");
-          whereClause += ` AND ${statusColumn} IN (${placeholders})`;
-          params.push(...statuses);
+          const statuses = otherFilters[key]
+            .split(",")
+            .map((s) => s.trim().toLowerCase());
+          whereClause += ` AND ${
+            filterConfig.status.column
+          } = ANY($${paramIndex++})`;
+          params.push(statuses);
         } else {
           const { operator, column, isString } = filterConfig[key];
           let value = otherFilters[key];
@@ -361,14 +378,14 @@ class PurchaseRepository {
 
     if (searchType && searchKey != null && searchKey !== "") {
       const searchConfig = {
-        party_name: { operator: "LIKE", column: "pa.name" },
+        party_name: { operator: "ILIKE", column: "pa.name" },
         total_amount: { operator: "=", column: "p.total_amount" },
-        invoice_number: { operator: "LIKE", column: "p.invoice_number" },
-        status: { operator: "LIKE", column: statusColumn },
+        invoice_number: { operator: "ILIKE", column: "p.invoice_number" },
+        status: { operator: "ILIKE", column: statusColumn },
       };
       if (searchConfig[searchType]) {
         const { operator, column } = searchConfig[searchType];
-        const value = operator === "LIKE" ? `%${searchKey}%` : searchKey;
+        const value = operator === "ILIKE" ? `%${searchKey}%` : searchKey;
         whereClause += ` AND ${column} ${operator} $${paramIndex++}`;
         params.push(value);
       }
@@ -386,28 +403,52 @@ class PurchaseRepository {
       SELECT 
           p.*, 
           pa.name as party_name,
-          pa.ledger_id as party_ledger_id,
+          pa.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
           db.name as done_by_name,
           cc.name as cost_center_name,
+          COUNT(*) OVER() AS total_count,
           (
-            SELECT json_group_array(
-              json_object(
-                'account_id', v.from_ledger_id,
-                'account_name', l.name,
-                'amount', vt.received_amount,
-                'mode_of_payment_id', v.mode_of_payment_id
-              )
-            )
-            FROM voucher_transactions vt
-            JOIN voucher v ON vt.voucher_id = v.id
-            JOIN ledger l ON v.from_ledger_id = l.id
-            WHERE CAST(vt.invoice_id AS INTEGER) = p.id AND vt.invoice_type = 'PURCHASE'
+            SELECT json_agg(payment_agg)
+            FROM (
+              SELECT
+                v.from_ledger_id as account_id,
+                l.name as account_name,
+                vt.received_amount as amount,
+                v.mode_of_payment_id
+              FROM voucher_transactions vt
+              JOIN voucher v ON vt.voucher_id = v.id
+              JOIN ledger l ON v.from_ledger_id = l.id
+              WHERE vt.invoice_id::integer = p.id AND vt.invoice_type = 'PURCHASE'
+            ) as payment_agg
           ) as payment_methods
       ${fromAndJoins}
       ${whereClause}
     `;
 
-    mainQuery += " ORDER BY p.date DESC, p.id DESC";
+    const allowedSortColumns = {
+      party_name: "pa.name",
+      date: "p.date",
+      total_amount: "p.total_amount",
+      discount: "p.discount",
+      paid_amount: "p.paid_amount",
+      due_amount: "(p.total_amount - p.paid_amount)",
+      done_by: "db.name",
+      cost_center: "cc.name",
+      invoice_number: "p.invoice_number",
+      status: statusColumn,
+    };
+    if (sort) {
+      const direction = sort.startsWith("-") ? "DESC" : "ASC";
+      const columnKey = sort.substring(sort.startsWith("-") ? 1 : 0);
+      if (allowedSortColumns[columnKey]) {
+        mainQuery += ` ORDER BY ${allowedSortColumns[columnKey]} ${direction}, p.id DESC`;
+      } else {
+        mainQuery += " ORDER BY p.date DESC, p.id DESC";
+      }
+    } else {
+      mainQuery += " ORDER BY p.date DESC, p.id DESC";
+    }
+
     mainQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     const mainQueryParams = [...params, limit, offset];
 
@@ -419,9 +460,12 @@ class PurchaseRepository {
     const { rows } = mainResult;
     const aggregationData = aggregationResult.rows[0];
 
+    const totalCount = rows.length > 0 ? parseInt(rows[0].total_count, 10) : 0;
+    const purchases = rows.map(({ total_count, ...rest }) => rest);
+
     return {
-      purchases: rows,
-      totalCount: rows.length > 0 ? 1000 : 0, // Placeholder for total count if needed
+      purchases,
+      totalCount,
       total_amount: aggregationData.total_amount,
       paid_amount: aggregationData.paid_amount,
     };
@@ -429,14 +473,23 @@ class PurchaseRepository {
 
   async decreaseItemQuantity(db, purchaseId, itemId, quantityToDecrease) {
     const query = `UPDATE purchase_item SET quantity = quantity - $1 WHERE purchase_id = $2 AND item_id = $3 AND quantity >= $1 RETURNING id;`;
-    const { rows } = await db.query(query, [quantityToDecrease, purchaseId, itemId]);
-    if (rows.length === 0) throw new Error("Return failed.");
+    const { rows } = await db.query(query, [
+      quantityToDecrease,
+      purchaseId,
+      itemId,
+    ]);
+    if (rows.length === 0)
+      throw new Error("Return failed. Quantity too high or item not found.");
     return rows[0];
   }
 
   async increaseItemQuantity(db, purchaseId, itemId, quantityToIncrease) {
     const query = `UPDATE purchase_item SET quantity = quantity + $1 WHERE purchase_id = $2 AND item_id = $3 RETURNING id;`;
-    const { rows } = await db.query(query, [quantityToIncrease, purchaseId, itemId]);
+    const { rows } = await db.query(query, [
+      quantityToIncrease,
+      purchaseId,
+      itemId,
+    ]);
     if (rows.length === 0) throw new Error("Failed to restore item quantity.");
     return rows[0];
   }

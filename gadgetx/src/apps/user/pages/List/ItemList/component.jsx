@@ -8,12 +8,12 @@ import React, {
 } from "react";
 import { useSearchParams } from "react-router-dom";
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
-import useItemPaginated from "@/hooks/api/item/useItemPaginated";
-import useDeleteItem from "@/hooks/api/item/useDeleteItem";
+import useItemPaginated from "@/apps/user/hooks/api/item/useItemPaginated";
+import useDeleteItem from "@/apps/user/hooks/api/item/useDeleteItem";
 import { Transaction } from "@/constants/object/transaction";
 import { useIsMobile } from "@/utils/useIsMobile";
-import { useCategorys } from "@/hooks/api/category/useCategorys";
-import { useBrands } from "@/hooks/api/brand/useBrands";
+import { useCategorys } from "@/apps/user/hooks/api/category/useCategorys";
+import { useBrands } from "@/apps/user/hooks/api/brand/useBrands";
 import DoneByAutoComplete from "@/apps/user/components/DoneByAutoComplete";
 import CostCenterAutoComplete from "@/apps/user/components/CostCenterAutoComplete";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
@@ -54,11 +54,11 @@ import { useToast } from "@/context/ToastContext";
 import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import Spacer from "@/components/Spacer";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import ExportMenu from "@/components/ExportMenu";
-import { useItemExportAndPrint } from "@/hooks/api/exportAndPrint/useItemExportAndPrint";
+import { useItemExportAndPrint } from "@/apps/user/hooks/api/exportAndPrint/useItemExportAndPrint";
 
 const stateReducer = (state, newState) => ({ ...state, ...newState });
 
@@ -106,7 +106,6 @@ const ItemRow = React.memo(
       <Td>{item.brand_name || "N/A"}</Td>
       <Td>{item.done_by_name || "N/A"}</Td>
       <Td>{item.cost_center_name || "N/A"}</Td>
-      <Td>{item.unit_name || "N/A"}</Td>
       <Td>{item.bar_code || "N/A"}</Td>
       <Td>{item.stock_quantity}</Td>
       <Td>{item.selling_price}</Td>
@@ -131,7 +130,7 @@ const MobileItem = React.memo(({ item, onView, onEdit, onDelete }) => (
         <div>Brand: {item.brand_name || "No Brand"}</div>
         {item.category_name && <div>Category: {item.category_name}</div>}
         <div style={{ color: "var(--color-neutral-600)" }}>
-          Stock: {item.stock_quantity} {item.unit_name || ""}
+          Stock: {item.stock_quantity}
         </div>
       </>
     }
@@ -710,7 +709,7 @@ const ItemList = () => {
                           </ThFilterContainer>
                         </ThContainer>
                       </Th>
-                      <Th>Unit</Th>
+
                       <Th>
                         <ThContainer>
                           Barcode

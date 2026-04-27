@@ -1,13 +1,13 @@
-import { useState, useEffect, forwardRef, useRef, useMemo } from 'react';
-import { useExpenseTypes } from '@/hooks/api/expenseType/useExpenseTypes';
-import AddExpenseType from '@/apps/user/pages/List/ExpenseTypeList/components/AddExpenseType';
-import { HiPencil } from 'react-icons/hi2';
+import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
+import { useExpenseTypes } from "@/apps/user/hooks/api/expenseType/useExpenseTypes";
+import AddExpenseType from "@/apps/user/pages/List/ExpenseTypeList/components/AddExpenseType";
+import { HiPencil } from "react-icons/hi2";
 
 // 1. Import Custom Components
-import CustomTextField from '@/components/CustomTextField';
-import CustomScrollbar from '@/components/CustomScrollbar';
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
 
-import './style.scss';
+import "./style.scss";
 
 const ExpenseTypeAutoCompleteWithAddOption = forwardRef(
   (
@@ -15,23 +15,30 @@ const ExpenseTypeAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label='Expense Type',
-      placeholder = 'Select or add an expense type',
+      label = "Expense Type",
+      placeholder = "Select or add an expense type",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       filters = {},
       is_edit = true,
       style = {},
     },
-    ref,
+    ref
   ) => {
-    const { data: expenseTypes, isLoading, isError, error, refetch } = useExpenseTypes(filters);
+    const {
+      data: expenseTypes,
+      isLoading,
+      isError,
+      error,
+      refetch,
+    } = useExpenseTypes(filters);
     const [expenseTypeOptions, setExpenseTypeOptions] = useState([]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('add');
-    const [selectedExpenseTypeInModal, setSelectedExpenseTypeInModal] = useState(null);
+    const [modalMode, setModalMode] = useState("add");
+    const [selectedExpenseTypeInModal, setSelectedExpenseTypeInModal] =
+      useState(null);
 
     useEffect(() => {
       if (expenseTypes) {
@@ -45,17 +52,17 @@ const ExpenseTypeAutoCompleteWithAddOption = forwardRef(
 
     const handleAddNew = (typedValue) => {
       setSelectedExpenseTypeInModal({ name: typedValue });
-      setModalMode('add');
+      setModalMode("add");
       setIsModalOpen(true);
     };
 
     const handleEdit = (option) => {
       const expenseTypeToEdit = expenseTypes.find(
-        (type) => type.id === option.value,
+        (type) => type.id === option.value
       );
       if (expenseTypeToEdit) {
         setSelectedExpenseTypeInModal(expenseTypeToEdit);
-        setModalMode('edit');
+        setModalMode("edit");
         setIsModalOpen(true);
       }
     };
@@ -93,7 +100,7 @@ const ExpenseTypeAutoCompleteWithAddOption = forwardRef(
     }
 
     if (isError) {
-      console.error('Failed to load expense types:', error);
+      console.error("Failed to load expense types:", error);
       return (
         <div className="expensetypeinput-select">
           <CustomTextField
@@ -136,9 +143,10 @@ const ExpenseTypeAutoCompleteWithAddOption = forwardRef(
         />
       </>
     );
-  },
+  }
 );
-ExpenseTypeAutoCompleteWithAddOption.displayName = 'ExpenseTypeAutoCompleteWithAddOption';
+ExpenseTypeAutoCompleteWithAddOption.displayName =
+  "ExpenseTypeAutoCompleteWithAddOption";
 
 export default ExpenseTypeAutoCompleteWithAddOption;
 
@@ -150,28 +158,28 @@ const ExpenseTypeSelectAutocompleteInput = forwardRef(
       onChange,
       options,
       label,
-      placeholder = '',
+      placeholder = "",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       onAddNew,
       onEdit,
       is_edit,
       style = {},
       ...rest
     },
-    ref,
+    ref
   ) => {
     const [showDropdown, setShowDropdown] = useState(false);
-    const [inputValue, setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // REMOVED: dropdownRef and scrolling useEffect
     const hasBeenFocused = useRef(false);
 
     useEffect(() => {
       const selectedOption = options.find((opt) => opt.value === value);
-      setInputValue(selectedOption ? selectedOption.label : '');
+      setInputValue(selectedOption ? selectedOption.label : "");
     }, [value, options]);
 
     const filteredOptions = useMemo(() => {
@@ -179,16 +187,16 @@ const ExpenseTypeSelectAutocompleteInput = forwardRef(
         return options;
       }
       return options.filter((opt) =>
-        opt.label.toLowerCase().includes(inputValue.toLowerCase()),
+        opt.label.toLowerCase().includes(inputValue.toLowerCase())
       );
     }, [inputValue, options]);
 
     const exactMatchExists = useMemo(
       () =>
         options.some(
-          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim(),
+          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase().trim()
         ),
-      [inputValue, options],
+      [inputValue, options]
     );
 
     const showAddNewOption = inputValue && !exactMatchExists && onAddNew;
@@ -200,7 +208,7 @@ const ExpenseTypeSelectAutocompleteInput = forwardRef(
       setShowDropdown(true);
 
       if (currentInput.length === 0) {
-        onChange({ target: { name, value: '' } });
+        onChange({ target: { name, value: "" } });
       }
     };
 
@@ -240,17 +248,17 @@ const ExpenseTypeSelectAutocompleteInput = forwardRef(
       if (itemsCount === 0) return;
 
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           setActiveIndex(
-            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount,
+            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
           );
           break;
-        case 'Enter':
+        case "Enter":
           if (activeIndex < 0) return;
           e.preventDefault();
           if (activeIndex < filteredOptions.length) {
@@ -259,7 +267,7 @@ const ExpenseTypeSelectAutocompleteInput = forwardRef(
             handleAddNew();
           }
           break;
-        case 'Escape':
+        case "Escape":
           setShowDropdown(false);
           break;
         default:
@@ -268,9 +276,7 @@ const ExpenseTypeSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
-        style={{ ...style, position: 'relative' }}
-      >
+      <div style={{ ...style, position: "relative" }}>
         <CustomTextField
           ref={ref}
           id={name}
@@ -307,7 +313,7 @@ const ExpenseTypeSelectAutocompleteInput = forwardRef(
                     handleSelectOption(opt);
                   }}
                   className={`expensetypeinput-select__option ${
-                    index === activeIndex ? 'active' : ''
+                    index === activeIndex ? "active" : ""
                   }`}
                 >
                   <div className="expensetypeinput-select__option-content">
@@ -327,11 +333,11 @@ const ExpenseTypeSelectAutocompleteInput = forwardRef(
             ) : showAddNewOption ? (
               <li
                 onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleAddNew();
+                  e.preventDefault();
+                  handleAddNew();
                 }}
                 className={`expensetypeinput-select__option expensetypeinput-select__option--add ${
-                  activeIndex === 0 ? 'active' : ''
+                  activeIndex === 0 ? "active" : ""
                 }`}
               >
                 + Add "{inputValue}"
@@ -341,7 +347,8 @@ const ExpenseTypeSelectAutocompleteInput = forwardRef(
         )}
       </div>
     );
-  },
+  }
 );
 
-ExpenseTypeSelectAutocompleteInput.displayName = 'ExpenseTypeSelectAutocompleteInput';
+ExpenseTypeSelectAutocompleteInput.displayName =
+  "ExpenseTypeSelectAutocompleteInput";

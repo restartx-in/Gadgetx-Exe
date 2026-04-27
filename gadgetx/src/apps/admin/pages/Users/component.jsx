@@ -1,18 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
-import useUsers from '@/hooks/api/user/useUsers'
-import useDeleteUser from '@/hooks/api/user/useDeleteUser'
-import { useIsMobile } from '@/utils/useIsMobile'
-import PageHeader from '@/components/PageHeader'
-import PageTitleWithBackButton from '@/components/PageTitleWithBackButton'
-import PopupFilter from '@/components/PopUpFilter'
-import RefreshButton from '@/components/RefreshButton'
-import SearchField from '@/components/SearchField'
-import AddButton from '@/components/AddButton'
-import Select from '@/components/Select'
-import MobileSearchField from '@/components/MobileSearchField'
-import CommonSkeleton from '@/components/CommonSkeleton'
+import useUsers from "@/apps/user/hooks/api/user/useUsers";
+import useDeleteUser from "@/apps/user/hooks/api/user/useDeleteUser";
+import { useIsMobile } from "@/utils/useIsMobile";
+import PageHeader from "@/components/PageHeader";
+import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
+import PopupFilter from "@/components/PopUpFilter";
+import RefreshButton from "@/components/RefreshButton";
+import PopupSearchField from "@/components/PopupSearchField";
+import AddButton from "@/components/AddButton";
+import Select from "@/components/Select";
+import MobileSearchField from "@/components/MobileSearchField";
+import CommonSkeleton from "@/apps/user/components/CommonSkeleton";
 import {
   Table,
   Thead,
@@ -24,60 +24,60 @@ import {
   ThSL,
   TdMenu,
   ThMenu,
-} from '@/components/Table'
-import TableFooter from '@/components/TableFooter'
-import TableWrapper from '@/components/TableWrapper'
-import Spacer from '@/components/Spacer'
+} from "@/components/Table";
+import TableFooter from "@/components/TableFooter";
+import TableWrapper from "@/components/TableWrapper";
+import Spacer from "@/components/Spacer";
 
-import ContainerWrapper from '@/components/ContainerWrapper'
-import VStack from '@/components/VStack'
-import HStack from '@/components/HStack'
-import ListItem from '@/apps/user/components/ListItem/component'
-import ScrollContainer from '@/components/ScrollContainer'
-import { useToast } from '@/context/ToastContext'
-import { CRUDTYPE, CRUDITEM } from '@/constants/object/crud'
-import { TOASTTYPE, TOASTSTATUS } from '@/constants/object/toastType'
-import './style.scss'
+import ContainerWrapper from "@/components/ContainerWrapper";
+import VStack from "@/components/VStack";
+import HStack from "@/components/HStack";
+import ListItem from "@/components/ListItem/component";
+import ScrollContainer from "@/components/ScrollContainer";
+import { useToast } from "@/context/ToastContext";
+import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
+import { TOASTTYPE, TOASTSTATUS } from "@/constants/object/toastType";
+import "./style.scss";
 
 const roleOptions = [
-  { value: '', label: 'All Roles' },
-  { value: 'admin', label: 'Administrator' },
-  { value: 'user', label: 'Standard User' },
-]
+  { value: "", label: "All Roles" },
+  { value: "admin", label: "Administrator" },
+  { value: "user", label: "Standard User" },
+];
 
-const searchOptions = [{ value: 'username', name: 'Username' }]
+const searchOptions = [{ value: "username", name: "Username" }];
 
 const Users = () => {
-  const showToast = useToast()
+  const showToast = useToast();
 
-  const navigate = useNavigate()
-  const isMobile = useIsMobile()
-  const searchRef = useRef(null)
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const searchRef = useRef(null);
 
-  const [showFilter, setShowFilter] = useState(false)
-  const [listData, setListData] = useState([])
-  const [role, setRole] = useState('')
-  const [searchKey, setSearchKey] = useState('')
+  const [showFilter, setShowFilter] = useState(false);
+  const [listData, setListData] = useState([]);
+  const [role, setRole] = useState("");
+  const [searchKey, setSearchKey] = useState("");
 
   const [state, setState] = useState({
     page: 1,
     page_size: 10,
-    user_type: '',
-    username: '',
-  })
+    user_type: "",
+    username: "",
+  });
 
-  const { data, isLoading, isError, error, refetch } = useUsers(state)
+  const { data, isLoading, isError, error, refetch } = useUsers(state);
 
-  const [totalPages, setTotalPages] = useState(0)
-  const [totalItems, setTotalItems] = useState(0)
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     if (data) {
-      setListData(data.data || [])
-      setTotalItems(data.count || 0)
-      setTotalPages(data.page_count || 1)
+      setListData(data.data || []);
+      setTotalItems(data.count || 0);
+      setTotalPages(data.page_count || 1);
     }
-  }, [data])
+  }, [data]);
 
   const handleFilter = () => {
     setState({
@@ -85,105 +85,105 @@ const Users = () => {
       page: 1,
       user_type: role,
       username: searchKey,
-    })
-    setShowFilter(false)
-  }
+    });
+    setShowFilter(false);
+  };
 
   const handleSearch = () => {
     setState({
       ...state,
       page: 1,
       username: searchKey,
-    })
-  }
+    });
+  };
 
   const handleRefresh = () => {
-    setRole('')
-    setSearchKey('')
-    if (searchRef.current) searchRef.current.value = ''
+    setRole("");
+    setSearchKey("");
+    if (searchRef.current) searchRef.current.value = "";
 
     setState({
       page: 1,
       page_size: 10,
-      user_type: '',
-      username: '',
-    })
-  }
+      user_type: "",
+      username: "",
+    });
+  };
 
   const handlePageLimitSelect = (value) => {
-    setState({ ...state, page_size: value, page: 1 })
-  }
+    setState({ ...state, page_size: value, page: 1 });
+  };
 
   const handlePageChange = (value) => {
-    setState({ ...state, page: value })
-  }
+    setState({ ...state, page: value });
+  };
 
-  const handleAddClick = () => navigate('/admin/users/add')
-  const handleEditClick = (id) => navigate(`/admin/users/edit/${id}`)
+  const handleAddClick = () => navigate("/admin/users/add");
+  const handleEditClick = (id) => navigate(`/admin/users/edit/${id}`);
 
   const handleViewClick = (id) => {
-    navigate(`/admin/users/edit/${id}`, { state: { viewMode: true } })
-  }
+    navigate(`/admin/users/edit/${id}`, { state: { viewMode: true } });
+  };
 
-  const { mutateAsync: deleteUser } = useDeleteUser()
+  const { mutateAsync: deleteUser } = useDeleteUser();
 
   const handleDelete = async (id) => {
     try {
-      await deleteUser(id)
+      await deleteUser(id);
       showToast({
         crudItem: CRUDITEM.USER,
         crudType: CRUDTYPE.DELETE_SUCCESS,
-      })
-      refetch()
+      });
+      refetch();
     } catch (error) {
       showToast({
         type: TOASTTYPE.GENARAL,
-        message: error.response?.data?.error || 'Failed to delete the expense.',
+        message: error.response?.data?.error || "Failed to delete the expense.",
         status: TOASTSTATUS.ERROR,
-      })
+      });
     }
-  }
+  };
 
-  if (isLoading && !data) return <CommonSkeleton />
-  if (isError) return <p>Error fetching users: {error.message}</p>
+  if (isLoading && !data) return <CommonSkeleton />;
+  if (isError) return <p>Error fetching users: {error.message}</p>;
 
   return (
     <ContainerWrapper>
       {!isMobile ? (
         <>
           <PageTitleWithBackButton title="Users" />
-            <PageHeader>
-              <HStack
-                justifyContent="flex-start"
-                className="vehicle_report-actions"
+          <PageHeader>
+            <HStack
+              justifyContent="flex-start"
+              className="vehicle_report-actions"
+            >
+              <PopupFilter
+                isOpen={showFilter}
+                setIsOpen={setShowFilter}
+                onApply={handleFilter}
               >
-                <PopupFilter
-                  isOpen={showFilter}
-                  setIsOpen={setShowFilter}
-                  onApply={handleFilter}
-                >
-                  <VStack>
-                    <Select
-                      label="Role"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      options={roleOptions}
-                    />
-                  </VStack>
-                </PopupFilter>
-                <RefreshButton onClick={handleRefresh} />
-                <SearchField
-                  searchKey={searchKey}
-                  setSearchKey={setSearchKey}
-                  searchType={'username'}
-                  setSearchType={() => {}}
-                  handleSearch={handleSearch}
-                  searchOptions={searchOptions}
-                  searchRef={searchRef}
-                />
-                <AddButton onClick={handleAddClick}>Add User</AddButton>
-              </HStack>
-            </PageHeader>
+                <VStack>
+                  <Select
+                    label="Role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    options={roleOptions}
+                  />
+                </VStack>
+              </PopupFilter>
+              <RefreshButton onClick={handleRefresh} />
+              <PopupSearchField
+                searchKey={searchKey}
+                setSearchKey={setSearchKey}
+                searchType={"username"}
+                setSearchType={() => {}}
+                handleSearch={handleSearch}
+                searchOptions={searchOptions}
+                searchRef={searchRef}
+              />
+              <AddButton onClick={handleAddClick}>Add User</AddButton>
+            </HStack>
+          </PageHeader>
           {listData.length === 0 ? (
             <div className="users_list-no_data_message">No users found.</div>
           ) : (
@@ -207,12 +207,12 @@ const Users = () => {
                     />
                     <Td>{user.username}</Td>
                     <Td>
-                      {user.user_type === 'admin'
-                        ? 'Administrator'
-                        : 'Standard User'}
+                      {user.user_type === "admin"
+                        ? "Administrator"
+                        : "Standard User"}
                     </Td>
                     <Td>
-                      {new Date(user.created_at).toLocaleDateString('en-IN')}
+                      {new Date(user.created_at).toLocaleDateString("en-IN")}
                     </Td>
                     <TdMenu
                       onEdit={() => handleEditClick(user.id)}
@@ -262,7 +262,7 @@ const Users = () => {
                 <MobileSearchField
                   searchKey={searchKey}
                   setSearchKey={setSearchKey}
-                  searchType={'username'}
+                  searchType={"username"}
                   setSearchType={() => {}}
                   handleSearch={handleSearch}
                   searchOptions={searchOptions}
@@ -289,17 +289,17 @@ const Users = () => {
                       subtitle={
                         <>
                           <div>
-                            Role:{' '}
-                            <span style={{ textTransform: 'capitalize' }}>
-                              {user.user_type === 'admin'
-                                ? 'Administrator'
-                                : 'Standard User'}
+                            Role:{" "}
+                            <span style={{ textTransform: "capitalize" }}>
+                              {user.user_type === "admin"
+                                ? "Administrator"
+                                : "Standard User"}
                             </span>
                           </div>
                           <div>
-                            Joined:{' '}
+                            Joined:{" "}
                             {new Date(user.created_at).toLocaleDateString(
-                              'en-IN',
+                              "en-IN"
                             )}
                           </div>
                         </>
@@ -327,7 +327,7 @@ const Users = () => {
         </>
       )}
     </ContainerWrapper>
-  )
-}
+  );
+};
 
-export default Users
+export default Users;

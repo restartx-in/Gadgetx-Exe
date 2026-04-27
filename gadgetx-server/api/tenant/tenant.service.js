@@ -5,11 +5,11 @@ class TenantService {
     this.userRepository = userRepository // Injected RoleRepository
   }
 
-  async create(tenantData, db) {
-    const tenant = await this.tenantRepository.create(db, tenantData)
-    const role = await this.createAdminRuleForTenant(tenant.id, db)
+  async create(tenantData) {
+    const tenant = await this.tenantRepository.create(tenantData)
+    const role = await this.createAdminRuleForTenant(tenant.id)
     const { username, password } = tenantData
-    const user = await this.userRepository.create(db, {
+    const user = await this.userRepository.create({
       username,
       password,
       tenant_id: tenant.id,
@@ -18,31 +18,31 @@ class TenantService {
     return tenant
   }
 
-  async createAdminRuleForTenant(tenant_id, db) {
+  async createAdminRuleForTenant(tenant_id) {
     const roleData = { name: 'admin', tenant_id, permissions: {} }
-    return await this.roleRepository.create(db, roleData)
+    return await this.roleRepository.create(roleData)
   }
 
-  async getAll(filters, db) {
-    return await this.tenantRepository.getAll(db, filters)
+  async getAll(filters) {
+    return await this.tenantRepository.getAll(filters)
   }
 
-  async getById(id, db) {
-    const tenant = await this.tenantRepository.getById(db, id)
+  async getById(id) {
+    const tenant = await this.tenantRepository.getById(id)
     if (!tenant) {
       throw new Error('Tenant not found')
     }
     return tenant
   }
 
-  async update(id, tenantData, db) {
-    await this.getById(id, db)
-    const updatedTenant = await this.tenantRepository.update(db, id, tenantData)
+  async update(id, tenantData) {
+    await this.getById(id)
+    const updatedTenant = await this.tenantRepository.update(id, tenantData)
     return updatedTenant
   }
 
-  async delete(id, db) {
-    return await this.tenantRepository.delete(db, id)
+  async delete(id) {
+    return await this.tenantRepository.delete(id)
   }
 }
 

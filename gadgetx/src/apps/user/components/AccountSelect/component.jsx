@@ -1,17 +1,17 @@
-import useAccounts from '@/hooks/api/account/useAccounts';  
-import Select from '@/components/Select'; 
-import './style.scss';
+import useAccounts from "@/apps/user/hooks/api/account/useAccounts";
+import Select from "@/components/Select";
+import "./style.scss";
 
 const AccountSelect = ({
   name,
   value,
   onChange,
   label,
-  placeholder = 'Select an Account',
+  placeholder = "Select an Account",
   required = false,
   disabled = false,
-  className = '',
-  filters = {},  
+  className = "",
+  filters = {},
 }) => {
   const { data: accounts, isLoading, isError, error } = useAccounts(filters);
 
@@ -20,19 +20,23 @@ const AccountSelect = ({
       <div className={`custom_select_wrapperr ${className}`}>
         {label && <label className="custom_select_label">{label}</label>}
         <div className="custom_select_headerr disabled">
-          <span className="custom_select_headerr_title">Loading accounts...</span>
+          <span className="custom_select_headerr_title">
+            Loading accounts...
+          </span>
         </div>
       </div>
-    );  
+    );
   }
 
   if (isError) {
-    console.error('Failed to load accounts:', error);
+    console.error("Failed to load accounts:", error);
     return (
-       <div className={`custom_select_wrapperr ${className}`}>
+      <div className={`custom_select_wrapperr ${className}`}>
         {label && <label className="custom_select_label">{label}</label>}
         <div className="custom_select_headerr disabled error">
-          <span className="custom_select_headerr_title">Error loading accounts</span>
+          <span className="custom_select_headerr_title">
+            Error loading accounts
+          </span>
         </div>
       </div>
     );
@@ -40,7 +44,7 @@ const AccountSelect = ({
 
   const accountOptions = (accounts || []).map((account) => ({
     value: account.id,
-    label: `${account.name} (${account.type})`,  
+    label: `${account.name} (${account.type})`,
   }));
 
   return (

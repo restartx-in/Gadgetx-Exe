@@ -6,16 +6,20 @@ import React, {
   useReducer,
   useCallback,
 } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { FaTrash } from "react-icons/fa";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { FaTrash, FaPrint } from "react-icons/fa";
 
 // Hooks & Context
-import { usePurchases } from "@/hooks/api/purchase/usePurchases";
-import { useVoucherById } from "@/hooks/api/voucher/useVoucherById";
-import { useCreateVoucher } from "@/hooks/api/voucher/useCreateVoucher";
-import { useUpdateVoucher } from "@/hooks/api/voucher/useUpdateVoucher";
-import { useDeleteVoucher } from "@/hooks/api/voucher/useDeleteVoucher";
+import { usePurchases } from "@/apps/user/hooks/api/purchase/usePurchases";
+import { useVoucherById } from "@/apps/user/hooks/api/voucher/useVoucherById";
+import { useCreateVoucher } from "@/apps/user/hooks/api/voucher/useCreateVoucher";
+import { useUpdateVoucher } from "@/apps/user/hooks/api/voucher/useUpdateVoucher";
+import { useDeleteVoucher } from "@/apps/user/hooks/api/voucher/useDeleteVoucher";
 import { useToast } from "@/context/ToastContext";
+import { onFormError } from "@/utils/formUtils"; // Added for consistent error handling
 
 // Constants & Components
 import { CRUDITEM, CRUDTYPE } from "@/constants/object/crud";
@@ -33,11 +37,13 @@ import SupplierAutocomplete from "@/apps/user/components/SupplierAutocomplete";
 import DoneByAutoCompleteWithAddOption from "@/apps/user/components/DoneByAutoCompleteWithAddOption";
 import CostCenterAutoCompleteWithAddOption from "@/apps/user/components/CostCenterAutoCompleteWithAddOption";
 import LedgerAutoCompleteWithAddOptionWithBalance from "@/apps/user/components/LedgerAutoCompleteWithAddOptionWithBalance";
-import CancelButton from "@/apps/user/components/CancelButton";
-import SubmitButton from "@/apps/user/components/SubmitButton";
+import CancelButton from "@/components/CancelButton";
+import SubmitButton from "@/components/SubmitButton";
+import Button from "@/components/Button";
 import Loader from "@/components/Loader";
-import DeleteConfirmationModal from "@/components/DeleteConfirmationModal/component";
-import ViewReportButton from "@/components/ViewButtonForReceiptAndPayment";
+import DeleteConfirmationModal from "@/apps/user/components/DeleteConfirmationModal/component";
+import ViewReportButton from "@/apps/user/components/ViewButtonForReceiptAndPayment";
+import ReceiptModal from "@/apps/user/components/ReceiptModal";
 import {
   Table,
   Thead,
@@ -47,53 +53,45 @@ import {
   Th,
   TableCaption,
 } from "@/components/Table";
-import AmountSymbol from "@/components/AmountSymbol";
-import TextBadge from "@/apps/user/components/TextBadge";
+import AmountSymbol from "@/apps/user/components/AmountSymbol";
+import TextBadge from "@/components/TextBadge";
 
 import "./style.scss";
 
-const initialState = {
-  form: {
-    voucher_no: "",
-    date: new Date().toISOString(),
-    party_id: "",
-    from_ledger_id: "",
-    to_ledger_id: "",
-    cost_center_id: "",
-    done_by_id: "",
-    description: "",
-  },
+// --- Zod Schema ---
+const voucherSchema = z.object({
+  to_ledger_id: z
+    .union([z.string(), z.number()])
+    .refine((val) => val !== "" && val !== null && val !== undefined, {
+      message: "To Ledger (Supplier) is required",
+    }),
+  from_ledger_id: z
+    .union([z.string(), z.number()])
+    .refine((val) => val !== "" && val !== null && val !== undefined, {
+      message: "From Ledger is required",
+    }),
+  voucher_no: z.string().min(1, "Payment No is required"),
+  date: z.string(),
+  party_id: z.any().optional(),
+  cost_center_id: z.any().optional().nullable(),
+  done_by_id: z.any().optional().nullable(),
+  description: z.string().optional(),
+});
+
+// --- Reducer for Invoice List Logic ---
+const invoiceInitialState = {
   purchaseInvoices: [],
-  referencedPurchaseIds: [], // Used to trigger API call in edit/view mode
+  referencedPurchaseIds: [],
 };
 
-const reducer = (state, action) => {
+const invoiceReducer = (state, action) => {
   switch (action.type) {
-    case "INITIALIZE_FORM_FROM_VOUCHER": {
-      const voucherData = action.payload;
-      const partyIdForFiltering = voucherData.to_ledger_id;
-      const ids = (voucherData.transactions || [])
-        .filter((t) => t.invoice_type === "PURCHASE")
-        .map((t) => parseInt(t.invoice_id));
-      return {
-        ...state,
-        form: {
-          voucher_no: voucherData.voucher_no,
-          date: voucherData.date,
-          party_id: partyIdForFiltering,
-          from_ledger_id: voucherData.from_ledger_id,
-          to_ledger_id: voucherData.to_ledger_id,
-          cost_center_id: voucherData.cost_center_id || "",
-          done_by_id: voucherData.done_by_id || "",
-          description: voucherData.description || "",
-        },
-        referencedPurchaseIds: ids,
-      };
-    }
+    case "SET_REFERENCED_IDS":
+      return { ...state, referencedPurchaseIds: action.payload };
+
     case "MERGE_VOUCHER_PURCHASES": {
-      const voucherPurchases = action.payload.voucherPurchases;
-      const transactions = action.payload.voucherData.transactions || [];
-      const txMap = transactions.reduce((map, t) => {
+      const { voucherPurchases, voucherData } = action.payload;
+      const txMap = (voucherData.transactions || []).reduce((map, t) => {
         map[parseInt(t.invoice_id)] = parseFloat(t.received_amount || 0);
         return map;
       }, {});
@@ -124,38 +122,23 @@ const reducer = (state, action) => {
       });
       return { ...state, purchaseInvoices: mappedInvoices };
     }
+
     case "LOAD_SUPPLIER_PURCHASES": {
       const supplierPurchases = action.payload;
-      const mappedInvoices = supplierPurchases.map((inv) => {
-        const maxPayable =
-          parseFloat(inv.total_amount) - parseFloat(inv.paid_amount || 0);
-        return {
-          ...inv,
-          now_paying_amount: 0,
-          is_selected: false,
-          balance: maxPayable,
-          date: inv.date,
-          status: inv.status.toLowerCase(),
-        };
-      });
+      const mappedInvoices = supplierPurchases.map((inv) => ({
+        ...inv,
+        now_paying_amount: 0,
+        is_selected: false,
+        balance:
+          parseFloat(inv.total_amount) - parseFloat(inv.paid_amount || 0),
+        status: (inv.status || "unpaid").toLowerCase(),
+      }));
       return { ...state, purchaseInvoices: mappedInvoices };
     }
-    case "SET_SUPPLIER": {
-      const selectedSupplier = action.payload;
-      return {
-        ...state,
-        form: {
-          ...state.form,
-          party_id: selectedSupplier?.supplier_id || "",
-          to_ledger_id: selectedSupplier?.ledger_id || "",
-        },
-        purchaseInvoices: selectedSupplier ? state.purchaseInvoices : [], // Clear invoices if supplier is cleared
-      };
-    }
-    case "UPDATE_FORM_FIELD": {
-      const { name, value } = action.payload;
-      return { ...state, form: { ...state.form, [name]: value } };
-    }
+
+    case "CLEAR_INVOICES":
+      return { ...state, purchaseInvoices: [] };
+
     case "TOGGLE_SELECT_ALL": {
       const isChecked = action.payload;
       const newInvoices = state.purchaseInvoices.map((inv) => {
@@ -172,6 +155,7 @@ const reducer = (state, action) => {
       });
       return { ...state, purchaseInvoices: newInvoices };
     }
+
     case "UPDATE_INVOICE_PAYMENT": {
       const { purchaseId, amount, isCheckboxChange } = action.payload;
       const newInvoices = state.purchaseInvoices.map((inv) => {
@@ -180,7 +164,7 @@ const reducer = (state, action) => {
             parseFloat(inv.total_amount) - parseFloat(inv.paid_amount || 0);
           let newPayingAmount = 0;
           if (isCheckboxChange) {
-            newPayingAmount = amount ? maxPayable : 0; // 'amount' here is the isChecked boolean
+            newPayingAmount = amount ? maxPayable : 0;
           } else {
             const payingAmount = parseFloat(amount) || 0;
             newPayingAmount = Math.min(Math.max(0, payingAmount), maxPayable);
@@ -197,6 +181,7 @@ const reducer = (state, action) => {
       });
       return { ...state, purchaseInvoices: newInvoices };
     }
+
     default:
       return state;
   }
@@ -205,18 +190,45 @@ const reducer = (state, action) => {
 const PaymentAgainstPurchase = () => {
   const { id, mode } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const showToast = useToast();
   const isViewMode = mode === "view";
   const isEditMode = mode === "edit";
 
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [invoiceState, dispatch] = useReducer(
+    invoiceReducer,
+    invoiceInitialState,
+  );
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const headerCheckboxRef = useRef(null);
+  const supplierRef = useRef(null); // Ref for Supplier field
 
-  // --- Data Fetching ---
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [selectedVoucherForPrint, setSelectedVoucherForPrint] = useState(null);
+
+  // UPDATED: Added shouldFocusError: false
+  const { control, handleSubmit, reset, watch, setValue, setFocus } = useForm({
+    resolver: zodResolver(voucherSchema),
+    shouldFocusError: false,
+    defaultValues: {
+      voucher_no: "",
+      date: new Date().toISOString(),
+      party_id: "",
+      from_ledger_id: "",
+      to_ledger_id: "",
+      cost_center_id: "",
+      done_by_id: "",
+      description: "",
+    },
+  });
+
+  const watchedPartyId = watch("party_id");
+  const watchedVoucherNo = watch("voucher_no");
+
   const { data: voucherData, isLoading: isFetchingVoucher } = useVoucherById(
     id,
-    { enabled: !!id }
+    { enabled: !!id },
   );
   const { mutateAsync: createVoucher, isPending: isCreating } =
     useCreateVoucher();
@@ -227,25 +239,40 @@ const PaymentAgainstPurchase = () => {
 
   const { data: voucherPurchases, isLoading: isFetchingVoucherPurchases } =
     usePurchases(
-      { ids: state.referencedPurchaseIds.join(","), status: "" },
+      { ids: invoiceState.referencedPurchaseIds.join(","), status: "" },
       {
         enabled:
-          (isEditMode || isViewMode) && state.referencedPurchaseIds.length > 0,
-      }
+          (isEditMode || isViewMode) &&
+          invoiceState.referencedPurchaseIds.length > 0,
+      },
     );
 
   const { data: supplierPurchases, isLoading: isPurchasesLoading } =
     usePurchases(
-      { party_id: state.form.party_id, status: "unpaid,partial" },
-      { enabled: !!state.form.party_id && !isEditMode && !isViewMode }
+      { party_id: watchedPartyId, status: "unpaid,partial" },
+      {
+        enabled: !!watchedPartyId && !isEditMode && !isViewMode,
+      },
     );
 
-  // --- Side Effects to Sync API Data with Reducer State ---
   useEffect(() => {
     if (voucherData && (isEditMode || isViewMode)) {
-      dispatch({ type: "INITIALIZE_FORM_FROM_VOUCHER", payload: voucherData });
+      reset({
+        voucher_no: voucherData.voucher_no,
+        date: voucherData.date,
+        party_id: "",
+        from_ledger_id: voucherData.from_ledger_id,
+        to_ledger_id: voucherData.to_ledger_id,
+        cost_center_id: voucherData.cost_center_id || "",
+        done_by_id: voucherData.done_by_id || "",
+        description: voucherData.description || "",
+      });
+      const ids = (voucherData.transactions || [])
+        .filter((t) => t.invoice_type === "PURCHASE")
+        .map((t) => parseInt(t.invoice_id));
+      dispatch({ type: "SET_REFERENCED_IDS", payload: ids });
     }
-  }, [voucherData, isEditMode, isViewMode]);
+  }, [voucherData, isEditMode, isViewMode, reset]);
 
   useEffect(() => {
     if ((isEditMode || isViewMode) && voucherPurchases && voucherData) {
@@ -262,30 +289,95 @@ const PaymentAgainstPurchase = () => {
     }
   }, [supplierPurchases, isEditMode, isViewMode]);
 
-  // --- Memoized Callbacks for Event Handlers ---
-  const handleFormChange = useCallback(
-    (e) =>
-      dispatch({
-        type: "UPDATE_FORM_FIELD",
-        payload: { name: e.target.name, value: e.target.value },
-      }),
-    []
+  const totalNowPaying = useMemo(
+    () =>
+      invoiceState.purchaseInvoices.reduce(
+        (sum, inv) => sum + inv.now_paying_amount,
+        0,
+      ),
+    [invoiceState.purchaseInvoices],
   );
-  const handleDateChange = useCallback(
-    (d) =>
-      dispatch({
-        type: "UPDATE_FORM_FIELD",
-        payload: { name: "date", value: d.toISOString() },
-      }),
-    []
-  );
+
+  const handlePrint = useCallback(() => {
+    if (!voucherData) {
+      showToast({
+        message: "Voucher data not available to print.",
+        status: TOASTSTATUS.WARNING,
+      });
+      return;
+    }
+    const formattedData = {
+      id: voucherData.id,
+      invoice_number: voucherData.voucher_no,
+      date: voucherData.date,
+      partner: {
+        label: `Paid to (Supplier)`,
+        name: voucherData.to_ledger_name,
+      },
+      items: invoiceState.purchaseInvoices
+        .filter((inv) => inv.now_paying_amount > 0)
+        .map((inv) => ({
+          name: `Payment for Invoice #${inv.invoice_number}`,
+          quantity: 1,
+          price: inv.now_paying_amount,
+        })),
+      summary: {
+        subTotal: totalNowPaying,
+        grandTotal: totalNowPaying,
+        orderTax: 0,
+        discount: 0,
+        shipping: 0,
+      },
+      payment: {
+        amountPaid: totalNowPaying,
+        changeReturn: 0,
+      },
+      payment_methods: [
+        {
+          amount: totalNowPaying,
+          mode_of_payment: voucherData.from_ledger_name || "N/A",
+        },
+      ],
+    };
+    setSelectedVoucherForPrint(formattedData);
+    setIsReceiptModalOpen(true);
+  }, [voucherData, invoiceState.purchaseInvoices, totalNowPaying, showToast]);
+
+  useEffect(() => {
+    if (
+      isViewMode &&
+      location.state?.print &&
+      voucherData &&
+      !isFetchingVoucher
+    ) {
+      handlePrint();
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [
+    isViewMode,
+    location.state,
+    voucherData,
+    isFetchingVoucher,
+    handlePrint,
+    navigate,
+  ]);
+
   const handleSupplierChange = useCallback(
-    (supplier) => dispatch({ type: "SET_SUPPLIER", payload: supplier }),
-    []
+    (supplier) => {
+      setValue("party_id", supplier?.supplier_id || "", {
+        shouldValidate: true,
+      });
+      setValue("to_ledger_id", supplier?.ledger_id || "", {
+        shouldValidate: true,
+      });
+      if (!supplier) dispatch({ type: "CLEAR_INVOICES" });
+    },
+    [setValue],
   );
+
   const handleSelectAll = useCallback(
     (isChecked) => dispatch({ type: "TOGGLE_SELECT_ALL", payload: isChecked }),
-    []
+    [],
   );
   const handleCheckboxChange = useCallback(
     (purchaseId, isChecked) =>
@@ -293,7 +385,7 @@ const PaymentAgainstPurchase = () => {
         type: "UPDATE_INVOICE_PAYMENT",
         payload: { purchaseId, amount: isChecked, isCheckboxChange: true },
       }),
-    []
+    [],
   );
   const handlePaymentChange = useCallback(
     (purchaseId, amount) =>
@@ -301,69 +393,101 @@ const PaymentAgainstPurchase = () => {
         type: "UPDATE_INVOICE_PAYMENT",
         payload: { purchaseId, amount, isCheckboxChange: false },
       }),
-    []
+    [],
   );
 
-  const handleSubmit = useCallback(async () => {
-    const transactions = state.purchaseInvoices
-      .filter((inv) => inv.now_paying_amount > 0)
-      .map((inv) => ({
-        invoice_id: String(inv.id),
-        invoice_type: "PURCHASE",
-        received_amount: inv.now_paying_amount,
-      }));
+  // UPDATED: Manual validation handler for toast and focus
+  const handleValidationError = (errors) => {
+    onFormError(errors, showToast);
 
-    if (transactions.length === 0) {
-      showToast({
-        type: TOASTTYPE.GENARAL,
-        message: "Please select at least one invoice to pay.",
-        status: TOASTSTATUS.WARNING,
-      });
+    // Prioritize focus based on visual order
+    if (errors.to_ledger_id) { // Supplier field
+      supplierRef.current?.focus?.();
       return;
     }
-
-    const total = transactions.reduce((sum, t) => sum + t.received_amount, 0);
-    const payload = {
-      amount: total,
-      date: state.form.date,
-      description: state.form.description,
-      voucher_no: state.form.voucher_no,
-      voucher_type: 0,
-      cost_center_id: state.form.cost_center_id || null,
-      done_by_id: state.form.done_by_id || null,
-      from_ledger: { ledger_id: state.form.from_ledger_id, amount: total },
-      to_ledger: { ledger_id: state.form.to_ledger_id, amount: total },
-      transactions,
-    };
-
-    try {
-      const action = isEditMode
-        ? updateVoucher({ id, voucherData: payload })
-        : createVoucher(payload);
-      await action;
-      showToast({
-        crudItem: CRUDITEM.VOUCHER,
-        crudType: isEditMode
-          ? CRUDTYPE.UPDATE_SUCCESS
-          : CRUDTYPE.CREATE_SUCCESS,
-      });
-      navigate("/payment-report");
-    } catch (err) {
-      showToast({
-        type: TOASTTYPE.GENARAL,
-        message: "Action failed",
-        status: TOASTSTATUS.ERROR,
-      });
+    if (errors.from_ledger_id) {
+      setFocus("from_ledger_id");
+      return;
     }
-  }, [
-    state,
-    isEditMode,
-    id,
-    navigate,
-    showToast,
-    createVoucher,
-    updateVoucher,
-  ]);
+    if (errors.voucher_no) {
+      setFocus("voucher_no");
+      return;
+    }
+  };
+
+  const onFormSubmit = useCallback(
+    async (data, andPrint = false) => {
+      const transactions = invoiceState.purchaseInvoices
+        .filter((inv) => inv.now_paying_amount > 0)
+        .map((inv) => ({
+          invoice_id: String(inv.id),
+          invoice_type: "PURCHASE",
+          received_amount: inv.now_paying_amount,
+        }));
+
+      if (transactions.length === 0) {
+        showToast({
+          type: TOASTTYPE.GENARAL,
+          message: "Please select at least one invoice to pay.",
+          status: TOASTSTATUS.WARNING,
+        });
+        return;
+      }
+
+      const total = transactions.reduce((sum, t) => sum + t.received_amount, 0);
+      const payload = {
+        amount: total,
+        date: data.date,
+        description: data.description,
+        voucher_no: data.voucher_no,
+        voucher_type: 0,
+        cost_center_id: data.cost_center_id || null,
+        done_by_id: data.done_by_id || null,
+        from_ledger: { ledger_id: data.from_ledger_id, amount: total },
+        to_ledger: { ledger_id: data.to_ledger_id, amount: total },
+        transactions,
+      };
+
+      try {
+        const response = isEditMode
+          ? await updateVoucher({ id, voucherData: payload })
+          : await createVoucher(payload);
+
+        const voucherId = isEditMode ? id : response?.id || response?.data?.id;
+
+        showToast({
+          crudItem: CRUDITEM.VOUCHER,
+          crudType: isEditMode
+            ? CRUDTYPE.UPDATE_SUCCESS
+            : CRUDTYPE.CREATE_SUCCESS,
+        });
+
+        if (andPrint && voucherId) {
+          navigate(`/payment-against-purchase/view/${voucherId}`, {
+            replace: true,
+            state: { print: true },
+          });
+        } else {
+          navigate("/payment-report");
+        }
+      } catch (err) {
+        showToast({
+          type: TOASTTYPE.GENARAL,
+          message: "Action failed",
+          status: TOASTSTATUS.ERROR,
+        });
+      }
+    },
+    [
+      invoiceState.purchaseInvoices,
+      isEditMode,
+      id,
+      navigate,
+      showToast,
+      createVoucher,
+      updateVoucher,
+    ],
+  );
 
   const handleDelete = useCallback(async () => {
     try {
@@ -382,23 +506,13 @@ const PaymentAgainstPurchase = () => {
     }
   }, [id, deleteVoucher, navigate, showToast]);
 
-  // --- Memoized Derived State ---
-  const totalNowPaying = useMemo(
-    () =>
-      state.purchaseInvoices.reduce(
-        (sum, inv) => sum + inv.now_paying_amount,
-        0
-      ),
-    [state.purchaseInvoices]
-  );
-
   const headerCheckboxState = useMemo(() => {
-    const payableInvoices = state.purchaseInvoices.filter(
+    const payableInvoices = invoiceState.purchaseInvoices.filter(
       (inv) =>
-        parseFloat(inv.total_amount) - parseFloat(inv.paid_amount || 0) > 0
+        parseFloat(inv.total_amount) - parseFloat(inv.paid_amount || 0) > 0,
     );
     const selectedPayableInvoices = payableInvoices.filter(
-      (inv) => inv.is_selected
+      (inv) => inv.is_selected,
     );
     if (payableInvoices.length === 0)
       return { checked: false, indeterminate: false, disabled: true };
@@ -409,7 +523,7 @@ const PaymentAgainstPurchase = () => {
       indeterminate: selectedPayableInvoices.length > 0 && !allSelected,
       disabled: isViewMode,
     };
-  }, [state.purchaseInvoices, isViewMode]);
+  }, [invoiceState.purchaseInvoices, isViewMode]);
 
   useEffect(() => {
     if (headerCheckboxRef.current) {
@@ -421,7 +535,8 @@ const PaymentAgainstPurchase = () => {
   const isLoading =
     isFetchingVoucher || isPurchasesLoading || isFetchingVoucherPurchases;
 
-  if (isLoading && state.purchaseInvoices.length === 0) return <Loader />;
+  if (isLoading && invoiceState.purchaseInvoices.length === 0)
+    return <Loader />;
 
   return (
     <ContainerWrapper>
@@ -437,7 +552,7 @@ const PaymentAgainstPurchase = () => {
               <PageTitle
                 title={
                   mode
-                    ? `${mode.toUpperCase()} Payment`
+                    ? `${mode.charAt(0).toUpperCase() + mode.slice(1)} Payment`
                     : "Payment Against Purchase"
                 }
               />
@@ -451,11 +566,12 @@ const PaymentAgainstPurchase = () => {
         <ScrollContainer>
           <div className="receipt-against-sale__content">
             <div className="receipt-against-sale__form-panel">
-              <VStack>
+              <VStack spacing={10}>
                 {!isViewMode && !isEditMode ? (
                   <SupplierAutocomplete
+                    ref={supplierRef} // Attached ref
                     label="To Ledger (Supplier)"
-                    value={state.form.party_id}
+                    value={watchedPartyId}
                     onChange={handleSupplierChange}
                     required
                   />
@@ -466,54 +582,85 @@ const PaymentAgainstPurchase = () => {
                     readOnly
                   />
                 )}
-                <LedgerAutoCompleteWithAddOptionWithBalance
-                  label="From Ledger (Bank/Cash)"
+                <Controller
                   name="from_ledger_id"
-                  value={state.form.from_ledger_id}
-                  onChange={handleFormChange}
-                  required
-                  disabled={isViewMode}
+                  control={control}
+                  render={({ field }) => (
+                    <LedgerAutoCompleteWithAddOptionWithBalance
+                      {...field}
+                      label="From Ledger (Bank/Cash)"
+                      required
+                      disabled={isViewMode}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                  )}
                 />
               </VStack>
-              <VStack>
-                <DateField
-                  label="Date"
-                  value={new Date(state.form.date)}
-                  onChange={handleDateChange}
-                  disabled={isViewMode}
+              <VStack spacing={10}>
+                <Controller
+                  name="description"
+                  control={control}
+                  render={({ field }) => (
+                    <TextArea
+                      {...field}
+                      label="Description"
+                      multiline
+                      rows={1}
+                      disabled={isViewMode}
+                    />
+                  )}
                 />
-                <InputField
-                  label="Payment No"
+                <Controller
                   name="voucher_no"
-                  value={state.form.voucher_no}
-                  onChange={handleFormChange}
-                  required
-                  disabled={isViewMode}
+                  control={control}
+                  render={({ field }) => (
+                    <InputField
+                      {...field}
+                      label="Payment No"
+                      required
+                      disabled={isViewMode}
+                    />
+                  )}
                 />
               </VStack>
-              <VStack>
-                <CostCenterAutoCompleteWithAddOption
-                  value={state.form.cost_center_id}
-                  onChange={handleFormChange}
+              <VStack spacing={10}>
+                <Controller
                   name="cost_center_id"
-                  disabled={isViewMode}
+                  control={control}
+                  render={({ field }) => (
+                    <CostCenterAutoCompleteWithAddOption
+                      {...field}
+                      disabled={isViewMode}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                  )}
                 />
-                <DoneByAutoCompleteWithAddOption
-                  value={state.form.done_by_id}
-                  onChange={handleFormChange}
+                <Controller
                   name="done_by_id"
-                  disabled={isViewMode}
+                  control={control}
+                  render={({ field }) => (
+                    <DoneByAutoCompleteWithAddOption
+                      {...field}
+                      disabled={isViewMode}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                  )}
                 />
               </VStack>
-              <TextArea
-                label="Description"
-                name="description"
-                value={state.form.description}
-                onChange={handleFormChange}
-                multiline
-                rows={3}
-                disabled={isViewMode}
-              />
+              <VStack spacing={10}>
+                <Controller
+                  name="date"
+                  control={control}
+                  render={({ field }) => (
+                    <DateField
+                      label="Date"
+                      value={new Date(field.value)}
+                      onChange={(d) => field.onChange(d.toISOString())}
+                      disabled={isViewMode}
+                    />
+                  )}
+                />
+              </VStack>
             </div>
 
             <div className="receipt-against-sale__table-panel">
@@ -541,14 +688,14 @@ const PaymentAgainstPurchase = () => {
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {!state.form.party_id && !id ? (
+                    {!watchedPartyId && !id ? (
                       <TableCaption
                         item="Invoices"
                         noOfCol={8}
                         message="Select a supplier to view pending invoices."
                       />
-                    ) : state.purchaseInvoices.length > 0 ? (
-                      state.purchaseInvoices.map((inv) => {
+                    ) : invoiceState.purchaseInvoices.length > 0 ? (
+                      invoiceState.purchaseInvoices.map((inv) => {
                         const maxPayable =
                           parseFloat(inv.total_amount) -
                           parseFloat(inv.paid_amount || 0);
@@ -624,19 +771,44 @@ const PaymentAgainstPurchase = () => {
         <div className="receipt-against-sale__actions">
           <CancelButton onClick={() => navigate(-1)} />
           {isViewMode && (
-            <button
-              className="btn-delete"
-              onClick={() => setIsDeleteModalOpen(true)}
-            >
-              <FaTrash /> Delete
-            </button>
+            <>
+              <Button
+                className="btn-delete"
+                onClick={() => setIsDeleteModalOpen(true)}
+              >
+                <FaTrash /> Delete
+              </Button>
+              <Button
+                onClick={() => navigate(`/payment-against-purchase/edit/${id}`)}
+              >
+                Edit
+              </Button>
+              <Button onClick={handlePrint}>
+                <FaPrint style={{ marginRight: "8px" }} />
+                Print
+              </Button>
+            </>
           )}
           {!isViewMode && (
-            <SubmitButton
-              label={isEditMode ? "Update Payment" : "Create Payment"}
-              onClick={handleSubmit}
-              isLoading={isCreating || isUpdating}
-            />
+            <>
+              <SubmitButton
+                label={isEditMode ? "Update Payment" : "Create Payment"}
+                onClick={handleSubmit(
+                  (data) => onFormSubmit(data, false),
+                  handleValidationError, // Use manual handler
+                )}
+                isLoading={isCreating || isUpdating}
+              />
+              <Button
+                onClick={handleSubmit(
+                  (data) => onFormSubmit(data, true),
+                  handleValidationError, // Use manual handler
+                )}
+                disabled={isCreating || isUpdating}
+              >
+                {isEditMode ? "Update & Print" : "Submit & Print"}
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -645,7 +817,17 @@ const PaymentAgainstPurchase = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
         isLoading={isDeleting}
-        transactionName={state.form.voucher_no}
+        transactionName={watchedVoucherNo}
+      />
+      <ReceiptModal
+        isOpen={isReceiptModalOpen}
+        onClose={() => {
+          setIsReceiptModalOpen(false);
+          if (isViewMode) {
+            navigate("/payment-report");
+          }
+        }}
+        transactionData={selectedVoucherForPrint}
       />
     </ContainerWrapper>
   );

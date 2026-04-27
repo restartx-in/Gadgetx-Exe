@@ -6,10 +6,12 @@ const ItemService = require("./item.service");
 const ItemController = require("./item.controller");
 const ItemValidator = require("./item.validator");
 const { upload } = require("../../middlewares/upload"); 
+const ItemCustomFieldValuesRepository = require("../itemCustomFieldValues/itemCustomFieldValues.repository");
 
 // Initialize without db injection
 const itemRepository = new ItemRepository();
-const itemService = new ItemService(itemRepository);
+const customFieldsRepo = new ItemCustomFieldValuesRepository();
+const itemService = new ItemService(itemRepository, customFieldsRepo);
 const itemController = new ItemController(itemService);
 const itemValidator = new ItemValidator();
 

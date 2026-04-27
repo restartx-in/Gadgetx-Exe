@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
-import './style.scss' 
-import { IoEyeOutline } from 'react-icons/io5'
-import { FaRegTrashCan } from 'react-icons/fa6'
-import { MdOutlineModeEdit } from 'react-icons/md'
-import { IoMdClose } from 'react-icons/io'
-import HStack from '@/components/HStack'
+import { useState, useEffect } from "react";
+import "./style.scss";
+import { IoEyeOutline } from "react-icons/io5";
+import { FaRegTrashCan } from "react-icons/fa6";
+import { MdOutlineModeEdit } from "react-icons/md";
+import { IoMdClose } from "react-icons/io";
+import HStack from "@/components/HStack";
 
 const TdMenuS = ({
   onEdit,
@@ -20,13 +20,13 @@ const TdMenuS = ({
           <button
             className="action_buttons-btn_view"
             style={{
-              height: '28px',
-              width: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              borderRadius: '7px',
+              height: "28px",
+              width: "28px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              borderRadius: "7px",
             }}
             onClick={onView}
           >
@@ -35,13 +35,13 @@ const TdMenuS = ({
           <button
             className="action_buttons-btn_edit"
             style={{
-              height: '28px',
-              width: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              borderRadius: '7px',
+              height: "28px",
+              width: "28px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              borderRadius: "7px",
             }}
             onClick={onEdit}
           >
@@ -55,10 +55,10 @@ const TdMenuS = ({
         </HStack>
       </div>
     </td>
-  )
-}
+  );
+};
 
-export default TdMenuS
+export default TdMenuS;
 
 const DeleteButtonWithModal = ({
   transaction,
@@ -66,43 +66,43 @@ const DeleteButtonWithModal = ({
   isDeleting = false,
 }) => {
   // Close on ESC
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape') setIsOpen(false)
-    }
-    if (isOpen) document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen])
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    if (isOpen) document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen]);
 
   // Prevent background scroll
   useEffect(() => {
-    if (isOpen) document.body.style.overflow = 'hidden'
+    if (isOpen) document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
   // Close modal
-  const onClose = () => setIsOpen(false)
+  const onClose = () => setIsOpen(false);
 
   // Overlay click closes modal
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) onClose()
-  }
+    if (e.target === e.currentTarget) onClose();
+  };
 
   return (
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          height: '28px',
-          width: '28px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          borderRadius: '7px',
+          height: "28px",
+          width: "28px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
+          borderRadius: "7px",
         }}
         className="btn_delete"
       >
@@ -138,19 +138,19 @@ const DeleteButtonWithModal = ({
               <button
                 className="popup_overlay__content-btn popup_overlay__content-apply"
                 onClick={() => {
-                  onDelete()
+                  onDelete();
                   setTimeout(() => {
-                    setIsOpen(false)
-                  }, 300)
+                    setIsOpen(false);
+                  }, 300);
                 }}
                 disabled={isDeleting}
               >
-                {isDeleting ? 'Deleting...' : 'Confirm'}
+                {isDeleting ? "Deleting..." : "Confirm"}
               </button>
             </div>
           </div>
         </div>
       )}
     </>
-  )
-}
+  );
+};

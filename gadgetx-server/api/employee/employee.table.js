@@ -1,16 +1,16 @@
 module.exports = async (client) => {
   try {
     const result = await client.query(`
-      SELECT name FROM sqlite_master WHERE type='table' AND name='employee';
+      SELECT to_regclass('public.employee') AS table_name;
     `)
 
-    const tableExists = result.rows.length > 0
+    const tableExists = result.rows[0].table_name !== null
     if (tableExists) {
       console.log('ℹ️ "employee" table already exists.')
     } else {
       await client.query(`
       CREATE TABLE employee (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         tenant_id INTEGER REFERENCES "tenant"(id) ON DELETE CASCADE, 
         name VARCHAR(100) NOT NULL,
         email VARCHAR(255) NOT NULL,
@@ -23,22 +23,19 @@ module.exports = async (client) => {
         hire_date DATE,
         photos TEXT,
         is_active BOOLEAN DEFAULT TRUE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (tenant_id, name)
       );
     `)
       console.log('✅ "employee" table created.')
 
-      const indexQueries = [
-        `CREATE INDEX idx_employee_tenant_id ON employee(tenant_id);`,
-        `CREATE INDEX idx_employee_position_id ON employee(employee_position_id);`,
-        `CREATE INDEX idx_employee_done_by_id ON employee(done_by_id);`,
-        `CREATE INDEX idx_employee_cost_center_id ON employee(cost_center_id);`
-      ];
-      for (let q of indexQueries) {
-        await client.query(q);
-      }
-      console.log('✅ Indexes for employee table created.')
+      await client.query(`
+        CREATE INDEX  idx_employee_tenant_id ON employee(tenant_id);
+        CREATE INDEX  idx_employee_position_id ON employee(employee_position_id);
+        CREATE INDEX  idx_employee_done_by_id ON employee(done_by_id);
+        CREATE INDEX  idx_employee_cost_center_id ON employee(cost_center_id);
+      `)
     }
   } catch (err) {
     console.error('❌ Error creating "employee" table:', err.message)

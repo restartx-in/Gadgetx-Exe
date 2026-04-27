@@ -29,6 +29,14 @@ export const getSaleMenuItems = (sale, handlers) => [
     onClick: () => handlers.onDownloadReceipt(sale.id),
   },
   {
+    label: 'Print Thermal Receipt',
+    icon: <FiPrinter size={16} />,
+    onClick: () =>
+      handlers.onDownloadThermalReceipt
+        ? handlers.onDownloadThermalReceipt(sale.id)
+        : handlers.onDownloadReceipt(sale.id),
+  },
+  {
     label: 'Show Payments',
     icon: <FiDollarSign size={16} />,
     onClick: () => handlers.onShowPayments(sale),
@@ -75,6 +83,11 @@ export const getSaleReturnMenuItems = (saleReturn, handlers) => [
     icon: <FiDollarSign size={16} />,
     onClick: () => handlers.onShowPayments(saleReturn),
   },
+  {
+    label: 'Print',
+    icon: <FiPrinter size={16} />,
+    onClick: () => handlers.onPrint(saleReturn),
+  },
 ]
 
 export const getPurchaseMenuItems = (purchase, handlers) => [
@@ -103,6 +116,11 @@ export const getPurchaseMenuItems = (purchase, handlers) => [
     icon: <FaRegEdit size={16} />,
     onClick: () => handlers.onEdit(purchase.id, purchase),
   },
+    {
+    label: 'Print',
+    icon: <FiPrinter size={16} />,
+    onClick: () => handlers.onPrint(purchase.id),
+  },
   {
     label: 'Delete Purchase',
     icon: <LuTrash2 size={16} />,
@@ -130,6 +148,11 @@ export const getPurchaseReturnMenuItems = (purchaseReturn, handlers) => [
     icon: <FiDollarSign size={16} />,
     onClick: () => handlers.onShowPayments(purchaseReturn),
   },
+    {
+    label: 'Print',
+    icon: <FiPrinter size={16} />,
+    onClick: () => handlers.onPrint(purchaseReturn),
+  }
 ]
 export const getJobSheetMenuItems = (jobsheet, handlers) => [
   {

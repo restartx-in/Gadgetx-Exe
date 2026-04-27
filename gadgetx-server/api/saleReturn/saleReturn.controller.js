@@ -14,6 +14,7 @@ class SaleReturnController {
 
     async update(req, res, next) {
         try {
+            // This is where it was crashing because 'this.service' was undefined
             const updatedReturn = await this.service.update(
                 req.params.id,
                 req.user,

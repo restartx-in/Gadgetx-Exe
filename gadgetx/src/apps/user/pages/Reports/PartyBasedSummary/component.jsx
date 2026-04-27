@@ -8,18 +8,18 @@ import React, {
 import { useSearchParams } from "react-router-dom";
 import { format, isValid } from "date-fns";
 
-import usePartySummary from "@/hooks/api/partySummary/usePartySummary";
+import usePartySummary from "@/apps/user/hooks/api/partySummary/usePartySummary";
 import { useIsMobile } from "@/utils/useIsMobile";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
 
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import DateFilter from "@/components/DateFilter";
 import RefreshButton from "@/components/RefreshButton";
 import Loader from "@/components/Loader";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PageHeader from "@/components/PageHeader";
 import HStack from "@/components/HStack/component.jsx";
 import {
@@ -40,7 +40,6 @@ import "./style.scss";
 const stateReducer = (state, newState) => ({ ...state, ...newState });
 
 const PartySummaryRow = React.memo(({ item, index }) => {
-
   return (
     <Tr>
       <TdSL index={index} />
@@ -138,7 +137,7 @@ const PartyBasedSummary = () => {
       isValid(new Date(endDate));
 
     return isDateFilterActive
-      ? `${format(new Date(startDate), "MMM d, yyyy")} → ${format(
+      ? `${format(new Date(startDate), "MMM d, yyyy")} to ${format(
           new Date(endDate),
           "MMM d, yyyy"
         )}`
@@ -154,7 +153,7 @@ const PartyBasedSummary = () => {
             subtitle={dateSubtitle}
           />
           <TableTopContainer
-            isMargin={true}
+            //isMargin={true}
             mainActions={
               <>
                 <DateFilter

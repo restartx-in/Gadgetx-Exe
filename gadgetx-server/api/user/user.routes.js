@@ -1,3 +1,4 @@
+
 const express = require('express')
 const router = express.Router()
 
@@ -11,11 +12,11 @@ const UserService = require('./user.service')
 const UserController = require('./user.controller')
 const TokenRepository = require('../token/token.repository')
 const TokenService = require('../token/token.service')
-// const db = require('../../config/db') // No longer needed here
+const db = require('../../config/db')
 
 // Dependency Injection
-const userRepository = new UserRepository()
-const tokenRepository = new TokenRepository()
+const userRepository = new UserRepository(db)
+const tokenRepository = new TokenRepository(db)
 const tokenService = new TokenService(tokenRepository, userRepository)
 const userService = new UserService(userRepository, tokenService)
 const userController = new UserController(userService)

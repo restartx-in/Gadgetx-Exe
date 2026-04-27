@@ -3,9 +3,9 @@
 module.exports = async (client) => {
   try {
     const result = await client.query(`
-      SELECT name FROM sqlite_master WHERE type='table' AND name='sales';
+      SELECT to_regclass('public.sales') AS table_name;
     `)
-    const tableExists = result.rows.length > 0
+    const tableExists = result.rows[0].table_name !== null
 
     if (tableExists) {
       console.log('ℹ️ "sales" table already exists.')
@@ -13,7 +13,7 @@ module.exports = async (client) => {
     } else {
       await client.query(`
         CREATE TABLE sales (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER REFERENCES "tenant"(id) ON DELETE CASCADE, 
           party_id INTEGER NOT NULL REFERENCES party(id), 
           done_by_id INTEGER REFERENCES "done_by"(id) ON DELETE SET NULL,
@@ -22,7 +22,7 @@ module.exports = async (client) => {
           paid_amount DECIMAL(10, 2) NOT NULL,
           change_return DECIMAL(10, 2) DEFAULT 0.00, -- <<< ADDED
           discount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-          date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           status VARCHAR(255) NOT NULL,
           invoice_number VARCHAR(100) NOT NULL,
           note TEXT DEFAULT NULL

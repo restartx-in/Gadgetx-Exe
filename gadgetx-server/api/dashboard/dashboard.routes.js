@@ -1,27 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const validateToken = require("../../middlewares/validateToken");
-// REMOVED: const db = require("../../config/db");
-
-const DashboardRepository = require("./dashboard.repository");
-const DashboardService = require("./dashboard.service");
 const DashboardController = require("./dashboard.controller");
+const validateToken = require("../../middlewares/validateToken");
 
-// Import Sales Service dependencies (though DashboardService only uses DashboardRepository based on provided code)
-const SalesRepository = require("../sales/sales.repository");
-const ItemRepository = require("../item/item.repository");
+const controller = new DashboardController();
 
-// Initialize dependencies (Stateless)
-const dashboardRepository = new DashboardRepository();
-const salesRepository = new SalesRepository();
-const itemRepository = new ItemRepository();
+router.use(validateToken);
 
-
-// Inject dependencies
-// Note: DashboardService constructor in provided file only takes dashboardRepository
-const dashboardService = new DashboardService(dashboardRepository); 
-const dashboardController = new DashboardController(dashboardService);
-
-router.get("/summary", validateToken, dashboardController.getSummary.bind(dashboardController));
+router.get("/financial-summary", (req, res, next) => controller.getFinancialSummary(req, res, next));
+router.get("/weekly-sales-purchases", (req, res, next) => controller.getWeeklySalesPurchases(req, res, next));
+router.get("/top-selling-products", (req, res, next) => controller.getTopSellingProducts(req, res, next));
+router.get("/stock-alerts", (req, res, next) => controller.getStockAlerts(req, res, next));
+router.get("/recent-sales", (req, res, next) => controller.getRecentSales(req, res, next));
+router.get("/recent-purchases", (req, res, next) => controller.getRecentPurchases(req, res, next));
 
 module.exports = router;

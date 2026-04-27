@@ -6,7 +6,6 @@ class ItemValidator {
       "category_id",
       "sku",
       "brand_id",
-      "unit_id",
       "stock_quantity",
       "purchase_price",
       "selling_price_with_tax", 
@@ -53,7 +52,6 @@ class ItemValidator {
       "party_id",
       "category_id",
       "brand_id",
-      "unit_id",
       "tax",
     ];
 

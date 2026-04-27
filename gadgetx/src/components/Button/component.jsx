@@ -4,6 +4,8 @@ import { FiTrash2 } from "react-icons/fi";
 import { LuEye } from "react-icons/lu";
 import { CiEdit } from "react-icons/ci";
 import { FiArrowLeft } from "react-icons/fi";
+import { FiPrinter } from "react-icons/fi";
+
 import './style.scss'
 
 const Button = ({
@@ -14,6 +16,7 @@ const Button = ({
   size = 'medium',
   disabled = false,
   className = '',
+  style = {},
   ...props
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -83,6 +86,17 @@ const Button = ({
       </>
     )
   }
+   else if (variant === 'print') {
+  buttonContent = (
+    <>
+      <span className="button-icon">
+        <FiPrinter className="w-5 h-5" />
+      </span>
+      <span className="button-text">{children}</span>
+    </>
+  )
+}
+
 
   return (
     <>
@@ -91,6 +105,7 @@ const Button = ({
         onClick={handleButtonClick}
         type={type}
         disabled={disabled}
+        style={style}
         {...props}
       >
         {buttonContent}

@@ -4,18 +4,9 @@ class AuthController {
     this.tokenService = tokenService;
   }
 
-  async signup(req, res, next) {
-    try {
-      const result = await this.service.signup(req.body, req.db);
-      res.status(201).json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
-
   async register(req, res, next) {
     try {
-      const user = await this.service.registerUser(req.body, req.db);
+      const user = await this.service.registerUser(req.body);
       res.status(201).json({
         id: user.id,
         username: user.username,
@@ -30,8 +21,7 @@ class AuthController {
   async login(req, res, next) {
     try {
       const { accessToken, refreshToken, user } = await this.service.login(
-        req.body,
-        req.db
+        req.body
       );
       res.json({
         message: "Login successful",
@@ -56,7 +46,7 @@ class AuthController {
       if (!refreshToken) {
         return res.status(400).json({ message: "Refresh token is required" });
       }
-      const tokens = await this.tokenService.refreshTokens(refreshToken, req.db);
+      const tokens = await this.tokenService.refreshTokens(refreshToken);
       res.json(tokens);
     } catch (error) {
       next(error);
@@ -69,7 +59,7 @@ class AuthController {
       if (!refreshToken) {
         return res.status(400).json({ message: "Refresh token is required" });
       }
-      await this.tokenService.removeRefreshToken(refreshToken, req.db);
+      await this.tokenService.removeRefreshToken(refreshToken);
       res.json({ message: "Logged out successfully" });
     } catch (error) {
       next(error);

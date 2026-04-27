@@ -1,7 +1,7 @@
 /* Wrapper for the date field */
 .date-field-wrapper {
   display: flex;
-  width: 190px;
+  width: 100%;
   height: 40px;
   background-color:var(--app-bg);
   border-radius: 8px;
@@ -24,14 +24,6 @@
   .MuiOutlinedInput-root {
     width: 100%;
     height: 100%;
-
-    .MuiOutlinedInput-notchedOutline {
-      border: none;
-    }
-
-    &:hover .MuiOutlinedInput-notchedOutline {
-      border: none;
-    }
   }
 
   .MuiInputBase-input {
@@ -75,7 +67,7 @@
 @media (max-width: 1024px) {
   .date-field-wrapper {
     max-width: 600px;
-    width: 165px;
+    width: 100%;
     .MuiSvgIcon-root {
       font-size: 17px;
     }

@@ -1,22 +1,26 @@
 import { useState, useEffect, useRef } from "react";
-import useCreateJobSheet from "@/hooks/api/jobSheets/useCreateJobSheet";
-import { useJobSheetInvoiceNo } from "@/hooks/api/jobSheetInvoiceNo/useJobSheetInvoiceNo";
-import useUpdateJobSheet from "@/hooks/api/jobSheets/useUpdateJobSheet";
-import useDeleteJobSheet from "@/hooks/api/jobSheets/useDeleteJobSheet";
-import { useCustomers } from "@/hooks/api/customer/useCustomers";
-import useEmployees from "@/hooks/api/employee/useEmployees";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import useCreateJobSheet from "@/apps/user/hooks/api/jobSheets/useCreateJobSheet";
+import { useJobSheetInvoiceNo } from "@/apps/user/hooks/api/jobSheetInvoiceNo/useJobSheetInvoiceNo";
+import useUpdateJobSheet from "@/apps/user/hooks/api/jobSheets/useUpdateJobSheet";
+import useDeleteJobSheet from "@/apps/user/hooks/api/jobSheets/useDeleteJobSheet";
+import { useCustomers } from "@/apps/user/hooks/api/customer/useCustomers";
+import useEmployees from "@/apps/user/hooks/api/employee/useEmployees";
 import DateField from "@/components/DateField";
 import Select from "@/components/Select";
 import HStack from "@/components/HStack";
 import TextArea from "@/components/TextArea";
-import CancelButton from "@/apps/user/components/CancelButton";
+import CancelButton from "@/components/CancelButton";
 import InputField from "@/components/InputField";
-import SubmitButton from "@/apps/user/components/SubmitButton";
-import DeleteTextButton from "@/apps/user/components/DeleteTextButton";
+import SubmitButton from "@/components/SubmitButton";
+import Button from "@/components/Button";
+import DeleteTextButton from "@/components/DeleteTextButton";
 import CustomerAutoCompleteWithAddOption from "@/apps/user/components/CustomerAutoCompleteWithAddOption";
 import DoneByAutoCompleteWithAddOption from "@/apps/user/components/DoneByAutoCompleteWithAddOption";
 import CostCenterAutoCompleteWithAddOption from "@/apps/user/components/CostCenterAutoCompleteWithAddOption";
-import Title from "@/apps/user/components/Title";
+import Title from "@/components/Title";
 import InputFieldWithCalculator from "@/apps/user/components/InputFieldWithCalculator";
 import { Modal, ModalHeader, ModalFooter, ModalBody } from "@/components/Modal";
 import { useToast } from "@/context/ToastContext";
@@ -28,13 +32,50 @@ import JobSheetInvoiceModal from "@/apps/user/components/JobSheetInvoiceModal";
 import AccountAutoCompleteWithAddOption from "@/apps/user/components/AccountAutoCompleteWithAddOption";
 import JsBarcode from "jsbarcode";
 import EmployeeAutoCompleteWithAddOption from "@/apps/user/components/EmployeeAutoCompleteWithAddOption";
-// IMPORT YOUR BUTTON
-import PrintBarcodeButton from "@/components/PrintBarcodeButton";
+import PrintBarcodeButton from "@/apps/user/components/PrintBarcodeButton";
 import { useIsMobile } from "@/utils/useIsMobile";
 
 import "./style.scss";
 
 const DRAFT_STORAGE_KEY = "job_sheet_form_draft";
+
+// 1. Define Zod Schema
+const jobSheetSchema = z
+  .object({
+    party_id: z
+      .union([z.string(), z.number()])
+      .refine((val) => val !== "" && val !== null, "Customer is required"),
+    item_name: z.string().min(1, "Item name is required"),
+    item_id: z.any().optional(),
+    servicer_id: z
+      .union([z.string(), z.number()])
+      .refine((val) => val !== "" && val !== null, "Servicer is required"),
+    bar_code: z.string().optional(),
+    issue_reported: z.string().min(1, "Issue description is required"),
+    diagnosis: z.string().optional(),
+    status: z.string().min(1, "Status is required"),
+    service_cost: z.coerce.number().min(0, "Service cost is required"),
+    service_charges: z.coerce.number().optional().default(0),
+    estimated_completion_date: z.string().nullable().optional(),
+    completion_date: z.string().nullable().optional(),
+    remarks: z.string().optional(),
+    done_by_id: z.any().optional().nullable(),
+    cost_center_id: z.any().optional().nullable(),
+    invoice_number: z.any().optional(),
+    account_id: z.any().refine((val) => val !== "" && val !== null, "Account is required"),
+  })
+  .refine(
+    (data) => {
+      if (data.status === "Completed") {
+        return data.account_id !== null && data.account_id !== "";
+      }
+      return true;
+    },
+    {
+      message: "Please Select Receiver Account when status is Completed",
+      path: ["account_id"],
+    },
+  );
 
 const LiveBarcodePreview = ({ value, options }) => {
   const barcodeRef = useRef(null);
@@ -65,7 +106,6 @@ const LiveBarcodePreview = ({ value, options }) => {
             ? options.customerName
             : ""}
         </span>
-        {/* NEW PHONE NUMBER DISPLAY IN PREVIEW */}
         <span
           className="customer-phone"
           style={{ fontSize: "12px", display: "block" }}
@@ -91,7 +131,18 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
   const itemNameRef = useRef(null);
   const barcodeRef = useRef(null);
 
-  const defaultForm = {
+  const [isOpenInvoiceModal, setIsOpenInvoiceModal] = useState(false);
+  const [invoiceData, setInvoiceData] = useState(null);
+
+  const [printOptions, setPrintOptions] = useState({
+    showCustomer: true,
+    showItem: true,
+    showPhone: true,
+  });
+
+  const disabled = mode === "view";
+
+  const defaultValues = {
     party_id: "",
     item_name: "",
     item_id: "",
@@ -111,17 +162,24 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
     account_id: null,
   };
 
-  const [form, setForm] = useState({ ...defaultForm });
-  const [isOpenInvoiceModal, setIsOpenInvoiceModal] = useState(false);
-  const [invoiceData, setInvoiceData] = useState(null);
-
-  const [printOptions, setPrintOptions] = useState({
-    showCustomer: true,
-    showItem: true,
-    showPhone: true, // New property
+  // 2. Setup React Hook Form
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(jobSheetSchema),
+    defaultValues,
   });
 
-  const disabled = mode === "view";
+  const watchedFormData = watch();
+  const watchedPartyId = watch("party_id");
+  const watchedBarcode = watch("bar_code");
+  const watchedItemName = watch("item_name");
 
   const { mutateAsync: createJobSheet, isPending: creating } =
     useCreateJobSheet();
@@ -130,7 +188,7 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
   const { mutateAsync: deleteJobSheet, isPending: deleting } =
     useDeleteJobSheet();
   const { data: invoiceNoData } = useJobSheetInvoiceNo(
-    !["view", "edit"].includes(mode)
+    !["view", "edit"].includes(mode),
   );
 
   const { data: customers = [], isLoading: customersLoading } = useCustomers();
@@ -142,13 +200,12 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
   ];
 
   const getSelectedCustomerName = () => {
-    const customer = customerOptions.find((c) => c.value === form.party_id);
+    const customer = customerOptions.find((c) => c.value === watchedPartyId);
     return customer ? customer.label : "";
   };
 
-  // Helper to get phone number
   const getSelectedCustomerPhone = () => {
-    const customer = customers.find((c) => c.id === form.party_id);
+    const customer = customers.find((c) => c.id === watchedPartyId);
     return customer ? customer.phone || "" : "";
   };
 
@@ -156,11 +213,6 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
     const { name, checked } = e.target;
     setPrintOptions((prev) => ({ ...prev, [name]: checked }));
   };
-
-  const employeeOptions = [
-    { value: "", label: "Select Servicer" },
-    ...employees.map((emp) => ({ value: emp.id, label: emp.name })),
-  ];
 
   const statusOptions = [
     { value: "Pending", label: "Pending" },
@@ -171,19 +223,20 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
 
   const handleGenerateBarcode = () => {
     const randomBarcode = Math.floor(
-      100000000000 + Math.random() * 900000000000
+      100000000000 + Math.random() * 900000000000,
     ).toString();
-    setForm({ ...form, bar_code: randomBarcode });
+    setValue("bar_code", randomBarcode);
   };
 
   const handleClearBarcode = () => {
-    setForm({ ...form, bar_code: "" });
+    setValue("bar_code", "");
   };
 
+  // Load Data
   useEffect(() => {
     if (isOpen) {
       if (mode === "edit" || mode === "view") {
-        const initialData = { ...defaultForm, ...selectedJobSheet };
+        const initialData = { ...defaultValues, ...selectedJobSheet };
         initialData.estimated_completion_date =
           selectedJobSheet.estimated_completion_date
             ? new Date(selectedJobSheet.estimated_completion_date)
@@ -196,39 +249,36 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
               .split("T")[0]
           : null;
 
-        setForm(initialData);
+        reset(initialData);
       } else if (mode === "add") {
         const savedForm = localStorage.getItem(DRAFT_STORAGE_KEY);
-        setForm(savedForm ? JSON.parse(savedForm) : { ...defaultForm });
+        if (savedForm) {
+          try {
+            reset(JSON.parse(savedForm));
+          } catch (e) {
+            reset(defaultValues);
+          }
+        } else {
+          reset(defaultValues);
+        }
       }
 
       if (mode !== "view") {
         setTimeout(() => partyRef.current?.focus(), 100);
       }
     }
-  }, [isOpen, mode, selectedJobSheet]);
+  }, [isOpen, mode, selectedJobSheet, reset]);
 
+  // Save Draft
   useEffect(() => {
-    if (mode === "add") {
-      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(form));
+    if (mode === "add" && isOpen) {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(watchedFormData));
     }
-  }, [form, mode]);
+  }, [watchedFormData, mode, isOpen]);
 
   const clearLocalStorageAndResetForm = () => {
     localStorage.removeItem(DRAFT_STORAGE_KEY);
-    setForm({ ...defaultForm });
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
-
-  const handleDateChange = (name, newDate) => {
-    setForm({
-      ...form,
-      [name]: newDate ? newDate.toISOString().split("T")[0] : null,
-    });
+    reset(defaultValues);
   };
 
   const handleDelete = async () => {
@@ -250,70 +300,33 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
     }
   };
 
-  const handleSubmit = async (e, shouldPrint = false) => {
-    e.preventDefault();
+  const onFormError = (errors) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError) {
+      showToast({
+        type: TOASTTYPE.GENARAL,
+        message: firstError.message || "Please check required fields.",
+        status: TOASTSTATUS.ERROR,
+      });
+      // Focus logic based on error field
+      if (errors.party_id) partyRef.current?.focus();
+      if (errors.item_name) itemNameRef.current?.focus();
+    }
+  };
 
-    if (!form.party_id) {
-      showToast({
-        message: "Please select a customer.",
-        status: TOASTSTATUS.WARNING,
-      });
-      partyRef.current?.focus();
-      return;
-    }
-    if (!form.item_name) {
-      showToast({
-        message: "Please enter an item name.",
-        status: TOASTSTATUS.WARNING,
-      });
-      itemNameRef.current?.focus();
-      return;
-    }
-    if (!form.issue_reported) {
-      showToast({
-        type: TOASTTYPE.GENARAL,
-        message: "Please describe the issue.",
-        status: TOASTSTATUS.ERROR,
-      });
-      return;
-    }
-    if (!form.servicer_id) {
-      showToast({
-        type: TOASTTYPE.GENARAL,
-        message: "Please select a servicer.",
-        status: TOASTSTATUS.ERROR,
-      });
-      return;
-    }
-    if (form.service_cost === "" || form.service_cost === null) {
-      showToast({
-        type: TOASTTYPE.GENARAL,
-        message: "Please enter the service cost.",
-        status: TOASTSTATUS.ERROR,
-      });
-      return;
-    }
-    if (form.status === "Completed" && form.account_id === null) {
-      showToast({
-        type: TOASTTYPE.GENARAL,
-        message: "Please Select Receiver Account",
-        status: TOASTSTATUS.ERROR,
-      });
-      return;
-    }
-
+  const onFormSubmit = async (data, shouldPrint = false) => {
     try {
       const payload = {
-        ...form,
-        service_cost: parseFloat(form.service_cost) || 0,
-        service_charges: parseFloat(form.service_charges) || 0,
-        party_id: Number(form.party_id),
-        item_id: Number(form.item_id) || null,
-        servicer_id: Number(form.servicer_id),
-        done_by_id: form.done_by_id || null,
-        cost_center_id: form.cost_center_id || null,
+        ...data,
+        service_cost: parseFloat(data.service_cost) || 0,
+        service_charges: parseFloat(data.service_charges) || 0,
+        party_id: Number(data.party_id),
+        item_id: Number(data.item_id) || null,
+        servicer_id: Number(data.servicer_id),
+        done_by_id: data.done_by_id || null,
+        cost_center_id: data.cost_center_id || null,
         invoice_number: ["view", "edit"].includes(mode)
-          ? form.invoice_number
+          ? data.invoice_number
           : invoiceNoData?.invoice_number,
       };
 
@@ -361,48 +374,67 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
           <Title report={Report.Jobsheet} mode={mode} />
         </ModalHeader>
         <ModalBody>
-          <CustomerAutoCompleteWithAddOption
-            ref={partyRef}
+          <Controller
             name="party_id"
-            value={form.party_id}
-            onChange={handleChange}
-            options={customerOptions}
-            disabled={disabled || customersLoading}
-            required
-          />
-          <InputField
-            label="Item Name"
-            ref={itemNameRef}
-            disabled={disabled}
-            name="item_name"
-            placeholder="Item Name (e.g., iPhone 13, Dell Laptop)"
-            value={form.item_name}
-            onChange={handleChange}
-            required
+            control={control}
+            render={({ field }) => (
+              <CustomerAutoCompleteWithAddOption
+                {...field}
+                ref={partyRef}
+                options={customerOptions}
+                disabled={disabled || customersLoading}
+                required
+                onChange={(e) => field.onChange(e.target.value)}
+              />
+            )}
           />
 
-          <EmployeeAutoCompleteWithAddOption
-            placeholder="Select Servicer"
+          <Controller
+            name="item_name"
+            control={control}
+            render={({ field }) => (
+              <InputField
+                {...field}
+                label="Item Name"
+                ref={itemNameRef}
+                disabled={disabled}
+                placeholder="Item Name (e.g., iPhone 13, Dell Laptop)"
+                required
+              />
+            )}
+          />
+
+          <Controller
             name="servicer_id"
-            value={form.servicer_id}
-            onChange={handleChange}
-            disabled={disabled}
-            required
+            control={control}
+            render={({ field }) => (
+              <EmployeeAutoCompleteWithAddOption
+                {...field}
+                placeholder="Select Servicer"
+                disabled={disabled}
+                required
+                onChange={(e) => field.onChange(e.target.value)}
+              />
+            )}
           />
 
           <div className="barcode-section">
             <div className="barcode-section__input-wrapper">
-              <InputField
-                label="Barcode"
-                disabled={disabled}
-                ref={barcodeRef}
+              <Controller
                 name="bar_code"
-                placeholder="Barcode (Optional)"
-                value={form.bar_code}
-                onChange={handleChange}
+                control={control}
+                render={({ field }) => (
+                  <InputField
+                    {...field}
+                    label="Barcode"
+                    disabled={disabled}
+                    ref={barcodeRef}
+                    placeholder="Barcode (Optional)"
+                  />
+                )}
               />
             </div>
-            {form.bar_code ? (
+            {watchedBarcode ? (
               <button
                 type="button"
                 onClick={handleClearBarcode}
@@ -422,20 +454,19 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
               </button>
             )}
 
-            {/* USING THE UPDATED BUTTON */}
             <PrintBarcodeButton
-              barcodeValue={form.bar_code}
+              barcodeValue={watchedBarcode}
               storeName={
                 printOptions.showCustomer ? getSelectedCustomerName() : ""
               }
               phone={printOptions.showPhone ? getSelectedCustomerPhone() : ""}
-              itemName={printOptions.showItem ? form.item_name : ""}
-              variant="jobsheet" // Triggers the Side-by-Side layout
-              disabled={disabled || !form.bar_code}
+              itemName={printOptions.showItem ? watchedItemName : ""}
+              variant="jobsheet"
+              disabled={disabled || !watchedBarcode}
             />
           </div>
 
-          {form.bar_code && (
+          {watchedBarcode && (
             <div className="barcode-display-section">
               <div className="barcode-section__display">
                 <div className="print-options-container">
@@ -449,7 +480,6 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
                     />
                     Customer Name
                   </label>
-                  {/* NEW CHECKBOX FOR CUSTOMER PHONE */}
                   <label className="print-options-container__label">
                     <input
                       type="checkbox"
@@ -473,115 +503,174 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
                 </div>
 
                 <LiveBarcodePreview
-                  value={form.bar_code}
+                  value={watchedBarcode}
                   options={{
                     showCustomer: printOptions.showCustomer,
                     showPhone: printOptions.showPhone,
                     showItem: printOptions.showItem,
                     customerName: getSelectedCustomerName(),
                     customerPhone: getSelectedCustomerPhone(),
-                    itemName: form.item_name,
+                    itemName: watchedItemName,
                   }}
                 />
               </div>
             </div>
           )}
 
-          <DoneByAutoCompleteWithAddOption
-            placeholder="Done By"
+          <Controller
             name="done_by_id"
-            value={form.done_by_id}
-            onChange={handleChange}
-            disabled={disabled}
-          />
-          <CostCenterAutoCompleteWithAddOption
-            placeholder="Cost Center"
-            name="cost_center_id"
-            value={form.cost_center_id}
-            onChange={handleChange}
-            disabled={disabled}
-          />
-          <TextArea
-            label="Issue Reported"
-            disabled={disabled}
-            name="issue_reported"
-            placeholder="Issue Reported"
-            value={form.issue_reported}
-            onChange={handleChange}
-            required
-          />
-          <TextArea
-            label="Diagnosis"
-            disabled={disabled}
-            name="diagnosis"
-            placeholder="Diagnosis"
-            value={form.diagnosis}
-            onChange={handleChange}
-          />
-          <Select
-            label="Status"
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            options={statusOptions}
-            disabled={disabled}
-            required
-          />
-          <InputFieldWithCalculator
-            label="Service Cost"
-            disabled={disabled}
-            name="service_cost"
-            placeholder="Service Cost"
-            value={form.service_cost}
-            onChange={handleChange}
-            required
-          />
-          <InputFieldWithCalculator
-            label="Service Charges"
-            disabled={disabled}
-            name="service_charges"
-            placeholder="Service Charges"
-            value={form.service_charges}
-            onChange={handleChange}
+            control={control}
+            render={({ field }) => (
+              <DoneByAutoCompleteWithAddOption
+                {...field}
+                placeholder="Done By"
+                disabled={disabled}
+                onChange={(e) => field.onChange(e.target.value)}
+              />
+            )}
           />
 
-          <AccountAutoCompleteWithAddOption
-            name="account_id"
-            value={form.account_id}
-            onChange={handleChange}
-            placeholder="Receiver Account"
-            required
-            disabled={disabled}
+          <Controller
+            name="cost_center_id"
+            control={control}
+            render={({ field }) => (
+              <CostCenterAutoCompleteWithAddOption
+                {...field}
+                placeholder="Cost Center"
+                disabled={disabled}
+                onChange={(e) => field.onChange(e.target.value)}
+              />
+            )}
           />
+
+          <Controller
+            name="issue_reported"
+            control={control}
+            render={({ field }) => (
+              <TextArea
+                {...field}
+                label="Issue Reported"
+                disabled={disabled}
+                placeholder="Issue Reported"
+                required
+              />
+            )}
+          />
+
+          <Controller
+            name="diagnosis"
+            control={control}
+            render={({ field }) => (
+              <TextArea
+                {...field}
+                label="Diagnosis"
+                disabled={disabled}
+                placeholder="Diagnosis"
+              />
+            )}
+          />
+
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                label="Status"
+                options={statusOptions}
+                disabled={disabled}
+                required
+              />
+            )}
+          />
+
+          <Controller
+            name="service_cost"
+            control={control}
+            render={({ field }) => (
+              <InputFieldWithCalculator
+                {...field}
+                label="Service Cost"
+                disabled={disabled}
+                placeholder="Service Cost"
+                required
+              />
+            )}
+          />
+
+          <Controller
+            name="service_charges"
+            control={control}
+            render={({ field }) => (
+              <InputFieldWithCalculator
+                {...field}
+                label="Service Charges"
+                disabled={disabled}
+                placeholder="Service Charges"
+              />
+            )}
+          />
+
+          <Controller
+            name="account_id"
+            control={control}
+            render={({ field }) => (
+              <AccountAutoCompleteWithAddOption
+                {...field}
+                placeholder="Receiver Account"
+                required={watch("status") === "Completed"}
+                disabled={disabled}
+                onChange={(e) => field.onChange(e.target.value)}
+              />
+            )}
+          />
+
           <HStack justifyContent="flex-start">
-            <DateField
-              disabled={disabled}
-              label="Est. Completion"
-              value={
-                form.estimated_completion_date
-                  ? new Date(form.estimated_completion_date)
-                  : null
-              }
-              onChange={(date) =>
-                handleDateChange("estimated_completion_date", date)
-              }
+            <Controller
+              name="estimated_completion_date"
+              control={control}
+              render={({ field }) => (
+                <DateField
+                  label="Est. Completion"
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(date) =>
+                    field.onChange(
+                      date ? date.toISOString().split("T")[0] : null,
+                    )
+                  }
+                  disabled={disabled}
+                />
+              )}
             />
-            <DateField
-              disabled={disabled}
-              label="Actual Completion"
-              value={
-                form.completion_date ? new Date(form.completion_date) : null
-              }
-              onChange={(date) => handleDateChange("completion_date", date)}
+            <Controller
+              name="completion_date"
+              control={control}
+              render={({ field }) => (
+                <DateField
+                  label="Actual Completion"
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(date) =>
+                    field.onChange(
+                      date ? date.toISOString().split("T")[0] : null,
+                    )
+                  }
+                  disabled={disabled}
+                />
+              )}
             />
           </HStack>
-          <TextArea
-            label="Remarks"
-            disabled={disabled}
+
+          <Controller
             name="remarks"
-            placeholder="Remarks"
-            value={form.remarks}
-            onChange={handleChange}
+            control={control}
+            render={({ field }) => (
+              <TextArea
+                {...field}
+                label="Remarks"
+                disabled={disabled}
+                placeholder="Remarks"
+              />
+            )}
           />
         </ModalBody>
         <ModalFooter>
@@ -602,27 +691,25 @@ const JobSheet = ({ isOpen, onClose, mode, selectedJobSheet, onSuccess }) => {
                   isLoading={creating || updating}
                   disabled={disabled}
                   type={mode}
-                  onClick={(e) => handleSubmit(e, false)}
+                  onClick={handleSubmit(
+                    (data) => onFormSubmit(data, false),
+                    onFormError,
+                  )}
                 />
                 {mode === "add" && !isMobile && (
-                  <SubmitButton
-                    label="Submit & Print"
-                    isLoading={creating || updating}
-                    disabled={disabled}
-                    onClick={(e) => handleSubmit(e, true)}
-                  />
+                  <Button
+                    variant="print"
+                    disabled={disabled || creating || updating}
+                    onClick={handleSubmit(
+                      (data) => onFormSubmit(data, true),
+                      onFormError,
+                    )}
+                  >
+                    {creating || updating ? "Processing..." : "Submit & Print"}
+                  </Button>
                 )}
               </>
             )}
-            {/* {selectedJobSheet && mode !== 'add' && (
-              <SubmitButton
-                label="Print"
-                onClick={() => {
-                  setInvoiceData(selectedJobSheet)
-                  setIsOpenInvoiceModal(true)
-                }}
-              />
-            )} */}
           </HStack>
         </ModalFooter>
       </Modal>

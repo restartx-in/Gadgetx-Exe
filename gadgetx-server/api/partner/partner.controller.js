@@ -28,6 +28,9 @@ class PartnerController {
       const newPartner = await this.service.create(partnerData, req.db);
       res.status(201).json(newPartner);
     } catch (error) {
+      if (error.message.includes('already exists')) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
       next(error);
     }
   }
@@ -108,6 +111,9 @@ class PartnerController {
       }
       res.json(updatedPartner);
     } catch (error) {
+      if (error.message.includes('already taken')) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
       next(error);
     }
   }

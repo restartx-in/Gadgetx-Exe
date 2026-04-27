@@ -1,15 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { TfiExport } from "react-icons/tfi";
 import { SlPrinter } from "react-icons/sl";
-const ExportMenu = ({ onExcel, onPdf, onPrint }) => {
+const ExportMenu = ({ onExcel, onPdf, onPrint, onThermalPrint }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPrintOpen, setIsPrintOpen] = useState(false);
   const menuRef = useRef(null);
+  const printMenuRef = useRef(null);
 
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsOpen(false);
+      }
+      if (printMenuRef.current && !printMenuRef.current.contains(event.target)) {
+        setIsPrintOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -43,14 +48,65 @@ const ExportMenu = ({ onExcel, onPdf, onPrint }) => {
     <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
       
       {/* Print Button */}
-      <button
-        className="btn-outline-secondary"
-        onClick={onPrint}
-        style={buttonStyle}
-        title="Print Report"
-      >
-        <SlPrinter  size={16} />
-      </button>
+      <div ref={printMenuRef} style={{ position: "relative" }}>
+        <button
+          className="btn-outline-secondary"
+          onClick={() => {
+            if (onThermalPrint) {
+              setIsPrintOpen((prev) => !prev);
+              return;
+            }
+            onPrint?.();
+          }}
+          style={buttonStyle}
+          title="Print Report"
+        >
+          <SlPrinter size={16} />
+        </button>
+
+        {isPrintOpen && onThermalPrint && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              marginTop: "4px",
+              background: "white",
+              border: "1px solid #e2e8f0",
+              borderRadius: "4px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              zIndex: 50,
+              minWidth: "140px",
+            }}
+          >
+            <div
+              onClick={() => {
+                onPrint?.();
+                setIsPrintOpen(false);
+              }}
+              style={{
+                ...dropdownItemStyle,
+                borderBottom: "1px solid #f0f0f0",
+              }}
+              onMouseEnter={(e) => (e.target.style.background = "#f7fafc")}
+              onMouseLeave={(e) => (e.target.style.background = "white")}
+            >
+              Normal Print
+            </div>
+            <div
+              onClick={() => {
+                onThermalPrint?.();
+                setIsPrintOpen(false);
+              }}
+              style={dropdownItemStyle}
+              onMouseEnter={(e) => (e.target.style.background = "#f7fafc")}
+              onMouseLeave={(e) => (e.target.style.background = "white")}
+            >
+              Thermal Print
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Export Dropdown */}
       <div ref={menuRef} style={{ position: "relative" }}>

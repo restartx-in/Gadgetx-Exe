@@ -32,12 +32,6 @@
   }
 }
 
-// Style for mobile view badge alignment
-.list-item-status-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 
 @media (max-width: 900px) {
   .sale_report {

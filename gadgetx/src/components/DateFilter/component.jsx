@@ -1,24 +1,28 @@
-import { useRef, useState, useEffect } from 'react';
-import { BsArrowRightShort } from 'react-icons/bs';
-import CustomCalendarIcon from '@/components/CustomCalendarIcon';
+import { useRef, useState, useEffect } from "react";
+import { BsArrowRightShort } from "react-icons/bs";
+import CustomCalendarIcon from "@/components/CustomCalendarIcon";
 
-import VStack from '@/components/VStack';
-import HStack from '@/components/HStack';
-import SubmitButton from '@/apps/user/components/SubmitButton';
-import Select from '@/components/Select';
+import VStack from "@/components/VStack";
+import HStack from "@/components/HStack";
+import SubmitButton from "@/components/SubmitButton";
+import Select from "@/components/Select";
 
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { format, subMonths, subYears } from 'date-fns';
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { format, subMonths, subYears } from "date-fns";
 
-import './style.scss';
+import "./style.scss";
 
-const DateFilter = ({ value, onChange, placement = 'left' }) => {
-  const { startDate, endDate, rangeType = 'custom' } = value || {
+const DateFilter = ({ value, onChange, placement = "left" }) => {
+  const {
+    startDate,
+    endDate,
+    rangeType = "custom",
+  } = value || {
     startDate: null,
     endDate: null,
-    rangeType: 'custom',
+    rangeType: "custom",
   };
 
   const popoverRef = useRef(null);
@@ -37,12 +41,16 @@ const DateFilter = ({ value, onChange, placement = 'left' }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target) && !isDatePickerOpen) {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target) &&
+        !isDatePickerOpen
+      ) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isDatePickerOpen]);
 
   const handleDateChange = (newValues) => {
@@ -52,43 +60,41 @@ const DateFilter = ({ value, onChange, placement = 'left' }) => {
   };
 
   const handleQuickSelect = (type) => {
-    if (type === 'custom') {
+    if (type === "custom") {
       handleDateChange({
         startDate: null,
         endDate: null,
-        rangeType: 'custom',
+        rangeType: "custom",
       });
       return;
     }
 
-   const today = new Date();
-  let from = today;
-  let to = today;
+    const today = new Date();
+    let from = today;
+    const to = today;
 
-  if (type === 'today') {
-    from = today;
-    to = new Date(today);
-    to.setDate(to.getDate() + 1); 
-  } else if (type === 'month') {
-    from = subMonths(today, 1);
-  } else if (type === 'year') {
-    from = subYears(today, 1);
-  }
+    if (type === "today") {
+      from = today;
+    } else if (type === "month") {
+      from = subMonths(today, 1);
+    } else if (type === "year") {
+      from = subYears(today, 1);
+    }
 
     handleDateChange({
-      startDate: format(from, 'yyyy-MM-dd'),
-      endDate: format(to, 'yyyy-MM-dd'),
+      startDate: format(from, "yyyy-MM-dd"),
+      endDate: format(to, "yyyy-MM-dd"),
       rangeType: type,
     });
     setIsOpen(false);
   };
 
   const handleApply = () => {
-    if (rangeType === 'custom') {
+    if (rangeType === "custom") {
       handleDateChange({
         startDate: tempStartDate,
         endDate: tempEndDate,
-        rangeType: 'custom',
+        rangeType: "custom",
       });
     }
     setIsOpen(false);
@@ -99,11 +105,15 @@ const DateFilter = ({ value, onChange, placement = 'left' }) => {
   return (
     <div className="date-range-filter-popover fs16" ref={popoverRef}>
       <button
-        className={`th-filter-btn ${isFilterActive ? 'active' : ''}`}
+        className={`th-filter-btn ${isFilterActive ? "active" : ""}`}
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Open date filter"
       >
-        <HStack alignItems="center" gap="0.1rem" className="date-filter-icon-container">
+        <HStack
+          alignItems="center"
+          gap="0.1rem"
+          className="date-filter-icon-container"
+        >
           <CustomCalendarIcon size={27} value="1" />
           <BsArrowRightShort size={20} />
           <CustomCalendarIcon size={27} value="30" />
@@ -111,22 +121,24 @@ const DateFilter = ({ value, onChange, placement = 'left' }) => {
       </button>
 
       {isOpen && (
-        <div className={`date-range-filter-popover__content popover-placement--${placement}`}>
+        <div
+          className={`date-range-filter-popover__content popover-placement--${placement}`}
+        >
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <VStack gap="1rem">
-              {rangeType === 'custom' && (
+              {rangeType === "custom" && (
                 <>
                   <DatePicker
                     label="From"
                     value={tempStartDate ? new Date(tempStartDate) : null}
                     onChange={(date) => {
-                      const isoDate = date ? format(date, 'yyyy-MM-dd') : null;
+                      const isoDate = date ? format(date, "yyyy-MM-dd") : null;
                       setTempStartDate(isoDate);
                     }}
                     onOpen={() => setIsDatePickerOpen(true)}
                     onClose={() => setIsDatePickerOpen(false)}
                     slotProps={{
-                      textField: { fullWidth: true, size: 'small' },
+                      textField: { fullWidth: true, size: "small" },
                       popper: { sx: { zIndex: 99999 }, disablePortal: false },
                     }}
                   />
@@ -135,13 +147,13 @@ const DateFilter = ({ value, onChange, placement = 'left' }) => {
                     label="To"
                     value={tempEndDate ? new Date(tempEndDate) : null}
                     onChange={(date) => {
-                      const isoDate = date ? format(date, 'yyyy-MM-dd') : null;
+                      const isoDate = date ? format(date, "yyyy-MM-dd") : null;
                       setTempEndDate(isoDate);
                     }}
                     onOpen={() => setIsDatePickerOpen(true)}
                     onClose={() => setIsDatePickerOpen(false)}
                     slotProps={{
-                      textField: { fullWidth: true, size: 'small' },
+                      textField: { fullWidth: true, size: "small" },
                       popper: { sx: { zIndex: 99999 }, disablePortal: false },
                     }}
                   />
@@ -151,15 +163,18 @@ const DateFilter = ({ value, onChange, placement = 'left' }) => {
                 value={rangeType}
                 onChange={(e) => handleQuickSelect(e.target.value)}
                 options={[
-                  { label: 'Custom Range', value: 'custom' },
-                  { label: 'Today', value: 'today' },
-                  { label: 'Last Month', value: 'month' },
-                  { label: 'Last Year', value: 'year' },
+                  { label: "Custom Range", value: "custom" },
+                  { label: "Today", value: "today" },
+                  { label: "Last Month", value: "month" },
+                  { label: "Last Year", value: "year" },
                 ]}
                 placeholder="Choose Range"
               />
 
-              <HStack justifyContent="space-between" className="date-range-filter-popover__actions">
+              <HStack
+                justifyContent="space-between"
+                className="date-range-filter-popover__actions"
+              >
                 <SubmitButton onClick={handleApply} type="add" />
               </HStack>
             </VStack>

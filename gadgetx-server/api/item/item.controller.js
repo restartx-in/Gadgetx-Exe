@@ -29,6 +29,9 @@ class ItemController {
       if (error.statusCode === 409) {
         return res.status(409).json({ error: error.message });
       }
+       if (error.message.includes('already exists')) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
       next(error);
     }
   }
@@ -69,6 +72,9 @@ class ItemController {
       }
       if (error.statusCode === 409) {
         return res.status(409).json({ error: error.message });
+      }
+       if (error.message.includes('already exists')) {
+        return res.status(400).json({ status: "failed", error: error.message });
       }
       next(error);
     }

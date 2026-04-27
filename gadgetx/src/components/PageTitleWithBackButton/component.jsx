@@ -1,14 +1,18 @@
-import IconBackButton from '@/apps/user/components/IconBackButton'
-import PageTitle from '@/components/PageTitle'
-import './style.scss'
+import IconBackButton from "@/components/IconBackButton";
+import PageTitle from "@/components/PageTitle";
+import "./style.scss";
 
+// Added subtitle prop
 const PageTitleWithBackButton = ({ title, subtitle }) => {
   return (
-    <div className="page_title_with_backbutton fs24 fw600">
+    <div className="page_title_with_backbutton">
       <IconBackButton />
-      <PageTitle title={title} subtitle={subtitle} />
+      <div className="title_container">
+        <PageTitle title={title} />
+        {subtitle && <span className="page_subtitle">{subtitle}</span>}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default PageTitleWithBackButton
+export default PageTitleWithBackButton;

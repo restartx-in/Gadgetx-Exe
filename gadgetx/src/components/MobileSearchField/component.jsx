@@ -1,26 +1,32 @@
-import React, { useState } from 'react'
-import { IoSearch } from 'react-icons/io5'
-import './style.scss'
-import { Modal, ModalHeader, ModalBody } from '@/components/Modal'
-import Select from '@/components/Select'
+import React, { useState, useRef } from "react";
+import { IoSearch } from "react-icons/io5";
+import "./style.scss";
+import { Modal, ModalHeader, ModalBody } from "@/components/Modal";
+import Select from "@/components/Select";
 
 const MobileSearchField = ({
   searchRef,
-  searchOptions = [],
+  searchOptions,
   handleSearch,
   searchKey,
   setSearchKey,
   searchType,
   setSearchType,
-  showSearchType = true,  
-  placeHolder = "Search"
 }) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSearchAndClose = () => {
-    handleSearch()
-    setIsOpen(false)
-  }
+    handleSearch();
+    setIsOpen(false);
+  };
+
+  const selectOptions = [
+    { value: "", label: "Select option" },
+    ...(searchOptions || []).map((option) => ({
+      value: option.value,
+      label: option.name,
+    })),
+  ];
 
   return (
     <div>
@@ -31,34 +37,25 @@ const MobileSearchField = ({
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <ModalHeader>Search</ModalHeader>
         <ModalBody>
-          {showSearchType && (
-            <Select
-              value={searchType}
-              onChange={(e) => {
-                setSearchType(e.target.value)
-                searchRef.current?.focus()
-              }}
-              className="fs14 mobile_search_field__select"
-              options={[
-                { value: '', label: 'Search Type' },
-                ...searchOptions.map((option) => ({
-                  value: option.value,
-                  label: option.name,
-                })),
-              ]}
-            />
-          )}
-
-          <div className="mobile_search_field__popup-content-input_wrapper">
+          <Select
+            value={searchType}
+            onChange={(e) => {
+              setSearchType(e.target.value);
+              searchRef.current?.focus();
+            }}
+            className="fs14 popup_search_select"
+            options={selectOptions}
+          />
+          <div className="popup_search_input_wrapper">
             <input
               type="text"
               ref={searchRef}
               className="fs14"
-              placeholder={placeHolder}
+              placeholder="Search"
               value={searchKey}
               onChange={(e) => setSearchKey(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSearchAndClose()
+                if (e.key === "Enter") handleSearchAndClose();
               }}
             />
             <button onClick={handleSearchAndClose}>
@@ -68,7 +65,7 @@ const MobileSearchField = ({
         </ModalBody>
       </Modal>
     </div>
-  )
-}
+  );
+};
 
-export default MobileSearchField
+export default MobileSearchField;

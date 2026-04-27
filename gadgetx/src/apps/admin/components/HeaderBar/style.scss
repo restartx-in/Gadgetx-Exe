@@ -1,63 +1,170 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin HeaderBar · OptiVision Theme — Glassmorphism + Gold
+// ─────────────────────────────────────────────────────────────────────────────
+
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap");
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+$gold-light: #e8cc7a;
+$gold-mid: #c9a84c;
+$gold-dark: #9c7d30;
+$cream: #faf6ee;
+$surface: #141414;
+$border: rgba(201, 168, 76, 0.18);
+$muted: #fff;
+$muted-hover: rgba(255, 255, 255, 0.78);
+
+$font-display: "poppins";
+$font-body: "Poppins";
+
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-pill: 20px;
+$transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ── Keyframes ─────────────────────────────────────────────────────────────────
+@keyframes goldShimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+// ── Shell ─────────────────────────────────────────────────────────────────────
 .admin-header-bar {
-  height: 100%;
-  width: 97%;
-  color: var(--sidbarBg);
+  height: 58px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 0 1.5rem 0 1rem;
+  box-sizing: border-box;
+  font-family: $font-body;
   position: relative;
   z-index: 100;
 
+  // Glassmorphism
+  background: rgba(14, 14, 14, 0.75);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border-bottom: 1px solid $border;
+
+  // Ambient gold glow line at bottom
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(201, 168, 76, 0.38),
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  // ── Left section ─────────────────────────────────────────────────────────
   &__left-section {
     display: flex;
     align-items: center;
-  }
+    gap: 12px;
+    transition: gap 0.3s ease;
 
-  &__menu-btn {
-    display: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease;
+    // Menu toggle button
+    &-menu-btn {
+      display: flex;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 7px;
+      border-radius: $radius-sm;
+      color: $muted;
+      transition:
+        background $transition,
+        color $transition;
 
-    &:hover {
-      background-color: var(--color-admin-background-rgba);
+      &:hover {
+        background: rgba(201, 168, 76, 0.08);
+        color: $cream;
+      }
+    }
+
+    // Brand block
+    &-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      &-name {
+        font-family: $font-display;
+        font-size: 18px !important;
+        font-weight: 400;
+        letter-spacing: 0.4px;
+        color: $cream;
+        white-space: nowrap;
+      }
+    }
+
+    // Page title — shimmer text
+    &-page-title {
+      font-family: $font-display;
+      font-size: 16px !important;
+      font-weight: 300;
+      white-space: nowrap;
+      letter-spacing: 0.2px;
+
+      background: linear-gradient(
+        90deg,
+        $gold-dark 0%,
+        $gold-light 30%,
+        $cream 50%,
+        $gold-light 70%,
+        $gold-dark 100%
+      );
+      background-size: 250% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: goldShimmer 6s linear infinite;
     }
   }
 
-  &__title {
-    // margin-left: 8px;
-  }
-
+  // ── Right section ─────────────────────────────────────────────────────────
   &__right-section {
     display: flex;
     align-items: center;
-    gap: 1.5rem; // same spacing pattern as header-bar
+    gap: 10px;
   }
 
-  .header-bar__right-section-user-dropdown {
+  // ── User dropdown ─────────────────────────────────────────────────────────
+  &__right-section-user-dropdown {
     position: relative;
 
     &-trigger {
       background: none;
+      border: 1px solid $border;
       cursor: pointer;
-      color: var(--sidbarBg);
+      color: $muted;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      transition: background-color 0.2s ease;
+      transition:
+        background $transition,
+        color $transition,
+        border-color $transition;
 
       &:hover {
-        background-color: rgba(0, 0, 0, 0.06);
+        background: rgba(201, 168, 76, 0.08);
+        border-color: rgba(201, 168, 76, 0.45);
+        color: $gold-mid;
       }
     }
 
@@ -65,53 +172,99 @@
       position: absolute;
       top: calc(100% + 10px);
       right: 0;
-      background: var(--color-neutral-0);
-      color: #3c4043;
-      border: 1px solid var(--color-neutral-200);
-      border-radius: var(--radius-md, 8px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      width: 180px;
-      z-index: 2000;
-      overflow: hidden;
       list-style: none;
-      padding: 6px 0;
+      padding: 5px;
       margin: 0;
+      width: 175px;
+      z-index: 2000;
 
-      li {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 16px;
-        font-size: 15px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
+      // Glassmorphism dropdown
+      background: rgba(20, 20, 20, 0.88);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid $border;
+      border-radius: $radius-md;
+      box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.5),
+        0 16px 40px -4px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(201, 168, 76, 0.05);
 
-        &:hover {
-          background-color: rgba(0, 0, 0, 0.05);
-        }
+      // Gold section label via pseudo
+      &::before {
+        content: "Account";
+        display: block;
+        font-size: 9px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 2.5px;
+        color: rgba(201, 168, 76, 0.5);
+        padding: 8px 12px 4px;
+        pointer-events: none;
+      }
+    }
 
-        span {
-          flex-grow: 1;
-        }
+    &-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      font-size: 13px !important;
+      font-weight: 300;
+      color: $muted;
+      cursor: pointer;
+      border-radius: $radius-sm;
+      transition:
+        background $transition,
+        color $transition;
 
+      svg {
+        flex-shrink: 0;
+        color: $muted;
+        transition: color $transition;
+      }
+
+      span {
+        flex-grow: 1;
+      }
+
+      &:hover {
+        background: rgba(201, 168, 76, 0.07);
+        color: $cream;
         svg {
-          flex-shrink: 0;
-          color: #3c4043;
+          color: $gold-mid;
+        }
+      }
+
+      // Logout — red on hover
+      &:last-child:hover {
+        background: rgba(192, 57, 43, 0.1);
+        color: #e07070;
+        svg {
+          color: #e07070;
         }
       }
     }
   }
 
-
+  // ── Responsive ───────────────────────────────────────────────────────────
   @media (max-width: 900px) {
-    width: 94%;
+    padding: 0 1rem;
 
-    &__menu-btn {
-      display: flex;
+    &__left-section {
+      gap: 8px;
     }
+  }
 
-    &__title {
-      font-size: 18px;
+  @media (max-width: 768px) {
+    padding: 0 0.75rem;
+
+    &__left-section {
+      &-brand-name {
+        display: none;
+      }
+      &-page-title {
+        display: none;
+      }
     }
   }
 }

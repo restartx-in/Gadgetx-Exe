@@ -1,13 +1,13 @@
-import { useState, useEffect, forwardRef, useRef, useMemo } from 'react';
-import { useRoles } from '@/hooks/api/role/useRoles';
-import AddRole from '@/apps/user/pages/List/RoleList/components/AddRole';
-import { HiPencil } from 'react-icons/hi2';
+import { useState, useEffect, forwardRef, useRef, useMemo } from "react";
+import { useRoles } from "@/apps/user/hooks/api/role/useRoles";
+import AddRole from "@/apps/user/pages/List/RoleList/components/AddRole";
+import { HiPencil } from "react-icons/hi2";
 
 // 1. Import Custom Components
-import CustomTextField from '@/components/CustomTextField';
-import CustomScrollbar from '@/components/CustomScrollbar';
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
 
-import './style.scss'; 
+import "./style.scss";
 
 const RoleAutoCompleteWithAddOption = forwardRef(
   (
@@ -15,21 +15,27 @@ const RoleAutoCompleteWithAddOption = forwardRef(
       name,
       value,
       onChange,
-      label = 'Role',
-      placeholder = 'Select a Role',
+      label = "Role",
+      placeholder = "Select a Role",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       filters = {},
       is_edit = true,
       style = {},
     },
-    ref,
+    ref
   ) => {
-    const { data: roles, isLoading, isError, error, refetch } = useRoles(filters);
+    const {
+      data: roles,
+      isLoading,
+      isError,
+      error,
+      refetch,
+    } = useRoles(filters);
     const [roleOptions, setRoleOptions] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('add');
+    const [modalMode, setModalMode] = useState("add");
     const [selectedRoleInModal, setSelectedRoleInModal] = useState(null);
 
     useEffect(() => {
@@ -44,7 +50,7 @@ const RoleAutoCompleteWithAddOption = forwardRef(
 
     const handleAddNew = (typedValue) => {
       setSelectedRoleInModal({ name: typedValue });
-      setModalMode('add');
+      setModalMode("add");
       setIsModalOpen(true);
     };
 
@@ -52,7 +58,7 @@ const RoleAutoCompleteWithAddOption = forwardRef(
       const roleToEdit = roles.find((r) => r.id === option.value);
       if (roleToEdit) {
         setSelectedRoleInModal(roleToEdit);
-        setModalMode('edit');
+        setModalMode("edit");
         setIsModalOpen(true);
       }
     };
@@ -90,7 +96,7 @@ const RoleAutoCompleteWithAddOption = forwardRef(
     }
 
     if (isError) {
-      console.error('Failed to load roles:', error);
+      console.error("Failed to load roles:", error);
       return (
         <div className="roleinput-select">
           <CustomTextField
@@ -128,11 +134,11 @@ const RoleAutoCompleteWithAddOption = forwardRef(
           onClose={handleCloseModal}
           mode={modalMode}
           selectedRole={selectedRoleInModal}
-          onSuccess={modalMode === 'add' ? onRoleCreated : onRoleUpdated}
+          onSuccess={modalMode === "add" ? onRoleCreated : onRoleUpdated}
         />
       </>
     );
-  },
+  }
 );
 
 export default RoleAutoCompleteWithAddOption;
@@ -145,28 +151,28 @@ const RoleSelectAutocompleteInput = forwardRef(
       onChange,
       options,
       label,
-      placeholder = '',
+      placeholder = "",
       required = false,
       disabled = false,
-      className = '',
+      className = "",
       onAddNew,
       onEdit,
       is_edit,
       style = {},
       ...rest
     },
-    ref,
+    ref
   ) => {
     const [showDropdown, setShowDropdown] = useState(false);
-    const [inputValue, setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    
+
     // REMOVED: dropdownRef and scrolling useEffect
     const hasBeenFocused = useRef(false);
 
     useEffect(() => {
       const selectedOption = options.find((opt) => opt.value === value);
-      setInputValue(selectedOption ? selectedOption.label : '');
+      setInputValue(selectedOption ? selectedOption.label : "");
     }, [value, options]);
 
     const filteredOptions = useMemo(() => {
@@ -174,7 +180,7 @@ const RoleSelectAutocompleteInput = forwardRef(
         return options;
       }
       return options.filter((opt) =>
-        opt.label.toLowerCase().includes(inputValue.toLowerCase()),
+        opt.label.toLowerCase().includes(inputValue.toLowerCase())
       );
     }, [inputValue, options]);
 
@@ -185,7 +191,7 @@ const RoleSelectAutocompleteInput = forwardRef(
       setShowDropdown(true);
 
       if (currentInput.length === 0) {
-        onChange({ target: { name, value: '' } });
+        onChange({ target: { name, value: "" } });
       }
     };
 
@@ -220,22 +226,29 @@ const RoleSelectAutocompleteInput = forwardRef(
 
     const handleKeyDown = (e) => {
       if (disabled || !showDropdown) return;
-      
-      const showAddNew = onAddNew && inputValue && !filteredOptions.some(opt => opt.label.toLowerCase() === inputValue.toLowerCase());
+
+      const showAddNew =
+        onAddNew &&
+        inputValue &&
+        !filteredOptions.some(
+          (opt) => opt.label.toLowerCase() === inputValue.toLowerCase()
+        );
       const itemsCount = filteredOptions.length + (showAddNew ? 1 : 0);
 
       if (itemsCount === 0) return;
 
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
-          setActiveIndex((prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount);
+          setActiveIndex(
+            (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
+          );
           break;
-        case 'Enter':
+        case "Enter":
           if (activeIndex < 0) return;
           e.preventDefault();
           if (activeIndex < filteredOptions.length) {
@@ -244,7 +257,7 @@ const RoleSelectAutocompleteInput = forwardRef(
             handleAddNew();
           }
           break;
-        case 'Escape':
+        case "Escape":
           setShowDropdown(false);
           break;
         default:
@@ -253,9 +266,9 @@ const RoleSelectAutocompleteInput = forwardRef(
     };
 
     return (
-      <div 
+      <div
         // className={`roleinput-select ${className}`}
-        style={{ ...style, position: 'relative' }}
+        style={{ ...style, position: "relative" }}
       >
         <CustomTextField
           ref={ref}
@@ -275,53 +288,61 @@ const RoleSelectAutocompleteInput = forwardRef(
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
           {...rest}
         />
-        
+
         {showDropdown && (
           <CustomScrollbar
             className="roleinput-select__dropdown"
             activeIndex={activeIndex}
             as="ul"
           >
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt, index) => (
-              <li
-                key={opt.value}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSelectOption(opt);
-                }}
-                className={`roleinput-select__option ${index === activeIndex ? 'active' : ''}`}
-              >
-                <div className="roleinput-select__option-content">
-                  <span>{opt.label}</span>
-                  {is_edit && !disabled && (
-                    <button
-                      type="button"
-                      className="roleinput-select__edit-button"
-                      onMouseDown={(e) => handleEditClick(e, opt)}
-                    >
-                      <HiPencil size={15} />
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))
-            ) : null}
-            
-            {onAddNew && inputValue && !filteredOptions.some(opt => opt.label.toLowerCase() === inputValue.toLowerCase()) && (
-              <li
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleAddNew();
-                }}
-                className={`roleinput-select__option roleinput-select__option--add ${activeIndex === filteredOptions.length ? 'active' : ''}`}
-              >
-                + Add "{inputValue}"
-              </li>
-            )}
+            {filteredOptions.length > 0
+              ? filteredOptions.map((opt, index) => (
+                  <li
+                    key={opt.value}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelectOption(opt);
+                    }}
+                    className={`roleinput-select__option ${
+                      index === activeIndex ? "active" : ""
+                    }`}
+                  >
+                    <div className="roleinput-select__option-content">
+                      <span>{opt.label}</span>
+                      {is_edit && !disabled && (
+                        <button
+                          type="button"
+                          className="roleinput-select__edit-button"
+                          onMouseDown={(e) => handleEditClick(e, opt)}
+                        >
+                          <HiPencil size={15} />
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                ))
+              : null}
+
+            {onAddNew &&
+              inputValue &&
+              !filteredOptions.some(
+                (opt) => opt.label.toLowerCase() === inputValue.toLowerCase()
+              ) && (
+                <li
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleAddNew();
+                  }}
+                  className={`roleinput-select__option roleinput-select__option--add ${
+                    activeIndex === filteredOptions.length ? "active" : ""
+                  }`}
+                >
+                  + Add "{inputValue}"
+                </li>
+              )}
           </CustomScrollbar>
         )}
       </div>
     );
-  },
+  }
 );

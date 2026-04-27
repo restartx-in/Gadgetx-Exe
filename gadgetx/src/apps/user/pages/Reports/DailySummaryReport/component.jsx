@@ -7,7 +7,7 @@ import React, {
   useReducer,
 } from "react";
 import { useSearchParams } from "react-router-dom";
-import useDailySummary from "@/hooks/api/dailySummary/useDailySummary";
+import useDailySummary from "@/apps/user/hooks/api/dailySummary/useDailySummary";
 import {
   Table,
   Thead,
@@ -23,6 +23,7 @@ import Button from "@/components/Button";
 import HStack from "@/components/HStack";
 import VStack from "@/components/VStack";
 import RefreshButton from "@/components/RefreshButton";
+import DownloadButton from "@/apps/user/components/DownloadButton";
 import DateField from "@/components/DateField";
 import TableFooter from "@/components/TableFooter";
 import { useIsMobile } from "@/utils/useIsMobile";
@@ -32,6 +33,13 @@ import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import PopUpFilter from "@/components/PopUpFilter";
 import PageHeader from "@/components/PageHeader";
 import Spacer from "@/components/Spacer";
+import api from "@/utils/axios/api";
+import { API_ENDPOINTS } from "@/config/api";
+import buildQueryParams from "@/utils/buildQueryParams";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { useToast } from "@/context/ToastContext";
+import { TOASTTYPE, TOASTSTATUS } from "@/constants/object/toastType";
 
 import "./style.scss";
 
@@ -39,7 +47,7 @@ import "./style.scss";
 const stateReducer = (state, action) => {
   switch (action.type) {
     case "SET_TAB":
-      return { ...state, activeTab: action.payload };
+      return { ...state, activeTab: action.payload, page: 1 };
     case "SET_DATES":
       return {
         ...state,
@@ -55,6 +63,17 @@ const stateReducer = (state, action) => {
         pageSize: action.payload,
         page: 1,
       };
+    case "SET_FILTERS":
+      return {
+        ...state,
+        minCount: action.payload.minCount,
+        maxCount: action.payload.maxCount,
+        minAmount: action.payload.minAmount,
+        maxAmount: action.payload.maxAmount,
+        sortBy: action.payload.sortBy,
+        sortOrder: action.payload.sortOrder,
+        page: 1,
+      };
     default:
       return state;
   }
@@ -64,6 +83,19 @@ const TABS = [
   { key: "sales", label: "Sales" },
   { key: "purchases", label: "Purchases" },
   { key: "expenses", label: "Expenses" },
+];
+
+const SORT_FIELD_OPTIONS = [
+  { value: "date", label: "Date" },
+  { value: "count", label: "Count" },
+  { value: "amount", label: "Amount" },
+  { value: "primary", label: "Received/Paid" },
+  { value: "balance", label: "Balance" },
+];
+
+const SORT_ORDER_OPTIONS = [
+  { value: "desc", label: "Descending" },
+  { value: "asc", label: "Ascending" },
 ];
 
 const formatCurrency = (amount) => {
@@ -147,6 +179,18 @@ const DailySummaryListFilter = React.memo(
     setFilterStartDate,
     filterEndDate,
     setFilterEndDate,
+    filterMinCount,
+    setFilterMinCount,
+    filterMaxCount,
+    setFilterMaxCount,
+    filterMinAmount,
+    setFilterMinAmount,
+    filterMaxAmount,
+    setFilterMaxAmount,
+    filterSortBy,
+    setFilterSortBy,
+    filterSortOrder,
+    setFilterSortOrder,
   }) => {
     const handleLocalStartDateChange = useCallback(
       (date) => {
@@ -181,6 +225,56 @@ const DailySummaryListFilter = React.memo(
             value={filterEndDate ? new Date(filterEndDate) : null}
             onChange={handleLocalEndDateChange}
           />
+          <input
+            type="number"
+            className="daily_summary_report__filter_input"
+            placeholder="Min Count"
+            value={filterMinCount}
+            onChange={(e) => setFilterMinCount(e.target.value)}
+          />
+          <input
+            type="number"
+            className="daily_summary_report__filter_input"
+            placeholder="Max Count"
+            value={filterMaxCount}
+            onChange={(e) => setFilterMaxCount(e.target.value)}
+          />
+          <input
+            type="number"
+            className="daily_summary_report__filter_input"
+            placeholder="Min Amount"
+            value={filterMinAmount}
+            onChange={(e) => setFilterMinAmount(e.target.value)}
+          />
+          <input
+            type="number"
+            className="daily_summary_report__filter_input"
+            placeholder="Max Amount"
+            value={filterMaxAmount}
+            onChange={(e) => setFilterMaxAmount(e.target.value)}
+          />
+          <select
+            className="daily_summary_report__filter_select"
+            value={filterSortBy}
+            onChange={(e) => setFilterSortBy(e.target.value)}
+          >
+            {SORT_FIELD_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                Sort By: {opt.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className="daily_summary_report__filter_select"
+            value={filterSortOrder}
+            onChange={(e) => setFilterSortOrder(e.target.value)}
+          >
+            {SORT_ORDER_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                Order: {opt.label}
+              </option>
+            ))}
+          </select>
         </VStack>
       </PopUpFilter>
     );
@@ -188,9 +282,11 @@ const DailySummaryListFilter = React.memo(
 );
 
 function DailySummaryReport() {
+  const showToast = useToast();
   const isMobile = useIsMobile();
   const defaultDates = getDefaultDateRange();
   const [searchParams] = useSearchParams();
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // 3. Initialize state with useReducer
   const [state, dispatch] = useReducer(stateReducer, {
@@ -199,10 +295,22 @@ function DailySummaryReport() {
     endDate: searchParams.get("endDate") || defaultDates.end,
     page: parseInt(searchParams.get("page")) || 1,
     pageSize: parseInt(searchParams.get("pageSize")) || 10,
+    minCount: searchParams.get("min_count") || "",
+    maxCount: searchParams.get("max_count") || "",
+    minAmount: searchParams.get("min_amount") || "",
+    maxAmount: searchParams.get("max_amount") || "",
+    sortBy: searchParams.get("sort_by") || "date",
+    sortOrder: searchParams.get("sort_order") || "desc",
   });
 
   const [filterStartDate, setFilterStartDate] = useState(state.startDate);
   const [filterEndDate, setFilterEndDate] = useState(state.endDate);
+  const [filterMinCount, setFilterMinCount] = useState(state.minCount);
+  const [filterMaxCount, setFilterMaxCount] = useState(state.maxCount);
+  const [filterMinAmount, setFilterMinAmount] = useState(state.minAmount);
+  const [filterMaxAmount, setFilterMaxAmount] = useState(state.maxAmount);
+  const [filterSortBy, setFilterSortBy] = useState(state.sortBy);
+  const [filterSortOrder, setFilterSortOrder] = useState(state.sortOrder);
 
   // --- API Call ---
   const {
@@ -215,15 +323,35 @@ function DailySummaryReport() {
     end_date: state.endDate,
     page: state.page,
     page_size: state.pageSize,
+    active_tab: state.activeTab,
+    min_count: state.minCount,
+    max_count: state.maxCount,
+    min_amount: state.minAmount,
+    max_amount: state.maxAmount,
+    sort_by: state.sortBy,
+    sort_order: state.sortOrder,
   });
-  
+
   // --- FIX STARTS HERE ---
   // This useEffect ensures that the data is fetched on initial component load
   // and whenever the filters or pagination change. It fixes the issue where
   // data would only appear after a manual refresh.
   useEffect(() => {
     refetch();
-  }, [state.startDate, state.endDate, state.page, state.pageSize, refetch]);
+  }, [
+    state.startDate,
+    state.endDate,
+    state.page,
+    state.pageSize,
+    state.activeTab,
+    state.minCount,
+    state.maxCount,
+    state.minAmount,
+    state.maxAmount,
+    state.sortBy,
+    state.sortOrder,
+    refetch,
+  ]);
   // --- FIX ENDS HERE ---
 
   // --- Derived Data ---
@@ -242,7 +370,22 @@ function DailySummaryReport() {
   useEffect(() => {
     setFilterStartDate(state.startDate);
     setFilterEndDate(state.endDate);
-  }, [state.startDate, state.endDate]);
+    setFilterMinCount(state.minCount);
+    setFilterMaxCount(state.maxCount);
+    setFilterMinAmount(state.minAmount);
+    setFilterMaxAmount(state.maxAmount);
+    setFilterSortBy(state.sortBy);
+    setFilterSortOrder(state.sortOrder);
+  }, [
+    state.startDate,
+    state.endDate,
+    state.minCount,
+    state.maxCount,
+    state.minAmount,
+    state.maxAmount,
+    state.sortBy,
+    state.sortOrder,
+  ]);
 
   // --- Mobile Tab Scrolling ---
   useEffect(() => {
@@ -268,14 +411,51 @@ function DailySummaryReport() {
       type: "SET_DATES",
       payload: { start: filterStartDate, end: filterEndDate },
     });
+    dispatch({
+      type: "SET_FILTERS",
+      payload: {
+        minCount: filterMinCount,
+        maxCount: filterMaxCount,
+        minAmount: filterMinAmount,
+        maxAmount: filterMaxAmount,
+        sortBy: filterSortBy,
+        sortOrder: filterSortOrder,
+      },
+    });
     setShowFilter(false);
-  }, [filterStartDate, filterEndDate]);
+  }, [
+    filterStartDate,
+    filterEndDate,
+    filterMinCount,
+    filterMaxCount,
+    filterMinAmount,
+    filterMaxAmount,
+    filterSortBy,
+    filterSortOrder,
+  ]);
 
   const handleFilterReset = useCallback(() => {
     const { start, end } = getDefaultDateRange();
     setFilterStartDate(start);
     setFilterEndDate(end);
+    setFilterMinCount("");
+    setFilterMaxCount("");
+    setFilterMinAmount("");
+    setFilterMaxAmount("");
+    setFilterSortBy("date");
+    setFilterSortOrder("desc");
     dispatch({ type: "SET_DATES", payload: { start, end } });
+    dispatch({
+      type: "SET_FILTERS",
+      payload: {
+        minCount: "",
+        maxCount: "",
+        minAmount: "",
+        maxAmount: "",
+        sortBy: "date",
+        sortOrder: "desc",
+      },
+    });
     setShowFilter(false);
   }, []);
 
@@ -298,6 +478,124 @@ function DailySummaryReport() {
     refetch();
   }, [refetch]);
 
+  const handleDownloadPdf = useCallback(async () => {
+    setIsDownloading(true);
+    try {
+      const query = buildQueryParams({
+        start_date: state.startDate,
+        end_date: state.endDate,
+        page: 1,
+        page_size: 100000,
+        active_tab: state.activeTab,
+        min_count: state.minCount,
+        max_count: state.maxCount,
+        min_amount: state.minAmount,
+        max_amount: state.maxAmount,
+        sort_by: state.sortBy,
+        sort_order: state.sortOrder,
+      });
+
+      const response = await api.get(`${API_ENDPOINTS.DAILY_SUMMARY.BASE}${query}`);
+      const rows = response?.data?.data || [];
+
+      if (!rows.length) {
+        showToast({
+          type: TOASTTYPE.GENARAL,
+          status: TOASTSTATUS.WARNING,
+          message: "No data available to download.",
+        });
+        return;
+      }
+
+      const tabLabel =
+        state.activeTab === "purchases"
+          ? "Purchases"
+          : state.activeTab === "expenses"
+            ? "Expenses"
+            : "Sales";
+
+      const doc = new jsPDF("l", "pt", "a4");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text(`Daily ${tabLabel} Report`, 40, 32);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(
+        `From: ${state.startDate || "-"}  To: ${state.endDate || "-"}  |  Sort: ${state.sortBy} (${state.sortOrder})`,
+        40,
+        48
+      );
+
+      const tableHead =
+        state.activeTab === "purchases"
+          ? [["SL", "Date", "Count", "Total", "Paid", "Balance"]]
+          : state.activeTab === "expenses"
+            ? [["SL", "Date", "Count", "Total", "Paid", "Balance"]]
+            : [["SL", "Date", "Count", "Total", "Received", "Balance"]];
+
+      const tableBody = rows.map((item, index) => {
+        const metrics =
+          state.activeTab === "purchases"
+            ? {
+                count: item.purchase?.count || 0,
+                total: (item.purchase?.paid || 0) + (item.purchase?.pending || 0),
+                primary: item.purchase?.paid || 0,
+                balance: item.purchase?.pending || 0,
+              }
+            : state.activeTab === "expenses"
+              ? {
+                  count: item.expense?.count || 0,
+                  total: item.expense?.amount || 0,
+                  primary: item.expense?.paid || 0,
+                  balance: item.expense?.balance || 0,
+                }
+              : {
+                  count: item.sale?.count || 0,
+                  total: (item.sale?.received || 0) + (item.sale?.pending || 0),
+                  primary: item.sale?.received || 0,
+                  balance: item.sale?.pending || 0,
+                };
+
+        return [
+          index + 1,
+          formatDate(item.date),
+          metrics.count,
+          metrics.total.toFixed(2),
+          metrics.primary.toFixed(2),
+          metrics.balance.toFixed(2),
+        ];
+      });
+
+      autoTable(doc, {
+        startY: 64,
+        head: tableHead,
+        body: tableBody,
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fillColor: [35, 128, 123] },
+        margin: { left: 40, right: 40 },
+        theme: "striped",
+      });
+
+      const stamp = new Date().toISOString().slice(0, 10);
+      doc.save(`daily-${state.activeTab}-report-${stamp}.pdf`);
+
+      showToast({
+        type: TOASTTYPE.GENARAL,
+        status: TOASTSTATUS.SUCCESS,
+        message: "PDF downloaded successfully.",
+      });
+    } catch (error) {
+      showToast({
+        type: TOASTTYPE.GENARAL,
+        status: TOASTSTATUS.ERROR,
+        message: error?.response?.data?.message || "Failed to download PDF report.",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [state, showToast]);
+
   const captionItem = useMemo(
     () =>
       ({
@@ -318,6 +616,18 @@ function DailySummaryReport() {
       setFilterStartDate,
       filterEndDate,
       setFilterEndDate,
+      filterMinCount,
+      setFilterMinCount,
+      filterMaxCount,
+      setFilterMaxCount,
+      filterMinAmount,
+      setFilterMinAmount,
+      filterMaxAmount,
+      setFilterMaxAmount,
+      filterSortBy,
+      setFilterSortBy,
+      filterSortOrder,
+      setFilterSortOrder,
     }),
     [
       showFilter,
@@ -325,6 +635,12 @@ function DailySummaryReport() {
       handleFilterReset,
       filterStartDate,
       filterEndDate,
+      filterMinCount,
+      filterMaxCount,
+      filterMinAmount,
+      filterMaxAmount,
+      filterSortBy,
+      filterSortOrder,
     ]
   );
 
@@ -396,6 +712,11 @@ function DailySummaryReport() {
             </div>
             <HStack className="daily_summary_report__actions_container">
               <DailySummaryListFilter {...filterProps} />
+              <DownloadButton
+                onClick={handleDownloadPdf}
+                loading={isDownloading}
+                disabled={isDownloading || loading}
+              />
               <RefreshButton onClick={handleManualRefresh} />
             </HStack>
           </>
@@ -424,6 +745,11 @@ function DailySummaryReport() {
           </div>
           <HStack className="daily_summary_report__actions_container">
             <DailySummaryListFilter {...filterProps} />
+            <DownloadButton
+              onClick={handleDownloadPdf}
+              loading={isDownloading}
+              disabled={isDownloading || loading}
+            />
             <RefreshButton onClick={handleManualRefresh} />
           </HStack>
         </HStack>

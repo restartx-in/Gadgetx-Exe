@@ -1,23 +1,25 @@
 module.exports = async (client) => {
   try {
     const result = await client.query(`
-      SELECT name FROM sqlite_master WHERE type='table' AND name='invoice_number';
+      SELECT to_regclass('public."invoice_number"') AS table_name;
     `)
 
-    const tableExists = result.rows.length > 0
+    const tableExists = result.rows[0].table_name !== null
 
     if (tableExists) {
       console.log('ℹ️ "invoice_number" table already exists.')
     } else {
       await client.query(`
         CREATE TABLE invoice_number (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id SERIAL PRIMARY KEY,
           tenant_id INTEGER REFERENCES "tenant"(id) ON DELETE CASCADE, 
           transaction_type VARCHAR(50) NOT NULL,
           value INT DEFAULT 0,
-          last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+          last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           UNIQUE (tenant_id, transaction_type)
         );
+
+
       `)
 
       console.log('✅ "invoice_number" table has been created.')
@@ -27,7 +29,7 @@ module.exports = async (client) => {
       `)
     }
   } catch (err) {
-    console.error('❌ Failed to create "invoice_number" table:', err.message)
+    console.error('❌ Failed to create "cost_center" table:', err.message)
     throw err
   }
 }

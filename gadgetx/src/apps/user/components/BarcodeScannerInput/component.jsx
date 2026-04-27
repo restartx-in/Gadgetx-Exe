@@ -63,7 +63,7 @@ const BarcodeScannerInput = ({
           ))}
         </select>
         <InputField
-        label="Barcode"
+        label={searchOptions.find((option) => option.value === searchType)?.name || "Barcode"}
           ref={searchRef}
           value={searchKey}
           onChange={onSearchKeyChange}

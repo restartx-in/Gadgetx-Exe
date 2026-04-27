@@ -1,8 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback, useReducer } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, isValid } from "date-fns";
 
-import useStockDetailedReport from "@/hooks/api/stockDetailedReport/useStockDetailedReport";
+import useStockDetailedReport from "@/apps/user/hooks/api/stockDetailedReport/useStockDetailedReport";
 import { useIsMobile } from "@/utils/useIsMobile";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
 
@@ -10,11 +16,11 @@ import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import ScrollContainer from "@/components/ScrollContainer";
 import TitleContainer from "@/components/TitleContainer";
-import TableTopContainer from "@/components/TableTopContainer";
+import TableTopContainer from "@/apps/user/components/TableTopContainer";
 import DateFilter from "@/components/DateFilter";
 import RefreshButton from "@/components/RefreshButton";
 import Loader from "@/components/Loader";
-import ListItem from "@/apps/user/components/ListItem/component";
+import ListItem from "@/components/ListItem/component";
 import PageHeader from "@/components/PageHeader";
 import HStack from "@/components/HStack/component.jsx";
 import {
@@ -95,6 +101,7 @@ const StockDetailedReport = () => {
 
   // Derived Data (Memoized)
   const listData = useMemo(() => data || [], [data]);
+  const totalItemCount = listData.length;
 
   // --- 3. Sync UI Controls from main state ---
   useEffect(() => {
@@ -108,7 +115,8 @@ const StockDetailedReport = () => {
   // --- Handlers (Memoized & UPDATED setState CALLS) ---
   const handleDateFilterChange = useCallback((newDateValue) => {
     setDateFilter(newDateValue);
-    setState({ // Simplified setState
+    setState({
+      // Simplified setState
       start_date: newDateValue.startDate || "",
       end_date: newDateValue.endDate || "",
     });
@@ -116,7 +124,8 @@ const StockDetailedReport = () => {
 
   const handleRefresh = useCallback(() => {
     setDateFilter({ startDate: null, endDate: null, rangeType: "custom" });
-    setState({ // Simplified setState (full reset object)
+    setState({
+      // Simplified setState (full reset object)
       start_date: "",
       end_date: "",
     });
@@ -132,7 +141,7 @@ const StockDetailedReport = () => {
       isValid(new Date(endDate));
 
     return isDateFilterActive
-      ? `${format(new Date(startDate), "MMM d, yyyy")} → ${format(
+      ? `${format(new Date(startDate), "MMM d, yyyy")} to ${format(
           new Date(endDate),
           "MMM d, yyyy"
         )}`
@@ -148,13 +157,16 @@ const StockDetailedReport = () => {
             subtitle={dateSubtitle}
           />
           <TableTopContainer
-            isMargin={true}
+            //isMargin={true}
             mainActions={
               <>
                 <DateFilter
                   value={dateFilter}
                   onChange={handleDateFilterChange}
                 />
+                <div className="total-stock-value-box fs14 fw500">
+                  <strong>All-Time Item Count:</strong> {totalItemCount}
+                </div>
                 <RefreshButton onClick={handleRefresh} />
               </>
             }
@@ -210,6 +222,10 @@ const StockDetailedReport = () => {
               <TableCaption item="Stock Detailed Report" />
             ) : (
               <div>
+                <ListItem
+                  title="All-Time Item Count"
+                  subtitle={<strong>{totalItemCount}</strong>}
+                />
                 {listData.map((item, index) => (
                   <MobileStockCard key={item.item_id || index} item={item} />
                 ))}

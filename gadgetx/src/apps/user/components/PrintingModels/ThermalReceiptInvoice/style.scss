@@ -1,18 +1,35 @@
 /* ThermalReceipt.scss */
 
+/* Arabic font for crisp thermal printing */
+@font-face {
+  font-family: 'Amiri';
+  src: url('/fonts/Amiri-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Main Container (Simulating the paper) */
 .thermal-receipt-sheet {
   background: #fff;
   width: 100%;
   max-width: 80mm; /* Standard Thermal Width */
-  margin: 0px;
+  margin: 0 auto;
   padding: 10px;
-  // font-family: 'Courier New', Courier, monospace; /* Classic Receipt Look */
+  font-size: 13px;
   color: #000;
   box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+
 .arabic-text {
   direction: rtl;
-  font-family: 'Tahoma', sans-serif;
+  font-family: 'Amiri', 'Noto Sans Arabic', 'Tahoma', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* For auto-translated static labels */
@@ -24,9 +41,14 @@
 
 .arabic-label {
   direction: rtl;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 0.9em; /* Make translation slightly smaller */
-  color: #333;
+  font-family: 'Amiri', 'Noto Sans Arabic', 'Tahoma', sans-serif;
+  font-size: 1em;
+  color: #000;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 }
 
@@ -87,8 +109,8 @@
   .grid-row {
     display: grid;
     /* Name | Qty | Price | Amount */
-    grid-template-columns: auto 50px 60px 70px; 
-    gap: 5px;
+    grid-template-columns: 1fr 0.45fr 0.6fr 0.7fr;
+    gap: 4px;
     align-items: start;
     padding: 4px 0;
   }
@@ -100,11 +122,26 @@
     padding-bottom: 4px;
   }
 
-  /* Column Alignments */
-  .col-name { text-align: left; word-break: break-word; }
+  .col-name {
+    text-align: left;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+    line-height: 1.3;
+  }
+  .col-name--sm {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .col-name--xs {
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: -0.1px;
+  }
   .col-qty  { text-align: center; }
-  .col-price { text-align: right; }
-  .col-total { text-align: right; font-weight: 600; }
+  .col-price { text-align: right; white-space: nowrap; }
+  .col-total { text-align: right; font-weight: 600; white-space: nowrap; }
 }
 
 /* --- Summary Section --- */
@@ -116,18 +153,46 @@
     display: flex;
     justify-content: space-between;
     padding: 3px 0;
+
+    &.summary-row--tax {
+      opacity: 1;
+      font-style: normal;
+      font-size: 13px;
+      font-weight: 700;
+      color: #000;
+
+      .summary-row__label,
+      .amount-symbol,
+      span {
+        color: #000 !important;
+        font-weight: 700;
+        font-style: normal;
+      }
+    }
     
     &.grand-total {
       font-weight: 800;
-      font-size: 15px;
-      border-top: 1px dashed #000;
+      font-size: 16px;
+      border-top: 3px double #000;
+      border-bottom: 3px double #000;
       margin-top: 8px;
-      padding-top: 8px;
+      padding: 6px 0;
     }
 
     &.balance-due {
       font-weight: 700;
     }
+  }
+
+  .paid-stamp {
+    text-align: center;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    margin-top: 6px;
+    padding: 4px 0;
+    border: 2px solid #000;
+    text-transform: uppercase;
   }
 }
 
@@ -152,9 +217,34 @@
 
   .barcode-wrap, .qr-wrap {
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
     margin-bottom: 10px;
-    img, canvas { max-width: 100%; }
+
+    img, canvas, svg {
+      max-width: 100%;
+    }
+
+    svg text {
+      fill: #000 !important;
+      font-weight: 700;
+    }
+  }
+
+  .barcode-number {
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #000;
+    word-break: break-all;
+  }
+
+  .barcode-number--top {
+    margin-bottom: 4px;
+    margin-top: 0;
+    letter-spacing: 0.4px;
   }
 
   .footer-message {
@@ -183,19 +273,16 @@
     visibility: visible !important;
   }
 
-  /* CENTER the receipt on the printed page */
+  /* Let receipt flow naturally from top — no fixed/transform positioning */
   .thermal-receipt-sheet {
-    position: fixed;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 80mm;
     max-width: 80mm;
-
-    /* Reduce shifting on printers */
-    padding: 5px;
+    padding: 4px;
     margin: 0;
     background: #fff;
+    box-shadow: none;
   }
 }

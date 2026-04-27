@@ -8,8 +8,8 @@
 
 // export default TableCaption
 
-import './style.scss'
-import {Tr,Td,} from '@/components/Table'
+import "./style.scss";
+import { Tr, Td } from "@/components/Table";
 
 const TableCaption = ({ item, noOfCol }) => {
   return (
@@ -18,7 +18,7 @@ const TableCaption = ({ item, noOfCol }) => {
         <p className="table_caption fs18 fw500">No {item} found.</p>
       </Td>
     </Tr>
-  )
-}
+  );
+};
 
-export default TableCaption
+export default TableCaption;

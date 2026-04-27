@@ -1,67 +1,41 @@
-// /* Modal Overlay */
-// .custom-modal__overlay {
-//   position: fixed;
-//   top: 0;
-//   left: 0;
-//   width: 100vw;
-//   height: 100vh;
-//   background: rgba(0, 0, 0, 0.45);
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   z-index: 999;
-//   animation: fadeIn 0.3s ease;
-// }
-
-/* Modal Container */
-.custom-modal__container {
+/* Base Modal */
+.gadgetx_custom-modal__container {
   background: #ffffff;
-  width: 100%;
-  max-width: 300px;
-  border-radius: 12px;
-  // padding: 20px 20px 24px;
+  max-height: 95vh;
+  overflow-y: auto;
+  border-radius: 14px;
+  padding: 30px;
   position: relative;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  animation: slideUp 0.25s ease;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
 }
 
-/* Close Button (X) */
-.modal-close-x {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  background: #f1f1f1;
-  border: none;
-  font-size: 18px;
-  font-weight: bold;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: 0.2s;
+/* 🔹 Thermal Mode (Normal Small) */
+.modal-thermal {
+  width: 95%;
+  max-width: 420px;   /* Small receipt width */
+  min-width: 320px;
+}
+
+/* 🔹 A4 Mode (Big Modal) */
+.modal-a4 {
+  width: 98%;
+  max-width: 1200px;  /* Big A4 preview width */
+  min-width: 700px;
+}
+
+/* Center Receipt Content */
+.preview-container {
+  width: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
-
-  &:hover {
-    background: #e2e2e2;
-  }
+  margin-top: 20px;
 }
-
-// /* Scrollable Invoice Preview */
-// .preview-container {
-//   max-height: 65vh;
-//   overflow-y: auto;
-//   border: 1px solid #eee;
-//   padding: 12px;
-//   border-radius: 8px;
-//   background: #fafafa;
-// }
 
 /* Footer Buttons */
-.custom-modal__footer {
+.gadgetx_custom-modal__footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -73,33 +47,3 @@
   width: 6px;
 }
 
-// .preview-container::-webkit-scrollbar-thumb {
-//   background: #ccc;
-//   border-radius: 4px;
-// }
-
-// /* Animations */
-// @keyframes fadeIn {
-//   from { opacity: 0; }
-//   to { opacity: 1; }
-// }
-
-// @keyframes slideUp {
-//   from { transform: translateY(20px); opacity: 0; }
-//   to { transform: translateY(0); opacity: 1; }
-// }
-
-// /* Mobile Responsive */
-// @media (max-width: 480px) {
-//   .custom-modal__container {
-//     width: 95%;
-//     padding: 16px;
-//   }
-
-//   .modal-close-x {
-//     top: 8px;
-//     right: 8px;
-//     width: 26px;
-//     height: 26px;
-//   }
-// }

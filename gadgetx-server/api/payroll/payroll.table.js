@@ -1,17 +1,17 @@
 module.exports = async (client) => {
   try {
     const result = await client.query(`
-            SELECT name FROM sqlite_master WHERE type='table' AND name='payroll';
+            SELECT to_regclass('public.payroll') AS table_name;
         `);
 
-    const tableExists = result.rows.length > 0;
+    const tableExists = result.rows[0].table_name !== null;
 
     if (tableExists) {
       console.log('ℹ️ "payroll" table already exists.');
     } else {
       await client.query(`
                 CREATE TABLE payroll (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     tenant_id INTEGER REFERENCES "tenant"(id) ON DELETE CASCADE, 
                     employee_id INTEGER REFERENCES employee(id) ON DELETE CASCADE NOT NULL,
                     done_by_id INTEGER REFERENCES "done_by"(id) ON DELETE SET NULL,
@@ -19,8 +19,8 @@ module.exports = async (client) => {
                     salary DECIMAL(12, 2) NOT NULL,
                     account_id INTEGER REFERENCES account(id) ON DELETE CASCADE NOT NULL,
                     pay_date DATE NOT NULL,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
             `);
       console.log('✅ "payroll" table created.');

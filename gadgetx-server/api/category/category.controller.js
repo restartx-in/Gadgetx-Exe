@@ -9,6 +9,9 @@ class CategoryController {
       const newCategory = await this.service.create(req.body, req.user, req.db);
       res.status(201).json(newCategory);
     } catch (error) {
+      if (error.message.includes('already exists')) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
       next(error);
     }
   }
@@ -54,6 +57,9 @@ class CategoryController {
       }
       res.json(updatedCategory);
     } catch (error) {
+      if (error.message.includes('already exists')) {
+        return res.status(400).json({ status: "failed", error: error.message });
+      }
       next(error);
     }
   }

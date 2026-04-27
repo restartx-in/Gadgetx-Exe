@@ -11,6 +11,7 @@ const ScrollContainer = ({ children }) => (
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100%', // ensures flex container stretches
+        flex: 1,
       }}
     >
       {children}

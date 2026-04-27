@@ -1,0 +1,26 @@
+.status-filter-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* reduced vertical gap */
+  padding: 6px 8px; /* reduced padding */
+  border: 1px solid #e6e6e6;
+  border-radius: 10px; /* slightly smaller radius */
+  background-color: #ffffff;
+  width: max-content;
+  // margin-bottom: 10px;
+}
+
+.status-filter-row {
+  display: flex;
+  gap: 4px; /* reduced horizontal gap */
+}
+.status-filter-row button {
+  min-width: 67px; /* slightly narrower */
+  height: 34px; /* 🔽 reduced button height */
+  font-size: 11px; /* smaller text */
+  padding: 0 8px;
+  border-radius: 6px;
+  line-height: 1; /* prevents extra vertical space */
+}
+
+

@@ -9,7 +9,7 @@ const PurchaseValidator = require("./purchase.validator");
 
 const ItemRepository = require("../item/item.repository");
 const AccountRepository = require("../account/account.repository");
-const TenantRepository = require('../tenant/tenant.repository');
+const TenantRepository = require('../../api/tenant/tenant.repository');
 
 // --- Dependency Injection for Voucher Service ---
 // We need VoucherService to create vouchers from Purchase

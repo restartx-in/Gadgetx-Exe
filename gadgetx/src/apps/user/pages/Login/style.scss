@@ -1,0 +1,262 @@
+// ── Variables ────────────────────────────────
+$orange-accent: #d35400;
+$text-white: #ffffff;
+$input-bg: #ffffff;
+$font-main: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+// ── Block: login-page ────────────────────────
+.login-page {
+  width: 100vw;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  font-family: $font-main;
+  overflow: hidden;
+
+  // Element: overlay
+  &__overlay {
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Element: container
+  &__container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 60px;
+
+    @media (max-width: 900px) {
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+    }
+  }
+
+  // Element: brand
+  &__brand {
+    font-size: 30px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    opacity: 0.9;
+
+    @media (max-width: 900px) {
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+  }
+
+  // Element: welcome (Sub-container)
+  &__welcome {
+    flex: 1;
+    color: $text-white;
+    padding-right: 40px;
+
+    @media (max-width: 900px) {
+      padding-right: 0;
+      margin-bottom: 20px;
+      flex: none; // Reset flex so it doesn't take unnecessary space on mobile
+    }
+  }
+
+  &__welcome-title {
+    font-size: 4rem;
+    font-weight: 600;
+    line-height: 0.85;
+    margin-bottom: 25px;
+    letter-spacing: -2px;
+
+    // HIDE ON MOBILE
+    @media (max-width: 900px) {
+      display: none;
+    }
+  }
+
+  &__welcome-text {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    max-width: 400px;
+    margin-bottom: 35px;
+    opacity: 0.85;
+
+    // HIDE ON MOBILE
+    @media (max-width: 900px) {
+      display: none;
+    }
+  }
+
+  // Element: form-section (Sub-container)
+  &__form-section {
+    flex: 0.8;
+    display: flex;
+    justify-content: flex-end;
+
+    @media (max-width: 900px) {
+      justify-content: center;
+      width: 100%;
+      flex: none;
+    }
+  }
+
+  &__form-box {
+    width: 100%;
+    max-width: 420px;
+    color: $text-white;
+  }
+
+  &__form-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+
+    @media (max-width: 900px) {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__input-group {
+    margin-bottom: 22px;
+    text-align: left;
+  }
+
+  &__label {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  &__input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 4px;
+    background: $input-bg;
+    font-size: 1rem;
+    color: #2c3e50;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: 3px solid rgba($orange-accent, 0.5);
+    }
+  }
+
+  &__options {
+    margin-bottom: 25px;
+    text-align: left;
+  }
+
+  &__remember {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    width: fit-content;
+  }
+
+  &__checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  &__submit-btn {
+    width: fit-content;
+    padding: 14px 40px;
+    background-color: $orange-accent;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease;
+
+    @media (max-width: 900px) {
+      width: 100%; // Make button full width on mobile for better UX
+    }
+
+    &:hover {
+      background-color: darken($orange-accent, 8%);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__footer-links {
+    margin-top: 20px;
+    text-align: left;
+
+    @media (max-width: 900px) {
+      text-align: center;
+    }
+  }
+
+  &__link-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+
+    &:hover {
+      text-decoration: underline;
+      color: white;
+    }
+  }
+
+  &__error-msg {
+    background: rgba(231, 76, 60, 0.2);
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    border: 1px solid #e74c3c;
+    color: #ffcccc;
+  }
+
+  &__legal {
+    margin-top: 50px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: left;
+
+    @media (max-width: 900px) {
+      text-align: center;
+      margin-top: 30px;
+    }
+  }
+
+  &__legal-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

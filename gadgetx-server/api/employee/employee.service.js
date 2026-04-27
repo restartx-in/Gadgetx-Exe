@@ -1,14 +1,16 @@
 class EmployeeService {
-  constructor(employeeRepository, tenantRepository) { 
+  constructor(employeeRepository, tenantRepository) {
     this.repository = employeeRepository;
-    this.tenantRepository = tenantRepository; 
+    this.tenantRepository = tenantRepository;
   }
 
   async getAll(user, filters, db) {
     let tenantId;
-    if (user.role === 'super_admin') {
+    if (user.role === "super_admin") {
       if (!filters.tenant_id) {
-        const error = new Error("Bad Request: Super admin must specify a 'tenant_id' in the query parameters.");
+        const error = new Error(
+          "Bad Request: Super admin must specify a 'tenant_id' in the query parameters.",
+        );
         error.statusCode = 400;
         throw error;
       }
@@ -16,25 +18,23 @@ class EmployeeService {
     } else {
       tenantId = user.tenant_id;
     }
-    // Pass db
     return await this.repository.getAllByTenantId(db, tenantId, filters);
   }
 
   async getAllPaginated(user, filters, db) {
-    let tenantId;
-    if (user.role === 'super_admin') {
-        if (!filters.tenant_id) {
-            const error = new Error("Bad Request: Super admin must specify a 'tenant_id' in the query parameters.");
-            error.statusCode = 400;
-            throw error;
-        }
-        tenantId = filters.tenant_id;
-    } else {
-        tenantId = user.tenant_id;
+    let tenantId =
+      user.role === "super_admin" ? filters.tenant_id : user.tenant_id;
+
+    if (user.role === "super_admin" && !tenantId) {
+      const error = new Error(
+        "Bad Request: Super admin must specify a 'tenant_id' in the query parameters.",
+      );
+      error.statusCode = 400;
+      throw error;
     }
 
-    // Pass db
-    const { employees, totalCount } = await this.repository.getPaginatedByTenantId(db, tenantId, filters);
+    const { employees, totalCount } =
+      await this.repository.getPaginatedByTenantId(db, tenantId, filters);
     const pageSize = filters.page_size ? parseInt(filters.page_size, 10) : 10;
     const page_count = totalCount > 0 ? Math.ceil(totalCount / pageSize) : 0;
 
@@ -42,8 +42,7 @@ class EmployeeService {
   }
 
   async getById(id, user, db) {
-    const tenantId = user.role === 'super_admin' ? null : user.tenant_id;
-    // Pass db
+    const tenantId = user.role === "super_admin" ? null : user.tenant_id;
     const employee = await this.repository.getById(db, id, tenantId);
     if (!employee) {
       throw new Error("Employee not found or not authorized");
@@ -52,53 +51,84 @@ class EmployeeService {
   }
 
   async create(employeeData, user, db) {
-    let tenantIdForNewEntry;
-    if (user.role === 'super_admin') {
-      if (!employeeData.tenant_id) {
-        const error = new Error("Super admin must specify a 'tenant_id' in the request body.");
-        error.statusCode = 400;
-        throw error;
+    try {
+      let tenantIdForNewEntry;
+      if (user.role === "super_admin") {
+        if (!employeeData.tenant_id) {
+          const error = new Error(
+            "Super admin must specify a 'tenant_id' in the request body.",
+          );
+          error.statusCode = 400;
+          throw error;
+        }
+        const tenantExists = await this.tenantRepository.getById(
+          db,
+          employeeData.tenant_id,
+        );
+        if (!tenantExists) {
+          const error = new Error(
+            `Tenant with ID ${employeeData.tenant_id} not found.`,
+          );
+          error.statusCode = 404;
+          throw error;
+        }
+        tenantIdForNewEntry = employeeData.tenant_id;
+      } else {
+        tenantIdForNewEntry = user.tenant_id;
       }
-      // Pass db
-      const tenantExists = await this.tenantRepository.getById(db, employeeData.tenant_id);
-      if (!tenantExists) {
-        const error = new Error(`Tenant with ID ${employeeData.tenant_id} not found.`);
-        error.statusCode = 404;
-        throw error;
-      }
-      tenantIdForNewEntry = employeeData.tenant_id;
-    } else {
-      tenantIdForNewEntry = user.tenant_id;
-    }
 
-    const dataToSave = { ...employeeData, tenant_id: tenantIdForNewEntry };
-    // Pass db
-    const newEmployee = await this.repository.create(db, dataToSave);
-    // Pass db to recursive call
-    return this.getById(newEmployee.id, user, db);
+      const dataToSave = { ...employeeData, tenant_id: tenantIdForNewEntry };
+      const newEmployee = await this.repository.create(db, dataToSave);
+      const data = await this.getById(newEmployee.id, user, db);
+
+      return { status: "success", data };
+    } catch (error) {
+      if (error.code === "23505") {
+        throw new Error(
+          `An employee with this identifier/email already exists.`,
+        );
+      }
+      throw error;
+    }
   }
 
   async update(id, employeeData, user, db) {
-    const { tenant_id, ...updateData } = employeeData;
-    const tenantIdToUpdate = user.role === 'super_admin' ? null : user.tenant_id;
+    try {
+      const { tenant_id, ...updateData } = employeeData;
+      const tenantIdToUpdate =
+        user.role === "super_admin" ? null : user.tenant_id;
 
-    // Pass db
-    const updatedEmployee = await this.repository.update(db, id, tenantIdToUpdate, updateData);
-    if (!updatedEmployee) {
-      throw new Error("Employee not found or not authorized to update");
+      const updatedEmployee = await this.repository.update(
+        db,
+        id,
+        tenantIdToUpdate,
+        updateData,
+      );
+      if (!updatedEmployee) {
+        throw new Error("Employee not found or not authorized to update");
+      }
+
+      const data = await this.getById(id, user, db);
+      return { status: "success", data };
+    } catch (error) {
+      if (error.code === "23505") {
+        throw new Error(`The provided identifier/email is already in use.`);
+      }
+      throw error;
     }
-    // Pass db to recursive call
-    return this.getById(id, user, db);
   }
 
   async delete(id, user, db) {
-    const tenantIdToDelete = user.role === 'super_admin' ? null : user.tenant_id;
-    // Pass db
+    const tenantIdToDelete =
+      user.role === "super_admin" ? null : user.tenant_id;
     const deleted = await this.repository.delete(db, id, tenantIdToDelete);
-     if (!deleted) {
+    if (!deleted) {
       throw new Error("Employee not found or not authorized to delete");
     }
-    return deleted;
+    return {
+      status: "success",
+      data: deleted,
+    };
   }
 }
 

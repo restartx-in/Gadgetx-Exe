@@ -1,0 +1,2 @@
+import FrameVariantAutoCompleteWithAddOption from './component'
+export default FrameVariantAutoCompleteWithAddOption

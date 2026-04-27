@@ -9,6 +9,7 @@ const TdDate = ({ children }) => {
     return `${day}-${month}-${year}`;
   }
 
+  // Example:
 
   return (
     <td className="td_date fs16">

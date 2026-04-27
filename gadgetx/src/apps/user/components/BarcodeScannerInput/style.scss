@@ -1,13 +1,14 @@
 .barcode-input-wrapper {
-  display: flex;
-  flex-direction: column;
   width: 100%;
+  display: block; // Remove flex column to avoid vertical alignment issues
+
 
   .input-with-button {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px; // Match standard gap
     width: 100%;
+    height: 100%;
 
     .search-type-select {
       appearance: none;
@@ -21,7 +22,7 @@
       font-size: 1rem;
       cursor: pointer;
 
-      height: 38px;
+      height: 40px;
       padding: 0 20px 0 15px;
       min-width: 80px;
       flex-shrink: 0; 
@@ -36,7 +37,7 @@
       }
     }
 
-    .input-field-container {
+    .custom-input {
       flex: 1;
       min-width: 0;
     }
@@ -46,8 +47,8 @@
       color: #fff;
       border: none;
       border-radius: 50%;
-      width: 45px;
-      height: 45px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;

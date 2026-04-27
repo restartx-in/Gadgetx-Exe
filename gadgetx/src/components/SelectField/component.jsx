@@ -1,139 +1,233 @@
-import React, { useState, useRef, useEffect } from 'react'
-import InputAdornment from '@mui/material/InputAdornment'
 
-// 1. Import Custom Components
-import CustomTextField from '@/components/CustomTextField'
-import CustomScrollbar from '@/components/CustomScrollbar'
+import React, { useState, useRef, useEffect, forwardRef} from "react";
+import { createPortal } from "react-dom";
+import CustomTextField from "@/components/CustomTextField";
+import CustomScrollbar from "@/components/CustomScrollbar";
+import "./style.scss";
 
-import './style.scss'
+const SelectField = forwardRef(({
 
-const SelectField = ({
   name,
   value,
   onChange,
   options = [],
   label,
-  placeholder = 'Select...',
+  placeholder = "Select...",
   disabled = false,
-  className = '',
+  required = false,
+  className = "",
+  menuPortalTarget,
   ...rest
-}) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const wrapperRef = useRef(null)
+}, ref) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [displayValue, setDisplayValue] = useState("");
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const wrapperRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const [dropdownStyle, setDropdownStyle] = useState({});
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [wrapperRef])
-
-  // Helper to determine what text to display
-  const getDisplayValue = () => {
-    if (!value) return ''
-
     const selectedOption = options.find((opt) =>
-      typeof opt === 'string' ? opt === value : opt.value === value,
-    )
+      typeof opt === "string" ? opt === value : opt.value === value
+    );
 
     if (selectedOption) {
-      return typeof selectedOption === 'string'
-        ? selectedOption
-        : selectedOption.label
+      setDisplayValue(
+        typeof selectedOption === "string"
+          ? selectedOption
+          : selectedOption.label
+      );
+    } else {
+      setDisplayValue("");
     }
-    return ''
-  }
+  }, [value, options]);
 
-  const displayValue = getDisplayValue()
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const isOutsideWrapper = wrapperRef.current && !wrapperRef.current.contains(event.target);
+      const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(event.target);
+      
+      if (isOutsideWrapper && (!menuPortalTarget || isOutsideDropdown)) {
+        setIsOpen(false);
+        setActiveIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [wrapperRef, menuPortalTarget]);
 
-  const handleOptionClick = (optionValue) => {
+  const updateDropdownPosition = () => {
+    if (menuPortalTarget && wrapperRef.current) {
+      const rect = wrapperRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 1,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 9999,
+        marginTop: 0,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && menuPortalTarget) {
+      updateDropdownPosition();
+      window.addEventListener('scroll', updateDropdownPosition, true);
+      window.addEventListener('resize', updateDropdownPosition);
+      return () => {
+        window.removeEventListener('scroll', updateDropdownPosition, true);
+        window.removeEventListener('resize', updateDropdownPosition);
+      };
+    }
+  }, [isOpen, menuPortalTarget]);
+
+  const handleToggle = () => {
+    if (!disabled) {
+      setIsOpen((prev) => !prev);
+    }
+  };
+
+  const handleSelect = (option) => {
+    const optionValue = typeof option === "string" ? option : option.value;
+
     const simulatedEvent = {
       target: {
         name: name,
         value: optionValue,
       },
-    }
-    onChange(simulatedEvent)
-    setIsOpen(false)
-  }
+    };
 
-  const toggleDropdown = () => {
-    if (!disabled) {
-      setIsOpen(!isOpen)
+    onChange(simulatedEvent);
+    setIsOpen(false);
+    setActiveIndex(-1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (disabled) return;
+
+    if (!isOpen) {
+      if (e.key === "Enter" || e.key === "ArrowDown" || e.key === " ") {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+      return;
     }
-  }
+
+    const itemsCount = options.length;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActiveIndex((prevIndex) => (prevIndex + 1) % itemsCount);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActiveIndex(
+          (prevIndex) => (prevIndex - 1 + itemsCount) % itemsCount
+        );
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (activeIndex >= 0 && activeIndex < options.length) {
+          handleSelect(options[activeIndex]);
+        }
+        break;
+      case "Escape":
+      case "Tab":
+        setIsOpen(false);
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <div
-      className={`custom-select ${disabled ? 'disabled' : ''} ${className}`}
       ref={wrapperRef}
+      className={`select-field ${className}`}
+      style={{ position: "relative" }}
     >
       <CustomTextField
+        id={name}
         name={name}
         label={label}
         value={displayValue}
-        onClick={toggleDropdown}
         placeholder={placeholder}
+        inputRef={ref}
+        required={required}
         disabled={disabled}
-        fullWidth
-        variant="outlined"
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
         autoComplete="off"
-        className="custom-select__input"
-        InputProps={{
-          readOnly: true, // Acts like a select trigger
-          endAdornment: (
-            <InputAdornment position="end" style={{ marginRight: '-8px' }}>
-              <i className={`custom-select__chevron ${isOpen ? 'open' : ''}`} />
-            </InputAdornment>
-          ),
-          style: { cursor: disabled ? 'not-allowed' : 'pointer' }
+        inputProps={{
+          readOnly: true,
+          style: { cursor: disabled ? "default" : "pointer" },
         }}
-        slotProps={{
-            htmlInput: {
-              autoComplete: 'off',
-              ...rest
-            },
-            inputLabel: {
-              required: false // Hides asterisk
-            }
-          }}
+        InputProps={{
+          endAdornment: (
+            <div className={`select-field__chevron ${isOpen ? "open" : ""}`}>
+              <i className="chevron-icon" />
+            </div>
+          ),
+        }}
         {...rest}
       />
 
-      {isOpen && (
-        <CustomScrollbar 
-          className="custom-select__list" 
-          role="listbox"
-          as="ul"
-        >
-          {options.map((opt) => {
-            const optionValue = typeof opt === 'string' ? opt : opt.value
-            const optionLabel = typeof opt === 'string' ? opt : opt.label
+      {isOpen && (() => {
+        const dropdownContent = (
+          <CustomScrollbar
+            className="select-field__dropdown"
+            activeIndex={activeIndex}
+            as="ul"
+            ref={dropdownRef}
+            style={menuPortalTarget ? dropdownStyle : undefined}
+          >
+            {options.length > 0 ? (
+              options.map((opt, index) => {
+                const optionValue = typeof opt === "string" ? opt : opt.value;
+                const optionLabel = typeof opt === "string" ? opt : opt.label;
+                const isSelected = value === optionValue;
 
-            return (
+                return (
+                  <li
+                    key={optionValue}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelect(opt);
+                    }}
+                    className={`select-field__option ${
+                      index === activeIndex ? "active" : ""
+                    } ${isSelected ? "selected" : ""}`}
+                  >
+                    <div className="select-field__option-content">
+                      <span style={{ fontWeight: isSelected ? 600 : 400 }}>
+                        {optionLabel}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })
+            ) : (
               <li
-                key={optionValue}
-                className={`custom-select__option ${
-                  value === optionValue ? 'selected' : ''
-                }`}
-                onClick={() => handleOptionClick(optionValue)}
-                role="option"
-                aria-selected={value === optionValue}
+                className="select-field__option"
+                style={{ cursor: "default", color: "#94a3b8" }}
               >
-                {optionLabel}
+                No options available
               </li>
-            )
-          })}
-        </CustomScrollbar>
-      )}
-    </div>
-  )
-}
+            )}
+          </CustomScrollbar>
+        );
 
-export default SelectField
+        return menuPortalTarget
+          ? createPortal(dropdownContent, menuPortalTarget)
+          : dropdownContent;
+      })()}
+    </div>
+  );
+});
+
+export default SelectField;

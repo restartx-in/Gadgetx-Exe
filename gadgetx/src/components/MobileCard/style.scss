@@ -1,0 +1,20 @@
+.card_container {
+  border: solid var(--border-color) 1px;
+  border-radius: 10px;
+  padding: 10px 10px;
+  margin: 10px 0;
+  &:last-child {
+    margin-bottom: 0;
+  }
+  &:first-child {
+    margin-top: 0;
+  }
+  &-title {
+  }
+  &__line {
+  }
+  &-left {
+  }
+  &-right {
+  }
+}

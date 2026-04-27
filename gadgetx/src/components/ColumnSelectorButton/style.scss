@@ -1,0 +1,25 @@
+.column_selector_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background-color: #ffffff;
+  color: #374151; // This sets the context for `currentColor` in the SVG
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.1s ease;
+
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #a1a1aa;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}

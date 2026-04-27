@@ -1,7 +1,11 @@
 import React, { forwardRef } from "react";
 import Barcode from "react-barcode";
-import AmountSymbol from "@/components/AmountSymbol";
-import "./style.scss"; // Reuse the styles from the Sales Receipt
+import AmountSymbol from "@/apps/user/components/AmountSymbol";
+import { isInvalidImageUrl } from "@/config/api";
+import "./style.scss"; 
+
+const safeImageUrl = (url) => (url && typeof url === "string" && !isInvalidImageUrl(url) ? url : null);
+
 
 const formatAmount = (amount) => {
   const num = parseFloat(amount) || 0;
@@ -48,10 +52,10 @@ const ThermalReceiptInvoice = forwardRef(({ data }, ref) => {
       
       {/* 1. HEADER */}
       <div className="thermal-header">
-        {store?.full_header_image_url && (
+        {safeImageUrl(store?.full_header_image_url) && (
           <div className="header-image">
             <img
-              src={store.full_header_image_url}
+              src={safeImageUrl(store.full_header_image_url)}
               alt="Logo"
               style={{
                 width: store.image_width || "auto",
