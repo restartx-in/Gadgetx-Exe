@@ -31,6 +31,27 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+process.on('exit', (code) => {
+  console.log(`⚠️ Process about to exit with code: ${code}`);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+console.log("📡 Attempting to start server...");
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
+
+server.on('close', () => {
+  console.log('🛑 Server closed');
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error event:', err);
 });

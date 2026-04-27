@@ -13,7 +13,7 @@ module.exports = async (client) => {
         CREATE TABLE transaction_ledger (
           id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL,
-          transaction_id INTEGER NOT NULL REFERENCES transaction(id) ON DELETE CASCADE,
+          transaction_id INTEGER NOT NULL REFERENCES "transaction"(id) ON DELETE CASCADE,
           account_id INTEGER NOT NULL REFERENCES account(id) ON DELETE CASCADE,
           debit NUMERIC(12,2) DEFAULT 0 CHECK (debit >= 0),
           credit NUMERIC(12,2) DEFAULT 0 CHECK (credit >= 0),

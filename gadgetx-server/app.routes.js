@@ -41,41 +41,39 @@ const itemRoutes = require("./api/item/item.routes");
 
 const router = express.Router();
 
-router.use("/api/auth", authRoutes);
-router.use("/api/users", userRoutes);
-router.use("/api/employees", employeeRoutes);
-router.use("/api/employee-position", employeepositionRoutes);
-// router.use("/api/employee-attendance", employeeAttendanceRoutes);
-router.use("/api/employee-payroll", PayrollRoutes);
-router.use("/api/expenses", expenseRoutes);
-router.use('/api/expense-type', expenseTypeRoutes);
-router.use('/api/cost-centers', cost_centerRoutes)
-router.use('/api/done-by', done_byRoutes)
-router.use('/api/settings', settingsRoutes)
-router.use('/api/roles', roleRoutes)
-router.use('/api/tenants', tenantRoutes)
-router.use("/api/brand", brandRoutes);
-router.use("/api/category", categoryRoutes);
-router.use("/api/customer", customerRoutes);
-router.use("/api/accounts", accountRoutes);
-router.use("/api/partners", partnerRoutes);
-router.use("/api/party", partyRoutes);
-router.use("/api/ledgers", ledgerRoutes);
-router.use("/api/vouchers", voucherRoutes);
-router.use("/api/mode-of-payment", modeofpaymentRoutes);
-router.use("/api/invoice-number", invoiceNumberRoutes);
-router.use("/api/report-field-permissions", reportFieldPermissionsRoutes);
-router.use("/api/transaction-field-permissions", transactionFieldPermissionsRoutes);
-router.use("/api/purchases",purchaseRoutes);
+router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
+router.use("/employees", employeeRoutes);
+router.use("/employee-position", employeepositionRoutes);
+// router.use("/employee-attendance", employeeAttendanceRoutes);
+router.use("/employee-payroll", PayrollRoutes);
+router.use("/expenses", expenseRoutes);
+router.use('/expense-type', expenseTypeRoutes);
+router.use('/cost-centers', cost_centerRoutes)
+router.use('/done-by', done_byRoutes)
+router.use('/settings', settingsRoutes)
+router.use('/roles', roleRoutes)
+router.use('/tenants', tenantRoutes)
+router.use("/brand", brandRoutes);
+router.use("/category", categoryRoutes);
+router.use("/customer", customerRoutes);
+router.use("/accounts", accountRoutes);
+router.use("/partners", partnerRoutes);
+router.use("/party", partyRoutes);
+router.use("/ledgers", ledgerRoutes);
+router.use("/vouchers", voucherRoutes);
+router.use("/mode-of-payment", modeofpaymentRoutes);
+router.use("/invoice-number", invoiceNumberRoutes);
+router.use("/report-field-permissions", reportFieldPermissionsRoutes);
+router.use("/transaction-field-permissions", transactionFieldPermissionsRoutes);
+router.use("/purchases",purchaseRoutes);
 
+router.use("/sales", salesRoutes);
+router.use("/dashboard", dashboardRoutes);
+router.use("/print-settings", printSettingsRoutes);
+router.use("/custom-pages", customPagesRoutes);
+router.use("/custom-page-data", customPageDataRoutes);
 
-
-router.use("/api/sales", salesRoutes);
-router.use("/api/dashboard", dashboardRoutes);
-router.use("/api/print-settings", printSettingsRoutes);
-router.use("/api/custom-pages", customPagesRoutes);
-router.use("/api/custom-page-data", customPageDataRoutes);
-
-router.use("/api/items", itemRoutes);
+router.use("/items", itemRoutes);
 module.exports = router;
 

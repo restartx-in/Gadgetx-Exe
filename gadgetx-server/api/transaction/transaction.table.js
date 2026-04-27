@@ -10,7 +10,7 @@ module.exports = async (client) => {
       console.log('ℹ️ "transaction" table already exists.');
     } else {
       await client.query(`
-        CREATE TABLE transaction (
+        CREATE TABLE "transaction" (
           id SERIAL PRIMARY KEY,
           tenant_id INTEGER NOT NULL REFERENCES tenant(id) ON DELETE CASCADE,
           transaction_type VARCHAR(30) NOT NULL CHECK (
@@ -28,16 +28,16 @@ module.exports = async (client) => {
       console.log('✅ "transaction" table created.');
 
       await client.query(`
-        CREATE INDEX idx_transactions_tenant_id ON transaction(tenant_id);
+        CREATE INDEX idx_transactions_tenant_id ON "transaction"(tenant_id);
       `);
       await client.query(`
-        CREATE INDEX idx_transactions_reference_id ON transaction(reference_id);
+        CREATE INDEX idx_transactions_reference_id ON "transaction"(reference_id);
       `);
        await client.query(`
-        CREATE INDEX idx_transaction_cost_center_id ON transaction(cost_center_id);
+        CREATE INDEX idx_transaction_cost_center_id ON "transaction"(cost_center_id);
       `);
       await client.query(`
-        CREATE INDEX idx_transaction_done_by_id ON transaction(done_by_id);
+        CREATE INDEX idx_transaction_done_by_id ON "transaction"(done_by_id);
       `);
       console.log(
         '✅ Indexes created on tenant_id, reference_id, done_by_id and cost_center_id columns of "transaction" table.'

@@ -1,0 +1,8 @@
+{
+  "ignore": [
+    "*.db",
+    "*.db-journal",
+    "*.db-wal",
+    "uploads/*"
+  ]
+}

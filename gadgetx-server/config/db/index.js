@@ -111,60 +111,70 @@ const query = (sql, params = []) => {
       sqliteSql = sqliteSql.replace(/\bRETURNING\b\s+.*$/gi, "").trim();
     }
 
-    // ── 8. Swallow Postgres-specific Trigger Functions ─────────────────────
-    if (upperSql.includes("CREATE OR REPLACE FUNCTION")) {
+    const upperSqlOriginal = sqliteSql.trim().toUpperCase();
+
+    // ── 8. Swallow Postgres-specific Trigger Functions (BEFORE splitting) ──
+    if (upperSqlOriginal.includes("CREATE OR REPLACE FUNCTION") || 
+        (upperSqlOriginal.includes("DO $$") && !upperSqlOriginal.includes("ALTER TABLE"))) {
       resolve({ rows: [] });
       return;
     }
 
-    // ── 9. Basic Trigger Translation (for updated_at) ──────────────────────
-    if (upperSql.includes("CREATE TRIGGER") && (upperSql.includes("EXECUTE FUNCTION") || upperSql.includes("EXECUTE PROCEDURE"))) {
-      const triggerMatch = sqliteSql.match(/CREATE\s+TRIGGER\s+(\w+)\s+BEFORE\s+UPDATE\s+ON\s+(\w+)/i);
-      if (triggerMatch) {
-        const [_, triggerName, tableName] = triggerMatch;
-        sqliteSql = `
-          CREATE TRIGGER IF NOT EXISTS ${triggerName} AFTER UPDATE ON ${tableName}
-          BEGIN
-            UPDATE ${tableName} SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-          END;
-        `;
-      } else {
-        // Swallow unhandled triggers to prevent crashes
-        console.warn("⚠️ Swallowing unhandled trigger definition for SQLite:", sqliteSql.substring(0, 50) + "...");
-        resolve({ rows: [] });
-        return;
-      }
-    }
-
-    // ── 10. Extract ALTER TABLE from DO blocks ─────────────────────────────
-    if (upperSql.includes("DO $$") && upperSql.includes("ALTER TABLE")) {
+    // ── 9. Extract ALTER TABLE from DO blocks (BEFORE splitting) ───────────
+    if (upperSqlOriginal.includes("DO $$") && upperSqlOriginal.includes("ALTER TABLE")) {
       const alterMatch = sqliteSql.match(/ALTER\s+TABLE\s+[\s\S]+?;/i);
       if (alterMatch) {
         sqliteSql = alterMatch[0];
       } else {
-        resolve({ rows: [] });
-        return;
+        // If no semicolon found inside, maybe it's just a fragment or poorly formatted
+        const simpleAlterMatch = sqliteSql.match(/ALTER\s+TABLE\s+[\s\S]+/i);
+        if (simpleAlterMatch) {
+            sqliteSql = simpleAlterMatch[0];
+        } else {
+            resolve({ rows: [] });
+            return;
+        }
       }
-    } else if (upperSql.includes("DO $$")) {
-      resolve({ rows: [] });
-      return;
     }
 
-    // ── 11. ADD COLUMN IF NOT EXISTS fallback ──────────────────────────────
-    sqliteSql = sqliteSql.replace(/ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS/gi, "ADD COLUMN");
+    // Split multiple statements (basic split)
+    const statements = sqliteSql.split(";").map(s => s.trim()).filter(s => s.length > 0);
 
     const runQuery = (singleSql, singleParams) => {
       return new Promise((res, rej) => {
-        const isSelectQuery = singleSql.trim().toUpperCase().startsWith("SELECT") || singleSql.trim().toUpperCase().startsWith("WITH");
+        let stmtSql = singleSql;
+        const upperStmtSql = stmtSql.trim().toUpperCase();
+
+        // ── 9. Basic Trigger Translation (for updated_at) ──────────────────
+        if (upperStmtSql.includes("CREATE TRIGGER") && (upperStmtSql.includes("EXECUTE FUNCTION") || upperStmtSql.includes("EXECUTE PROCEDURE"))) {
+          const triggerMatch = stmtSql.match(/CREATE\s+TRIGGER\s+(\w+)\s+BEFORE\s+UPDATE\s+ON\s+(\w+)/i);
+          if (triggerMatch) {
+            const [_, triggerName, tableName] = triggerMatch;
+            stmtSql = `
+              CREATE TRIGGER IF NOT EXISTS ${triggerName} AFTER UPDATE ON ${tableName}
+              BEGIN
+                UPDATE ${tableName} SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+              END;
+            `;
+          } else {
+            console.warn("⚠️ Swallowing unhandled trigger definition for SQLite:", stmtSql.substring(0, 50) + "...");
+            res({ rows: [] });
+            return;
+          }
+        }
+
+        // ── 11. ADD COLUMN IF NOT EXISTS fallback ──────────────────────────
+        stmtSql = stmtSql.replace(/ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS/gi, "ADD COLUMN");
+
+        const isSelectQuery = stmtSql.trim().toUpperCase().startsWith("SELECT") || stmtSql.trim().toUpperCase().startsWith("WITH");
         if (isSelectQuery) {
-          db.all(singleSql, singleParams, (err, rows) => {
+          db.all(stmtSql, singleParams, (err, rows) => {
             if (err) rej(err);
             else res({ rows });
           });
         } else {
-          db.run(singleSql, singleParams, function (err) {
+          db.run(stmtSql, singleParams, function (err) {
             if (err) {
-              // Ignore "duplicate column name" error for ALTER TABLE
               if (err.message.includes("duplicate column name")) {
                 res({ rows: [], lastID: this?.lastID, changes: this?.changes });
               } else {
@@ -177,9 +187,6 @@ const query = (sql, params = []) => {
         }
       });
     };
-
-    // Split multiple statements (basic split)
-    const statements = sqliteSql.split(";").map(s => s.trim()).filter(s => s.length > 0);
 
     if (statements.length > 1) {
       // Run multiple statements in sequence
@@ -195,7 +202,22 @@ const query = (sql, params = []) => {
         }
       })();
     } else if (statements.length === 1) {
-      runQuery(statements[0], newParams).then(resolve).catch(reject);
+      runQuery(statements[0], newParams).then(async (result) => {
+        if (isReturning && returningTable && result.lastID) {
+          try {
+            const row = await runQuery(`SELECT * FROM "${returningTable}" WHERE id = ?`, [result.lastID]);
+            resolve(row);
+          } catch (err) {
+            resolve(result); // Fallback to original result if SELECT fails
+          }
+        } else if (isReturning && returningTable && !result.lastID && upperSql.startsWith("UPDATE")) {
+            // For UPDATE RETURNING, we don't have a lastID easily, but maybe we can fetch by params?
+            // This is complex, but for now let's just resolve what we have.
+            resolve(result);
+        } else {
+          resolve(result);
+        }
+      }).catch(reject);
     } else {
       resolve({ rows: [] });
     }
