@@ -62,7 +62,7 @@ class SalesService {
       discount = 0,
       payment_methods = [],
       note = null,
-      account_id = null,
+      ledger_id = null,
       change_return = 0,
       ...saleDetails
     } = saleData;
@@ -96,7 +96,7 @@ class SalesService {
     const salePayload = {
       ...saleDetails,
       tenant_id: tenantId,
-      account_id,
+      ledger_id,
       discount: parseFloat(discount),
       total_amount: grandTotal,
       change_return: parseFloat(change_return),
@@ -142,7 +142,7 @@ class SalesService {
       discount = 0,
       payment_methods = [],
       note = null,
-      account_id = null,
+      ledger_id = null,
       change_return = 0,
       ...saleDetails
     } = saleData;
@@ -193,7 +193,7 @@ class SalesService {
 
     const salePayload = {
       ...saleDetails,
-      account_id,
+      ledger_id,
       discount: parseFloat(discount),
       total_amount: grandTotal,
       change_return: parseFloat(change_return),

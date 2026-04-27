@@ -88,6 +88,8 @@ const generateBarcodeImage = (invoiceNumber) => {
     columns,
     getSaleMenuItems,
     DotMenu,
+    accountNameMap,
+    modeOfPaymentList,
   }) => {
     const balance = (parseFloat(sls.total_amount) || 0) - (parseFloat(sls.paid_amount) || 0);
         console.log("cutomer",sls);
@@ -107,7 +109,7 @@ const generateBarcodeImage = (invoiceNumber) => {
             return <TdDate key={field.value}>{sls.date}</TdDate>;
           }
           // 2. CUSTOMER
-          if (field.value === "customer") {
+          if (field.value === "party_name" || field.value === "customer") {
             return (
               <TdOverflow key={field.value}>
                 {sls.party_name || "Walk-in"}
@@ -121,7 +123,7 @@ const generateBarcodeImage = (invoiceNumber) => {
             );
           }
           // 4. STATUS
-          if (field.value === "status") {
+          if (field.value === "payment_status" || field.value === "status") {
             return (
               <Td key={field.value}>
                 <TextBadge variant="paymentStatus" type={sls.status}>
@@ -132,11 +134,32 @@ const generateBarcodeImage = (invoiceNumber) => {
           }
           // 5. ACCOUNT
           if (field.value === "account") {
+            const fromPayments = (sls.payment_methods || [])
+              .map((p) => p.account_name)
+              .filter(Boolean)
+              .join(", ");
+            
+            let accountDisplay = 
+              sls.ledger_name || 
+              fromPayments || 
+              sls.account_name || 
+              sls.default_account_name || 
+              accountNameMap[sls.account_id] || 
+              accountNameMap[sls.ledger_id] || 
+              "";
+  
+            if (!accountDisplay && (sls.mode_of_payment_id || sls.ledger_id)) {
+              const mop = modeOfPaymentList.find(m => String(m.id) === String(sls.mode_of_payment_id));
+              if (mop) {
+                accountDisplay = accountNameMap[mop.default_ledger_id] || mop.default_ledger_name || mop.name;
+              } else {
+                accountDisplay = accountNameMap[sls.ledger_id] || "";
+              }
+            }
+
             return (
               <TdOverflow key={field.value}>
-                {(sls.payment_methods || [])
-                  .map((p) => p.account_name)
-                  .join(", ") || "N/A"}
+                {accountDisplay || "N/A"}
               </TdOverflow>
             );
           }
@@ -194,8 +217,30 @@ const generateBarcodeImage = (invoiceNumber) => {
 );
 
 const MobileSaleCard = React.memo(
-  ({ sls, handlers, getSaleMenuItems, DotMenu }) => {
+  ({ sls, handlers, getSaleMenuItems, DotMenu, accountNameMap, modeOfPaymentList }) => {
     const balance = (sls.total_amount || 0) - (sls.paid_amount || 0);
+    const fromPayments = (sls.payment_methods || [])
+      .map((p) => p.account_name)
+      .filter(Boolean)
+      .join(", ");
+    
+    let accountDisplay = 
+      sls.ledger_name || 
+      fromPayments || 
+      sls.account_name || 
+      sls.default_account_name || 
+      accountNameMap[sls.account_id] || 
+      accountNameMap[sls.ledger_id] || 
+      "";
+
+    if (!accountDisplay && (sls.mode_of_payment_id || sls.ledger_id)) {
+      const mop = modeOfPaymentList.find(m => String(m.id) === String(sls.mode_of_payment_id));
+      if (mop) {
+        accountDisplay = accountNameMap[mop.default_ledger_id] || mop.default_ledger_name || mop.name;
+      } else {
+        accountDisplay = accountNameMap[sls.ledger_id] || "";
+      }
+    }
     const menuItems = useMemo(
       () => getSaleMenuItems(sls, handlers),
       [sls, handlers, getSaleMenuItems],
@@ -206,9 +251,7 @@ const MobileSaleCard = React.memo(
         subtitle={
           <>
             <div className="fs14">
-              Account:{" "}
-              {sls.payment_methods?.map((p) => p.account_name).join(", ") ||
-                "N/A"}
+              Account: {accountDisplay || "N/A"}
             </div>
             {sls.done_by_name && (
               <div className="fs14">Done By: {sls.done_by_name}</div>
@@ -946,6 +989,8 @@ const CommonSaleReport = ({ hooks, components, config }) => {
                         columns={extraFields.filter((f) => f.show)}
                         getSaleMenuItems={getSaleMenuItems}
                         DotMenu={DotMenu}
+                        accountNameMap={accountNameMap}
+                        modeOfPaymentList={modeOfPaymentList}
                       />
                     ))
                   ) : (
@@ -1014,6 +1059,8 @@ const CommonSaleReport = ({ hooks, components, config }) => {
                       handlers={rowHandlers}
                       getSaleMenuItems={getSaleMenuItems}
                       DotMenu={DotMenu}
+                      accountNameMap={accountNameMap}
+                      modeOfPaymentList={modeOfPaymentList}
                     />
                   ))
                 )}

@@ -66,6 +66,7 @@ export const useReportTableFieldsSettings = (report) => {
     if (report === Report.Sale) {
       return allPossibleFields.filter((item) =>
         [
+          ExtraFields.Date,
           ExtraFields.Customer,
           ExtraFields.InvoiceNo,
           ExtraFields.Account,
@@ -79,6 +80,7 @@ export const useReportTableFieldsSettings = (report) => {
       )
       .sort((a, b) => {
         const order = [
+          ExtraFields.Date,
           ExtraFields.Customer,
           ExtraFields.InvoiceNo,
           ExtraFields.Account,
