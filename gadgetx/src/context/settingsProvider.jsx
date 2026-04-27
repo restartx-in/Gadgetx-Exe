@@ -33,7 +33,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refresh_token')
         if (!refreshToken) {
           localStorage.clear()
-          window.location.href = '/login'
+          window.location.hash = '#/login'
           return Promise.reject(error)
         }
         
@@ -48,7 +48,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         if (refreshError.response && (refreshError.response.status === 401 || refreshError.response.status === 403)) {
           localStorage.clear()
-          window.location.href = '/login'
+          window.location.hash = '#/login'
         }
         return Promise.reject(refreshError)
       }

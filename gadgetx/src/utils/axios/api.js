@@ -28,7 +28,7 @@ api.interceptors.response.use(
         localStorage.removeItem('refresh_token')
         localStorage.removeItem('user_type')
         localStorage.removeItem('user_id')
-        window.location.href = '/login'
+        window.location.hash = '#/login'
         return Promise.reject(error); 
     }
 
@@ -37,7 +37,7 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token')
         if (!refreshToken) {
-          window.location.href = '/login'
+          window.location.hash = '#/login'
           return Promise.reject(error)
         }
         
@@ -54,7 +54,7 @@ api.interceptors.response.use(
         localStorage.removeItem('refresh_token')
         localStorage.removeItem('user_type')
         localStorage.removeItem('user_id')
-        window.location.href = '/login'
+        window.location.hash = '#/login'
         return Promise.reject(refreshError)
       }
     }

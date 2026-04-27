@@ -93,7 +93,7 @@ class UserRepository {
       FROM "user" u
       LEFT JOIN "role" r ON u.role_id = r.id
       LEFT JOIN "tenant" t ON u.tenant_id = t.id
-      WHERE u.username = $1
+      WHERE LOWER(u.username) = LOWER($1)
     `, 
       [username]
     );
