@@ -2,6 +2,10 @@
 .table_row {
   transition: background-color var(--transition-fast);
 
+  td {
+    height: 52px;
+  }
+
   &:hover {
     background-color: var(--color-primary-50);
   }
@@ -10,4 +14,4 @@
 //     font-weight: var(--fw700);
 //     background-color: var(--color-neutral-100) !important;
 //   }
-}
+}
