@@ -22,14 +22,7 @@ import SubmitButton from "@/components/SubmitButton";
 import DeleteTextButton from "@/components/DeleteTextButton";
 import Loader from "@/components/Loader";
 import Button from "@/components/Button";
-import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Td,
-  Th,
-} from "@/components/Table";
+import { Table, Thead, Tbody, Tr, Td, Th } from "@/components/Table";
 import "./style.scss";
 
 const DRAFT_PREFIX = "category_form_draft_";
@@ -38,13 +31,15 @@ const categorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
   done_by_id: z.union([z.string(), z.number()]).optional().nullable(),
   cost_center_id: z.union([z.string(), z.number()]).optional().nullable(),
-  custom_fields: z.array(
-    z.object({
-      label: z.string().min(1, "Label is required"),
-      type: z.string().min(1, "Type is required"),
-      is_required: z.boolean().default(false),
-    })
-  ).optional(),
+  custom_fields: z
+    .array(
+      z.object({
+        label: z.string().min(1, "Label is required"),
+        type: z.string().min(1, "Type is required"),
+        is_required: z.boolean().default(false),
+      }),
+    )
+    .optional(),
 });
 
 const CommonAddCategory = ({
@@ -251,7 +246,13 @@ const CommonAddCategory = ({
                           <Th style={{ width: "10%", textAlign: "center" }}>
                             Req.
                           </Th>
-                          <Th style={{ width: "15%", textAlign: "right", paddingRight: "20px" }}>
+                          <Th
+                            style={{
+                              width: "15%",
+                              textAlign: "right",
+                              paddingRight: "20px",
+                            }}
+                          >
                             {!disabled && (
                               <div
                                 className="btn-icon add-header"
@@ -359,8 +360,16 @@ const CommonAddCategory = ({
 
                         {!disabled && fields.length === 0 && (
                           <Tr className="empty-row">
-                            <Td colSpan={4} style={{ textAlign: "center", padding: "20px", color: "#94a3b8" }}>
-                              No custom fields added yet. Click the + button in the header to add one.
+                            <Td
+                              colSpan={4}
+                              style={{
+                                textAlign: "center",
+                                padding: "20px",
+                                color: "#94a3b8",
+                              }}
+                            >
+                              No custom fields added yet. Click the + button in
+                              the header to add one.
                             </Td>
                           </Tr>
                         )}
