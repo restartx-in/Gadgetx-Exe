@@ -22,6 +22,7 @@ import {
   TdDate,
   TableCaption,
   ThContainer,
+  TdOverflow,
   ThSort,
   ThFilterContainer,
   ThSearchOrFilterPopover,
@@ -31,6 +32,7 @@ import PageHeader from "@/components/PageHeader";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import Loader from "@/components/Loader";
 import { useToast } from "@/context/ToastContext";
+import { TOASTTYPE, TOASTSTATUS } from "@/constants/object/toastType";
 import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
 import { useIsMobile } from "@/utils/useIsMobile";
 import ScrollContainer from "@/components/ScrollContainer";
@@ -91,7 +93,6 @@ const CommonSupplierList = ({
     setSort(state.sort || "");
   }, [state]);
 
-
   const { data, isLoading } = useSuppliersPaginatedHook(state);
   const { mutateAsync: deleteSupplier } = useDeleteSupplierHook();
   const listData = useMemo(() => data?.data || [], [data]);
@@ -110,7 +111,7 @@ const CommonSupplierList = ({
           prev.delete("action");
           return prev;
         },
-        { replace: true }
+        { replace: true },
       );
       setModal({ isOpen: true, mode: "add", item: null });
     }
@@ -130,6 +131,11 @@ const CommonSupplierList = ({
       sort: "",
       searchType: "",
       searchKey: "",
+    });
+    showToast({
+      type: TOASTTYPE.GENARAL,
+      message: "Report has been refreshed..",
+      status: TOASTSTATUS.SUCCESS,
     });
   }, [defaultCC]);
 
@@ -213,7 +219,7 @@ const CommonSupplierList = ({
         {!isMobile ? (
           <>
             <PageTitleWithBackButton title="Suppliers" />
-          
+
             <TableTopContainer
               mainActions={
                 <>
@@ -256,6 +262,19 @@ const CommonSupplierList = ({
                   <Thead>
                     <Tr>
                       <ThSL />
+                      <Th>
+                        <ThContainer>
+                          Created At
+                          <ThFilterContainer>
+                            <ThSort
+                              sort={sort}
+                              setSort={setSort}
+                              value="created_at"
+                              handleSort={handleSort}
+                            />
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
                       {/* Name Column */}
                       <Th>
                         <ThContainer>
@@ -291,6 +310,150 @@ const CommonSupplierList = ({
                           </ThFilterContainer>
                         </ThContainer>
                       </Th>
+                      {/* Phone Column */}
+                      <Th>
+                        <ThContainer>
+                          Phone
+                          <ThFilterContainer>
+                            <ThSort
+                              sort={sort}
+                              setSort={setSort}
+                              value="phone"
+                              handleSort={handleSort}
+                            />
+                            <ThSearchOrFilterPopover
+                              isSearch
+                              onSearch={() =>
+                                handleHeaderSearch("phone", uiState.phone)
+                              }
+                            >
+                              <InputField
+                                isLabel={false}
+                                value={uiState.phone}
+                                onChange={(e) =>
+                                  setUiState({
+                                    ...uiState,
+                                    phone: e.target.value,
+                                  })
+                                }
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" &&
+                                  handleHeaderSearch("phone", uiState.phone)
+                                }
+                              />
+                            </ThSearchOrFilterPopover>
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
+                      {/* Email Column */}
+                      <Th>
+                        <ThContainer>
+                          Email
+                          <ThFilterContainer>
+                            <ThSort
+                              sort={sort}
+                              setSort={setSort}
+                              value="email"
+                              handleSort={handleSort}
+                            />
+                            <ThSearchOrFilterPopover
+                              isSearch
+                              onSearch={() =>
+                                handleHeaderSearch("email", uiState.email)
+                              }
+                            >
+                              <InputField
+                                isLabel={false}
+                                value={uiState.email}
+                                onChange={(e) =>
+                                  setUiState({
+                                    ...uiState,
+                                    email: e.target.value,
+                                  })
+                                }
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" &&
+                                  handleHeaderSearch("email", uiState.email)
+                                }
+                              />
+                            </ThSearchOrFilterPopover>
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
+
+                      {/* Address Column */}
+                      <Th>
+                        <ThContainer>
+                          Address
+                          <ThFilterContainer>
+                            <ThSearchOrFilterPopover
+                              isSearch
+                              onSearch={() =>
+                                handleHeaderSearch("address", uiState.address)
+                              }
+                            >
+                              <InputField
+                                isLabel={false}
+                                value={uiState.address}
+                                onChange={(e) =>
+                                  setUiState({
+                                    ...uiState,
+                                    address: e.target.value,
+                                  })
+                                }
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" &&
+                                  handleHeaderSearch("address", uiState.address)
+                                }
+                              />
+                            </ThSearchOrFilterPopover>
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
+                      <Th>
+                        <ThContainer>
+                          Out. Balance
+                          <ThFilterContainer>
+                            <ThSort
+                              sort={sort}
+                              setSort={setSort}
+                              value="outstanding_balance"
+                              handleSort={handleSort}
+                            />
+                            <ThSearchOrFilterPopover
+                              isSearch
+                              onSearch={() =>
+                                handleHeaderSearch(
+                                  "outstanding_balance",
+                                  uiState.outstanding_balance,
+                                )
+                              }
+                            >
+                              <InputField
+                                isLabel={false}
+                                value={uiState.outstanding_balance}
+                                onChange={(e) =>
+                                  setUiState({
+                                    ...uiState,
+                                    outstanding_balance: e.target.value,
+                                  })
+                                }
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" &&
+                                  handleHeaderSearch(
+                                    "outstanding_balance",
+                                    uiState.outstanding_balance,
+                                  )
+                                }
+                              />
+                            </ThSearchOrFilterPopover>
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
+                      <Th>
+                        <ThContainer>Terms</ThContainer>
+                      </Th>
+
                       {/* Done By Column */}
                       <Th>
                         <ThContainer>
@@ -344,159 +507,7 @@ const CommonSupplierList = ({
                           </ThFilterContainer>
                         </ThContainer>
                       </Th>
-                      {/* Email Column */}
-                      <Th>
-                        <ThContainer>
-                          Email
-                          <ThFilterContainer>
-                            <ThSort
-                              sort={sort}
-                              setSort={setSort}
-                              value="email"
-                              handleSort={handleSort}
-                            />
-                            <ThSearchOrFilterPopover
-                              isSearch
-                              onSearch={() =>
-                                handleHeaderSearch("email", uiState.email)
-                              }
-                            >
-                              <InputField
-                                isLabel={false}
-                                value={uiState.email}
-                                onChange={(e) =>
-                                  setUiState({
-                                    ...uiState,
-                                    email: e.target.value,
-                                  })
-                                }
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" &&
-                                  handleHeaderSearch("email", uiState.email)
-                                }
-                              />
-                            </ThSearchOrFilterPopover>
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
-                      {/* Phone Column */}
-                      <Th>
-                        <ThContainer>
-                          Phone
-                          <ThFilterContainer>
-                            <ThSort
-                              sort={sort}
-                              setSort={setSort}
-                              value="phone"
-                              handleSort={handleSort}
-                            />
-                            <ThSearchOrFilterPopover
-                              isSearch
-                              onSearch={() =>
-                                handleHeaderSearch("phone", uiState.phone)
-                              }
-                            >
-                              <InputField
-                                isLabel={false}
-                                value={uiState.phone}
-                                onChange={(e) =>
-                                  setUiState({
-                                    ...uiState,
-                                    phone: e.target.value,
-                                  })
-                                }
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" &&
-                                  handleHeaderSearch("phone", uiState.phone)
-                                }
-                              />
-                            </ThSearchOrFilterPopover>
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
-                      {/* Address Column */}
-                      <Th>
-                        <ThContainer>
-                          Address
-                          <ThFilterContainer>
-                            <ThSearchOrFilterPopover
-                              isSearch
-                              onSearch={() =>
-                                handleHeaderSearch("address", uiState.address)
-                              }
-                            >
-                              <InputField
-                                isLabel={false}
-                                value={uiState.address}
-                                onChange={(e) =>
-                                  setUiState({
-                                    ...uiState,
-                                    address: e.target.value,
-                                  })
-                                }
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" &&
-                                  handleHeaderSearch("address", uiState.address)
-                                }
-                              />
-                            </ThSearchOrFilterPopover>
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
-                      <Th>Terms</Th>
-                      <Th>
-                        <ThContainer>
-                          Outstanding Balance
-                          <ThFilterContainer>
-                            <ThSort
-                              sort={sort}
-                              setSort={setSort}
-                              value="outstanding_balance"
-                              handleSort={handleSort}
-                            />
-                            <ThSearchOrFilterPopover
-                              isSearch
-                              onSearch={() =>
-                                handleHeaderSearch(
-                                  "outstanding_balance",
-                                  uiState.outstanding_balance,
-                                )
-                              }
-                            >
-                              <InputField
-                                isLabel={false}
-                                value={uiState.outstanding_balance}
-                                onChange={(e) =>
-                                  setUiState({
-                                    ...uiState,
-                                    outstanding_balance: e.target.value,
-                                  })
-                                }
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" &&
-                                  handleHeaderSearch(
-                                    "outstanding_balance",
-                                    uiState.outstanding_balance,
-                                  )
-                                }
-                              />
-                            </ThSearchOrFilterPopover>
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
-                      <Th>
-                        <ThContainer>
-                          Created At
-                          <ThFilterContainer>
-                            <ThSort
-                              sort={sort}
-                              setSort={setSort}
-                              value="created_at"
-                              handleSort={handleSort}
-                            />
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
+
                       <ThMenu />
                     </Tr>
                   </Thead>
@@ -509,15 +520,15 @@ const CommonSupplierList = ({
                             page={state.page}
                             pageSize={state.page_size}
                           />
-                          <Td>{item.name}</Td>
-                          <Td>{item.done_by_name}</Td>
-                          <Td>{item.cost_center_name}</Td>
-                          <Td>{item.email}</Td>
-                          <Td>{item.phone}</Td>
-                          <Td>{item.address}</Td>
-                          <Td>{item.payment_terms}</Td>
-                          <Td>{item.outstanding_balance ?? 0}</Td>
                           <TdDate>{item.created_at}</TdDate>
+                          <TdOverflow>{item.name}</TdOverflow>
+                          <Td>{item.phone}</Td>
+                          <TdOverflow>{item.email}</TdOverflow>
+                          <TdOverflow>{item.address}</TdOverflow>
+                          <Td>{item.outstanding_balance ?? 0}</Td>
+                          <TdOverflow>{item.payment_terms}</TdOverflow>
+                          <TdOverflow>{item.done_by_name}</TdOverflow>
+                          <TdOverflow>{item.cost_center_name}</TdOverflow>
                           <TdMenu
                             onEdit={() =>
                               setModal({ isOpen: true, mode: "edit", item })
@@ -587,7 +598,9 @@ const CommonSupplierList = ({
                       subtitle={
                         <div>
                           {item.phone} | {item.done_by_name}
-                          <div>Outstanding: {item.outstanding_balance ?? 0}</div>
+                          <div>
+                            Outstanding: {item.outstanding_balance ?? 0}
+                          </div>
                         </div>
                       }
                       onEdit={() =>

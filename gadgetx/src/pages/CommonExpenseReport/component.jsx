@@ -47,6 +47,7 @@ import HStack from "@/components/HStack";
 import TableFooter from "@/components/TableFooter";
 import PageHeader from "@/components/PageHeader";
 import { useToast } from "@/context/ToastContext";
+import { TOASTSTATUS, TOASTTYPE } from "@/constants/object/toastType";
 import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import Spacer from "@/components/Spacer";
@@ -400,28 +401,32 @@ const CommonExpenseReport = ({ hooks, components, config }) => {
     setShowFilter(false);
   }, []);
 
-  const handleRefresh = useCallback(
-    () =>
-      setState({
-        page: 1,
-        page_size: 10,
-        category: "",
-        ledger_id: "",
-        done_by_id: "",
-        cost_center_id: defaltCostCenter,
-        status: "",
-        amount: "",
-        amount_paid: "",
-        min_amount: "",
-        max_amount: "",
-        start_date: "",
-        end_date: "",
-        sort: "-date",
-        searchType: "",
-        searchKey: "",
-      }),
-    [defaltCostCenter],
-  );
+  const handleRefresh = useCallback(() => {
+    setState({
+      page: 1,
+      page_size: 10,
+      category: "",
+      ledger_id: "",
+      done_by_id: "",
+      cost_center_id: defaltCostCenter,
+      status: "",
+      amount: "",
+      amount_paid: "",
+      min_amount: "",
+      max_amount: "",
+      start_date: "",
+      end_date: "",
+      sort: "-date",
+      searchType: "",
+      searchKey: "",
+    });
+
+    showToast({
+      type: TOASTTYPE.GENARAL,
+      message: "Report has been refreshed.",
+      status: TOASTSTATUS.SUCCESS,
+    });
+  }, [defaltCostCenter]);
 
   const handlePageLimitSelect = useCallback(
     (value) => setState({ page_size: value, page: 1 }),
@@ -871,7 +876,7 @@ const CommonExpenseReport = ({ hooks, components, config }) => {
           <>
             <PageTitleWithBackButton title="Expenses" />
             <ScrollContainer>
-              <PageHeader >
+              <PageHeader>
                 <HStack>
                   <DateFilter
                     value={dateFilterValue}
@@ -889,7 +894,7 @@ const CommonExpenseReport = ({ hooks, components, config }) => {
                     searchRef={searchRef}
                   />
                 </HStack>
-                <div style={{marginLeft: "auto"}}>
+                <div style={{ marginLeft: "auto" }}>
                   <AddButton onClick={handleAddClick}>Add Expense</AddButton>
                 </div>
               </PageHeader>

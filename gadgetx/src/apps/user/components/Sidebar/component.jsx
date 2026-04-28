@@ -206,7 +206,7 @@ const sidebarData = [
       {
         to: "/expense-type",
         title: "Expense Type",
-        label: "Expense Categories",
+        label: "Expense Types",
         Icon: RiBillFill,
         addPath: "/expense-type?action=add",
       },

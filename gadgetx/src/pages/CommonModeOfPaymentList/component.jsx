@@ -20,6 +20,7 @@ import {
   ThMenu,
   TableCaption,
   ThContainer,
+  TdOverflow,
   ThSort,
   ThFilterContainer,
   ThSearchOrFilterPopover,
@@ -95,10 +96,10 @@ const CommonMOPRow = React.memo(
   ({ item, index, listLength, onEdit, onView, onDelete }) => (
     <Tr>
       <TdSL index={index} page={1} pageSize={listLength} />
-      <Td>{item.name}</Td>
-      <Td>{item.default_ledger_name || "-"}</Td>
-      <Td>{item.done_by_name}</Td>
-      <Td>{item.cost_center_name}</Td>
+      <TdOverflow>{item.name}</TdOverflow>
+      <TdOverflow>{item.default_ledger_name || "-"}</TdOverflow>
+      <TdOverflow>{item.done_by_name}</TdOverflow>
+      <TdOverflow>{item.cost_center_name}</TdOverflow>
       <TdMenu
         onEdit={() => onEdit(item)}
         onView={() => onView(item)}

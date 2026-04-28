@@ -22,6 +22,7 @@ import {
   TdDate,
   TableCaption,
   ThContainer,
+  TdOverflow,
   ThSort,
   ThFilterContainer,
   ThSearchOrFilterPopover,
@@ -31,6 +32,7 @@ import PageHeader from "@/components/PageHeader";
 import ContainerWrapper from "@/components/ContainerWrapper";
 import Loader from "@/components/Loader";
 import { useToast } from "@/context/ToastContext";
+import { TOASTTYPE, TOASTSTATUS } from "@/constants/object/toastType";
 import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
 import { useIsMobile } from "@/utils/useIsMobile";
 import ScrollContainer from "@/components/ScrollContainer";
@@ -107,7 +109,6 @@ const CommonLedgerList = ({
     setSort(state.sort || "");
   }, [state]);
 
-
   const { data, isLoading } = useLedgerPaginatedHook(state);
   const { mutateAsync: deleteLedger } = useDeleteLedgerHook();
   const listData = useMemo(() => data?.data || [], [data]);
@@ -126,7 +127,7 @@ const CommonLedgerList = ({
           prev.delete("action");
           return prev;
         },
-        { replace: true }
+        { replace: true },
       );
       setModal({ isOpen: true, mode: "add", item: null });
     }
@@ -147,6 +148,11 @@ const CommonLedgerList = ({
       searchKey: "",
     };
     setState(reset);
+    showToast({
+      type: TOASTTYPE.GENARAL,
+      message: "Report has been refreshed..",
+      status: TOASTSTATUS.SUCCESS,
+    });
   }, [defaultCostCenter]);
 
   // Sort logic that updates both local UI and trigger API
@@ -301,6 +307,36 @@ const CommonLedgerList = ({
                       <ThSL />
                       <Th>
                         <ThContainer>
+                          Date
+                          <ThFilterContainer>
+                            <ThSort
+                              sort={sort}
+                              setSort={setSort}
+                              value="created_at"
+                              handleSort={handleSort}
+                            />
+                            <ThSearchOrFilterPopover isSearch={false}>
+                              <DateFilter
+                                value={{
+                                  startDate: uiState.start_date,
+                                  endDate: uiState.end_date,
+                                  rangeType: "custom",
+                                }}
+                                onChange={(val) =>
+                                  setState({
+                                    start_date: val.startDate,
+                                    end_date: val.endDate,
+                                    page: 1,
+                                  })
+                                }
+                                popover={true}
+                              />
+                            </ThSearchOrFilterPopover>
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
+                      <Th>
+                        <ThContainer>
                           Name
                           <ThFilterContainer>
                             <ThSort
@@ -419,36 +455,7 @@ const CommonLedgerList = ({
                           </ThFilterContainer>
                         </ThContainer>
                       </Th>
-                      <Th>
-                        <ThContainer>
-                          Date
-                          <ThFilterContainer>
-                            <ThSort
-                              sort={sort}
-                              setSort={setSort}
-                              value="created_at"
-                              handleSort={handleSort}
-                            />
-                            <ThSearchOrFilterPopover isSearch={false}>
-                              <DateFilter
-                                value={{
-                                  startDate: uiState.start_date,
-                                  endDate: uiState.end_date,
-                                  rangeType: "custom",
-                                }}
-                                onChange={(val) =>
-                                  setState({
-                                    start_date: val.startDate,
-                                    end_date: val.endDate,
-                                    page: 1,
-                                  })
-                                }
-                                popover={true}
-                              />
-                            </ThSearchOrFilterPopover>
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
+
                       <ThMenu />
                     </Tr>
                   </Thead>
@@ -461,11 +468,11 @@ const CommonLedgerList = ({
                             page={state.page}
                             pageSize={state.page_size}
                           />
-                          <Td>{item.name}</Td>
-                          <Td>{parseFloat(item.balance).toFixed(2)}</Td>
-                          <Td>{item.done_by_name}</Td>
-                          <Td>{item.cost_center_name}</Td>
                           <TdDate>{item.created_at}</TdDate>
+                          <TdOverflow>{item.name}</TdOverflow>
+                          <Td>{parseFloat(item.balance).toFixed(2)}</Td>
+                          <TdOverflow>{item.done_by_name}</TdOverflow>
+                          <TdOverflow>{item.cost_center_name}</TdOverflow>
                           <TdMenu
                             onEdit={() =>
                               setModal({ isOpen: true, mode: "edit", item })
