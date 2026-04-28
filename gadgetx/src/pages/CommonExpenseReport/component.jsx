@@ -116,7 +116,7 @@ const ExpenseRow = React.memo(
             return (
               <TdNumeric key={field.value}>{balance.toFixed(2)}</TdNumeric>
             );
-          if (field.value === "status")
+          if (field.value === "status" || field.value === "payment_status")
             return (
               <Td key={field.value}>
                 <TextBadge variant="paymentStatus" type={status}>
@@ -830,7 +830,7 @@ const CommonExpenseReport = ({ hooks, components, config }) => {
                           );
                         if (field.value === "balance")
                           return <Th key={field.value}>Balance</Th>;
-                        if (field.value === "status")
+                        if (field.value === "status" || field.value === "payment_status")
                           return <Th key={field.value}>Status</Th>;
                         return null;
                       })}
