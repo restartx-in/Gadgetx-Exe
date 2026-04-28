@@ -5,9 +5,9 @@ import React, {
   useMemo,
   useCallback,
   useReducer,
-} from "react";
-import { useSearchParams } from "react-router-dom";
-import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
+} from 'react'
+import { useSearchParams } from 'react-router-dom'
+import PageTitleWithBackButton from '@/components/PageTitleWithBackButton'
 import {
   Table,
   Thead,
@@ -24,28 +24,28 @@ import {
   ThSort,
   ThFilterContainer,
   ThSearchOrFilterPopover,
-} from "@/components/Table";
-import AddButton from "@/components/AddButton";
-import PageHeader from "@/components/PageHeader";
-import ContainerWrapper from "@/components/ContainerWrapper";
-import Loader from "@/components/Loader";
-import { useToast } from "@/context/ToastContext";
-import { CRUDTYPE, CRUDITEM } from "@/constants/object/crud";
-import { TOASTTYPE, TOASTSTATUS } from "@/constants/object/toastType";
-import { useIsMobile } from "@/utils/useIsMobile";
-import ScrollContainer from "@/components/ScrollContainer";
-import ListItem from "@/components/ListItem/component";
-import Spacer from "@/components/Spacer";
-import HStack from "@/components/HStack";
-import RefreshButton from "@/components/RefreshButton";
-import PopupSearchField from "@/components/PopupSearchField";
-import MobileSearchField from "@/components/MobileSearchField";
-import PopUpFilter from "@/components/PopUpFilter";
-import VStack from "@/components/VStack";
-import InputField from "@/components/InputField";
-import useSyncURLParams from "@/hooks/useSyncURLParams";
+} from '@/components/Table'
+import AddButton from '@/components/AddButton'
+import PageHeader from '@/components/PageHeader'
+import ContainerWrapper from '@/components/ContainerWrapper'
+import Loader from '@/components/Loader'
+import { useToast } from '@/context/ToastContext'
+import { CRUDTYPE, CRUDITEM } from '@/constants/object/crud'
+import { TOASTTYPE, TOASTSTATUS } from '@/constants/object/toastType'
+import { useIsMobile } from '@/utils/useIsMobile'
+import ScrollContainer from '@/components/ScrollContainer'
+import ListItem from '@/components/ListItem/component'
+import Spacer from '@/components/Spacer'
+import HStack from '@/components/HStack'
+import RefreshButton from '@/components/RefreshButton'
+import PopupSearchField from '@/components/PopupSearchField'
+import MobileSearchField from '@/components/MobileSearchField'
+import PopUpFilter from '@/components/PopUpFilter'
+import VStack from '@/components/VStack'
+import InputField from '@/components/InputField'
+import useSyncURLParams from '@/hooks/useSyncURLParams'
 
-const stateReducer = (state, newState) => ({ ...state, ...newState });
+const stateReducer = (state, newState) => ({ ...state, ...newState })
 
 const CommonCategoryList = ({
   useCategorysHook,
@@ -56,27 +56,27 @@ const CommonCategoryList = ({
   TableTopContainer,
   categoryItemConstant, // e.g., Transaction.Category
 }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const showToast = useToast();
-  const isMobile = useIsMobile();
-  const searchRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams()
+  const showToast = useToast()
+  const isMobile = useIsMobile()
+  const searchRef = useRef(null)
 
-  const defaultCostCenter = localStorage.getItem("DEFAULT_COST_CENTER") ?? "";
-  const isDisableCostCenter = defaultCostCenter !== "";
+  const defaultCostCenter = localStorage.getItem('DEFAULT_COST_CENTER') ?? ''
+  const isDisableCostCenter = defaultCostCenter !== ''
 
   // 1. Core Logic State
   const [state, setState] = useReducer(stateReducer, {
-    name: searchParams.get("name") || "",
-    sort: searchParams.get("sort") || "",
-    done_by_id: searchParams.get("doneById") || "",
-    cost_center_id: searchParams.get("costCenterId") || defaultCostCenter,
-    searchType: searchParams.get("searchType") || "",
-    searchKey: searchParams.get("searchKey") || "",
-  });
+    name: searchParams.get('name') || '',
+    sort: searchParams.get('sort') || '',
+    done_by_id: searchParams.get('doneById') || '',
+    cost_center_id: searchParams.get('costCenterId') || defaultCostCenter,
+    searchType: searchParams.get('searchType') || '',
+    searchKey: searchParams.get('searchKey') || '',
+  })
 
   // 2. Local UI State (for filter popover and header inputs)
-  const [showFilter, setShowFilter] = useState(false);
-  const [uiState, setUiState] = useState(state);
+  const [showFilter, setShowFilter] = useState(false)
+  const [uiState, setUiState] = useState(state)
 
   useSyncURLParams({
     name: state.name,
@@ -85,76 +85,76 @@ const CommonCategoryList = ({
     costCenterId: state.cost_center_id,
     searchType: state.searchType,
     searchKey: state.searchKey,
-  });
+  })
 
   // Sync UI inputs when global state changes (e.g., on refresh)
   useEffect(() => {
-    setUiState(state);
-  }, [state]);
+    setUiState(state)
+  }, [state])
 
-  const { data: categorys, isLoading } = useCategorysHook(state);
-  const { mutateAsync: deleteCategory } = useDeleteCategoryHook();
-  const listData = useMemo(() => categorys || [], [categorys]);
+  const { data: categorys, isLoading } = useCategorysHook(state)
+  const { mutateAsync: deleteCategory } = useDeleteCategoryHook()
+  const listData = useMemo(() => categorys || [], [categorys])
 
   // Modal State
   const [modal, setModal] = useState({
     isOpen: false,
-    mode: "view",
+    mode: 'view',
     item: null,
-  });
+  })
 
   useEffect(() => {
-    if (searchParams.get("action") === "add" && !modal.isOpen) {
-      setModal({ isOpen: true, mode: "add", item: null });
+    if (searchParams.get('action') === 'add' && !modal.isOpen) {
+      setModal({ isOpen: true, mode: 'add', item: null })
     }
-  }, [searchParams, modal.isOpen]);
+  }, [searchParams, modal.isOpen])
 
   const handleAddClick = useCallback(() => {
     setSearchParams(
       (prev) => {
-        prev.set("action", "add");
-        return prev;
+        prev.set('action', 'add')
+        return prev
       },
       { replace: true },
-    );
-  }, [setSearchParams]);
+    )
+  }, [setSearchParams])
 
   const handleDelete = useCallback(
     async (id) => {
       try {
-        await deleteCategory(id);
+        await deleteCategory(id)
         showToast({
           crudItem: CRUDITEM.CATEGORY,
           crudType: CRUDTYPE.DELETE_SUCCESS,
-        });
+        })
       } catch (error) {
         showToast({
           crudItem: CRUDITEM.CATEGORY,
           crudType: CRUDTYPE.DELETE_ERROR,
-        });
+        })
       }
     },
     [deleteCategory, showToast],
-  );
+  )
 
   const handleRefresh = useCallback(() => {
     const reset = {
-      name: "",
-      sort: "",
-      done_by_id: "",
+      name: '',
+      sort: '',
+      done_by_id: '',
       cost_center_id: defaultCostCenter,
-      searchType: "",
-      searchKey: "",
-    };
-    setState(reset);
+      searchType: '',
+      searchKey: '',
+    }
+    setState(reset)
     showToast({
       type: TOASTTYPE.GENARAL,
-      message: "Report has been refreshed..",
+      message: 'Report has been refreshed..',
       status: TOASTSTATUS.SUCCESS,
-    });
-  }, [defaultCostCenter, showToast]);
+    })
+  }, [defaultCostCenter, showToast])
 
-  const searchOptions = [{ value: "name", name: "Name" }];
+  const searchOptions = [{ value: 'name', name: 'Name' }]
 
   return (
     <>
@@ -238,7 +238,7 @@ const CommonCategoryList = ({
                                 setUiState({ ...uiState, name: e.target.value })
                               }
                               onKeyDown={(e) =>
-                                e.key === "Enter" &&
+                                e.key === 'Enter' &&
                                 setState({ name: uiState.name })
                               }
                               isLabel={false}
@@ -247,8 +247,12 @@ const CommonCategoryList = ({
                         </ThFilterContainer>
                       </ThContainer>
                     </Th>
-                    <Th>Done By</Th>
-                    <Th>Cost Center</Th>
+                    <Th>
+                      <ThContainer>Done By</ThContainer>
+                    </Th>
+                    <Th>
+                      <ThContainer>Cost Center</ThContainer>
+                    </Th>
                     <ThMenu />
                   </Tr>
                 </Thead>
@@ -266,10 +270,10 @@ const CommonCategoryList = ({
                         <Td>{item.cost_center_name}</Td>
                         <TdMenu
                           onEdit={() =>
-                            setModal({ isOpen: true, mode: "edit", item })
+                            setModal({ isOpen: true, mode: 'edit', item })
                           }
                           onView={() =>
-                            setModal({ isOpen: true, mode: "view", item })
+                            setModal({ isOpen: true, mode: 'view', item })
                           }
                           onDelete={() => handleDelete(item.id)}
                         />
@@ -318,10 +322,10 @@ const CommonCategoryList = ({
                         </>
                       }
                       onView={() =>
-                        setModal({ isOpen: true, mode: "view", item })
+                        setModal({ isOpen: true, mode: 'view', item })
                       }
                       onEdit={() =>
-                        setModal({ isOpen: true, mode: "edit", item })
+                        setModal({ isOpen: true, mode: 'edit', item })
                       }
                       onDelete={() => handleDelete(item.id)}
                     />
@@ -337,20 +341,20 @@ const CommonCategoryList = ({
       <AddCategoryModal
         isOpen={modal.isOpen}
         onClose={() => {
-          setModal({ ...modal, isOpen: false });
+          setModal({ ...modal, isOpen: false })
           setSearchParams(
             (prev) => {
-              prev.delete("action");
-              return prev;
+              prev.delete('action')
+              return prev
             },
             { replace: true },
-          );
+          )
         }}
         mode={modal.mode}
         selectedCategory={modal.item}
       />
     </>
-  );
-};
+  )
+}
 
-export default CommonCategoryList;
+export default CommonCategoryList
