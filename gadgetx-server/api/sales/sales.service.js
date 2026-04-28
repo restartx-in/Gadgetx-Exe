@@ -23,8 +23,8 @@ class SalesService {
       const missingIds = itemIds.filter((id) => !foundItemIds.includes(id));
       throw new Error(
         `One or more items not found. Could not find item IDs: ${missingIds.join(
-          ", "
-        )} for tenant ${tenantId}`
+          ", ",
+        )} for tenant ${tenantId}`,
       );
     }
 
@@ -74,12 +74,12 @@ class SalesService {
     const itemsWithDetails = await this._processSaleItems(
       uniqueInputItems,
       tenantId,
-      db
+      db,
     );
 
     const itemsSubtotal = itemsWithDetails.reduce(
       (sum, item) => sum + item.total_price,
-      0
+      0,
     );
     const grandTotal = itemsSubtotal - parseFloat(discount);
 
@@ -108,7 +108,7 @@ class SalesService {
     const newSales = await this.repository.create(
       db,
       salePayload,
-      itemsWithDetails
+      itemsWithDetails,
     );
 
     // 4. Update Stock
@@ -130,7 +130,7 @@ class SalesService {
 
   async update(id, user, saleData, db) {
     const tenantId = user.tenant_id;
-    
+
     // 1. Fetch Original Sale (includes existing vouchers/payments)
     const originalSale = await this.repository.getById(db, id, tenantId);
     if (!originalSale) {
@@ -152,12 +152,12 @@ class SalesService {
     const itemsWithDetails = await this._processSaleItems(
       uniqueInputItems,
       tenantId,
-      db
+      db,
     );
 
     const itemsSubtotal = itemsWithDetails.reduce(
       (sum, item) => sum + item.total_price,
-      0
+      0,
     );
     const grandTotal = itemsSubtotal - parseFloat(discount);
 
@@ -174,9 +174,7 @@ class SalesService {
 
     // Collect IDs of incoming vouchers to identify which existing ones should be kept
     const incomingVoucherIds = new Set(
-        validIncomingPayments
-            .map(p => p.voucher_id)
-            .filter(id => id != null)
+      validIncomingPayments.map((p) => p.voucher_id).filter((id) => id != null),
     );
 
     // Get existing vouchers from the DB record
@@ -186,9 +184,12 @@ class SalesService {
     // This solves the issue where editing a payment (without passing ID) or removing it
     // resulted in duplicate payments or incorrect totals.
     for (const existingVoucher of existingVouchers) {
-        if (existingVoucher.voucher_id && !incomingVoucherIds.has(existingVoucher.voucher_id)) {
-            await this.voucherService.delete(existingVoucher.voucher_id, user, db);
-        }
+      if (
+        existingVoucher.voucher_id &&
+        !incomingVoucherIds.has(existingVoucher.voucher_id)
+      ) {
+        await this.voucherService.delete(existingVoucher.voucher_id, user, db);
+      }
     }
 
     const salePayload = {
@@ -202,10 +203,10 @@ class SalesService {
 
     // Calculate Stock Differences
     const originalItemQuantities = new Map(
-      (originalSale.items || []).map((item) => [item.item_id, item.quantity])
+      (originalSale.items || []).map((item) => [item.item_id, item.quantity]),
     );
     const updatedItemQuantities = new Map(
-      (itemsWithDetails || []).map((item) => [item.item_id, item.quantity])
+      (itemsWithDetails || []).map((item) => [item.item_id, item.quantity]),
     );
 
     const stockAdjustments = new Map();
@@ -230,7 +231,7 @@ class SalesService {
       id,
       tenantId,
       salePayload,
-      itemsWithDetails
+      itemsWithDetails,
     );
 
     if (!updatedSales) {
@@ -244,7 +245,12 @@ class SalesService {
 
     // 5. Process Create/Update for incoming payments
     if (updatedSales && validIncomingPayments.length > 0) {
-       await this._processVouchersForPayments(updatedSales, user, validIncomingPayments, db);
+      await this._processVouchersForPayments(
+        updatedSales,
+        user,
+        validIncomingPayments,
+        db,
+      );
     }
 
     const result = await this.getById(id, tenantId, db);
@@ -257,7 +263,9 @@ class SalesService {
   // Renamed from _createVouchersForPayments to reflect dual purpose (create & update)
   async _processVouchersForPayments(sale, user, payment_methods, db) {
     if (!sale.party_ledger_id) {
-       throw new Error(`The customer '${sale.party_name}' does not have a linked Ledger account.`);
+      throw new Error(
+        `The customer '${sale.party_name}' does not have a linked Ledger account.`,
+      );
     }
 
     for (const payment of payment_methods) {
@@ -273,30 +281,43 @@ class SalesService {
         date: sale.date,
         description: `Payment for Sale Invoice #${sale.invoice_number}`,
         // Keep existing number if updating, otherwise generate new one
-        voucher_no: payment.voucher_no || `VS-${sale.invoice_number}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-        
-        voucher_type: isReceipt ? 1 : 0, 
-        
-        from_ledger: { ledger_id: isReceipt ? sale.party_ledger_id : payment.account_id }, 
-        to_ledger: { ledger_id: isReceipt ? payment.account_id : sale.party_ledger_id },
-        
+        voucher_no:
+          payment.voucher_no ||
+          `VS-${sale.invoice_number}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+
+        voucher_type: isReceipt ? 1 : 0,
+
+        from_ledger: {
+          ledger_id: isReceipt ? sale.party_ledger_id : payment.account_id,
+        },
+        to_ledger: {
+          ledger_id: isReceipt ? payment.account_id : sale.party_ledger_id,
+        },
+
         cost_center_id: sale.cost_center_id,
         done_by_id: sale.done_by_id,
         mode_of_payment_id: payment.mode_of_payment_id,
-        
-        transactions: [{
-             invoice_id: sale.id,
-             invoice_type: 'SALE',
-             received_amount: amount 
-        }]
+
+        transactions: [
+          {
+            invoice_id: sale.id,
+            invoice_type: "SALE",
+            received_amount: amount,
+          },
+        ],
       };
 
       if (payment.voucher_id) {
-          // UPDATE existing voucher
-          await this.voucherService.update(payment.voucher_id, user, voucherData, db);
+        // UPDATE existing voucher
+        await this.voucherService.update(
+          payment.voucher_id,
+          user,
+          voucherData,
+          db,
+        );
       } else {
-          // CREATE new voucher
-          await this.voucherService.create(user, voucherData, db);
+        // CREATE new voucher
+        await this.voucherService.create(user, voucherData, db);
       }
     }
   }
@@ -326,12 +347,12 @@ class SalesService {
     };
   }
 
-  
   _normalizeImageUrl(url) {
-    if (typeof url !== 'string') return url;
-    if (url.startsWith('//')) url = url.replace(/^\/+/, '/');
-    url = url.replace(/\s/g, '%20');
-    if (url.includes('inventoryx')) url = url.replace(/inventoryx/g, 'inventoryx');
+    if (typeof url !== "string") return url;
+    if (url.startsWith("//")) url = url.replace(/^\/+/, "/");
+    url = url.replace(/\s/g, "%20");
+    if (url.includes("inventoryx"))
+      url = url.replace(/inventoryx/g, "inventoryx");
     return url;
   }
 
@@ -340,46 +361,56 @@ class SalesService {
     if (!sales) throw new Error("Sales not found or not authorized");
     // Fix //uploads/... from legacy data so images load (browsers treat // as protocol-relative)
     if (sales.store) {
-      if (sales.store.header_image_url) sales.store.header_image_url = this._normalizeImageUrl(sales.store.header_image_url);
-      if (sales.store.full_header_image_url) sales.store.full_header_image_url = this._normalizeImageUrl(sales.store.full_header_image_url);
+      if (sales.store.header_image_url)
+        sales.store.header_image_url = this._normalizeImageUrl(
+          sales.store.header_image_url,
+        );
+      if (sales.store.full_header_image_url)
+        sales.store.full_header_image_url = this._normalizeImageUrl(
+          sales.store.full_header_image_url,
+        );
     }
     return sales;
   }
 
+  // sales.service.js
   async delete(id, user, db) {
     const tenantId = user.tenant_id;
     const saleToDelete = await this.repository.getById(db, id, tenantId);
-    if (!saleToDelete) {
-      throw new Error("Sale not found or not authorized");
-    }
+    if (!saleToDelete) throw new Error("Sale not found");
 
     const client = await db.connect();
     try {
       await client.query("BEGIN");
 
-      const deletedSales = await this.repository.delete(client, id, tenantId);
-      if (!deletedSales) {
-        throw new Error("Sales not found or not authorized to delete");
+      // Pass the 'client' down so VoucherService uses the same transaction
+      if (saleToDelete.payment_methods) {
+        for (const payment of saleToDelete.payment_methods) {
+          // Pass 'client' as the 4th argument
+          await this.voucherService.delete(
+            payment.voucher_id,
+            user,
+            db,
+            client,
+          );
+        }
       }
+
+      await this.repository.delete(client, id, tenantId);
 
       for (const item of saleToDelete.items) {
         await this.itemRepository.updateStock(
           client,
           item.item_id,
-          item.quantity 
+          item.quantity,
         );
       }
+
       await client.query("COMMIT");
-      return { 
-        status: "success",
-        data: deletedSales,
-      };
+      return { status: "success" };
     } catch (error) {
       await client.query("ROLLBACK");
-      return {
-        status: "failed",
-        message: error.message || "Something went wrong",
-      };
+      throw error;
     } finally {
       client.release();
     }

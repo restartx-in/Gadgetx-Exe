@@ -1,9 +1,8 @@
 module.exports = async (client) => {
-  console.log("🚀 Starting SQLite-compatible Database Migration...");
+  console.log("🚀 Starting SQLite Cleanup & Migration...");
 
   /**
    * Helper function to run queries safely.
-   * If a column already exists, SQLite throws an error; we catch it so the script continues.
    */
   const safeQuery = async (label, sql) => {
     try {
@@ -19,7 +18,16 @@ module.exports = async (client) => {
   };
 
   try {
-    // --- 1. PAYROLL TABLE UPDATES ---
+    // --- 1. CLEANUP: DELETE TABLES ---
+    // Drop sale_item first because it depends on sales
+    await client.query(`DROP TABLE IF EXISTS sale_item;`);
+    console.log('✅ "sale_item" table deleted.');
+
+    await client.query(`DROP TABLE IF EXISTS sales;`);
+    console.log('✅ "sales" table deleted.');
+
+
+    // --- 2. PAYROLL TABLE UPDATES (Fixing the account_id error) ---
     
     // Add ledger_id
     await safeQuery(
@@ -27,7 +35,7 @@ module.exports = async (client) => {
       `ALTER TABLE payroll ADD COLUMN ledger_id INTEGER REFERENCES ledger(id) ON DELETE CASCADE;`
     );
 
-    // Try to drop account_id (Requires SQLite 3.35.0+)
+    // Remove the problematic account_id column
     await safeQuery(
       "Drop account_id from payroll",
       `ALTER TABLE payroll DROP COLUMN account_id;`
@@ -39,30 +47,9 @@ module.exports = async (client) => {
       `CREATE INDEX IF NOT EXISTS idx_payroll_ledger_id ON payroll(ledger_id);`
     );
 
+    console.log("🎉 Cleanup successful. Tables dropped and payroll updated.");
+    console.log("ℹ️ Note: Your sales and sale_item tables will be re-created when you run your table creation scripts.");
 
-    // --- 2. SALES TABLE UPDATES ---
-
-    await safeQuery(
-      "Add ledger_id to sales",
-      `ALTER TABLE sales ADD COLUMN ledger_id INTEGER REFERENCES ledger(id) ON DELETE SET NULL;`
-    );
-
-    await safeQuery(
-      "Add change_return to sales",
-      `ALTER TABLE sales ADD COLUMN change_return DECIMAL(10, 2) DEFAULT 0.00;`
-    );
-
-    await safeQuery(
-      "Add status to sales",
-      `ALTER TABLE sales ADD COLUMN status VARCHAR(255) DEFAULT 'unpaid';`
-    );
-
-    await safeQuery(
-      "Create sales ledger index",
-      `CREATE INDEX IF NOT EXISTS idx_sales_ledger_id ON sales(ledger_id);`
-    );
-
-    console.log("🎉 Database migration script completed successfully.");
   } catch (e) {
     console.error("❌ A critical error occurred during migration:", e.message);
     throw e;

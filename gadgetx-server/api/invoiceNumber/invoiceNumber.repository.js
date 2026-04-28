@@ -6,33 +6,46 @@ class InvoiceNumberRepository {
     return `${type.toUpperCase()}-${padded}`
   }
 
-  // 1️⃣ Increment and return next invoice number (ATOMIC AND FIXED)
+  // 1️⃣ Increment and return next invoice number (SQLite Compatible)
   async generateNext(db, { type, tenantId }) {
-    const result = await db.query(
-      `INSERT INTO invoice_number (tenant_id, transaction_type, value)
-       VALUES ($1, $2, 1)
-       ON CONFLICT (tenant_id, transaction_type) 
-       DO UPDATE SET 
-         value = invoice_number.value + 1,
-         last_updated = NOW()
-       RETURNING value;`,
+    // 1. Check if the record exists
+    const check = await db.query(
+      `SELECT value FROM invoice_number WHERE tenant_id = $1 AND transaction_type = $2`,
       [tenantId, type]
-    )
+    );
 
-    const value = result.rows[0].value
-    return this.formatInvoiceNumber(type, value)
+    let newValue;
+    if (check.rows.length > 0) {
+      // 2a. Update existing record
+      newValue = check.rows[0].value + 1;
+      await db.query(
+        `UPDATE invoice_number SET value = $1, last_updated = CURRENT_TIMESTAMP 
+         WHERE tenant_id = $2 AND transaction_type = $3`,
+        [newValue, tenantId, type]
+      );
+    } else {
+      // 2b. Insert new record
+      newValue = 1;
+      await db.query(
+        `INSERT INTO invoice_number (tenant_id, transaction_type, value, last_updated) 
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
+        [tenantId, type, newValue]
+      );
+    }
+
+    return this.formatInvoiceNumber(type, newValue);
   }
 
-  // 2️⃣ Get last used invoice number (not incrementing)
-async get(db, { type, tenantId }) {
-  const res = await db.query(
-    `SELECT value FROM invoice_number 
-     WHERE transaction_type = $1 AND tenant_id = $2`, 
-     [type, tenantId] // <--- The database needs "type" here to find the right row!
-  )
+  // 2️⃣ Get last used invoice number
+  async get(db, { type, tenantId }) {
+    const res = await db.query(
+      `SELECT value FROM invoice_number 
+       WHERE transaction_type = $1 AND tenant_id = $2`, 
+       [type, tenantId]
+    );
 
-    const value = res.rows[0]?.value || 0
-    return this.formatInvoiceNumber(type, value)
+    const value = res.rows[0]?.value || 0;
+    return this.formatInvoiceNumber(type, value);
   }
 
   // 3️⃣ Get all invoice sequences for a tenant
@@ -45,4 +58,4 @@ async get(db, { type, tenantId }) {
   }
 }
 
-module.exports = InvoiceNumberRepository
+module.exports = InvoiceNumberRepository;

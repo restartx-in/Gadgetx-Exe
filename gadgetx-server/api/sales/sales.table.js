@@ -26,7 +26,8 @@ module.exports = async (client) => {
           date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           status VARCHAR(255) NOT NULL DEFAULT 'unpaid',
           invoice_number VARCHAR(100) NOT NULL,
-          note TEXT DEFAULT NULL
+          note TEXT DEFAULT NULL,
+          is_online BOOLEAN DEFAULT false
         );
       `)
       console.log('✅ "sales" table created.')
@@ -40,6 +41,9 @@ module.exports = async (client) => {
       )
       await client.query(
         `CREATE INDEX idx_sales_cost_center_id ON sales(cost_center_id);`
+      )
+      await client.query(
+        `CREATE INDEX idx_sales_is_online ON sales(is_online);`
       )
       console.log('✅ Indexes for "sales" table created.')
     }

@@ -8,9 +8,6 @@ class SalesRepository {
   async getByUserId(db, tenantId, filters = {}) {
     const { sort, searchType, searchKey, ids, ...otherFilters } = filters 
     
-    // Status column
-    const statusColumn = 's.status';
-
     let query = `
             SELECT 
                 s.*,
@@ -20,17 +17,19 @@ class SalesRepository {
                 cc.name as cost_center_name,
                 l.name as ledger_name,
                 (
-                  SELECT json_agg(json_build_object(
-                    'voucher_id', v.id,
-                    'account_id', v.to_ledger_id,
-                    'account_name', l.name,
-                    'amount', vt.received_amount,
-                    'mode_of_payment_id', v.mode_of_payment_id
-                  ))
+                  SELECT json_group_array(
+                    json_object(
+                      'voucher_id', v.id,
+                      'account_id', v.to_ledger_id,
+                      'account_name', l2.name,
+                      'amount', vt.received_amount,
+                      'mode_of_payment_id', v.mode_of_payment_id
+                    )
+                  )
                   FROM voucher_transactions vt
                   JOIN voucher v ON vt.voucher_id = v.id
-                  JOIN ledger l ON v.to_ledger_id = l.id
-                  WHERE vt.invoice_id::integer = s.id 
+                  JOIN ledger l2 ON v.to_ledger_id = l2.id
+                  WHERE vt.invoice_id = CAST(s.id AS TEXT) 
                     AND vt.invoice_type = 'SALE'
                 ) as payment_methods
             FROM sales s
@@ -54,11 +53,12 @@ class SalesRepository {
       max_paid_amount: { operator: '<=', column: 's.paid_amount' },
       start_date: { operator: '>=', column: 's.date' },
       end_date: { operator: '<=', column: 's.date' },
-      party_name: { operator: 'ILIKE', column: 'p.name', isString: true },
+      party_name: { operator: 'LIKE', column: 'p.name', isString: true },
       total_amount: { operator: '=', column: 's.total_amount' },
       paid_amount: { operator: '=', column: 's.paid_amount' },
       balance: { operator: '=', column: '(s.total_amount - s.paid_amount)' },
       invoice_number: { operator: '=', column: 's.invoice_number' },
+      is_online: { operator: '=', column: 's.is_online' },
       account_id: {}, 
     }
 
@@ -72,18 +72,22 @@ class SalesRepository {
           query += ` AND EXISTS (
             SELECT 1 FROM voucher_transactions vt
             JOIN voucher v ON vt.voucher_id = v.id
-            WHERE vt.invoice_id::integer = s.id 
+            WHERE vt.invoice_id = CAST(s.id AS TEXT) 
             AND vt.invoice_type = 'SALE' 
             AND v.to_ledger_id = $${paramIndex++}
           )`
           params.push(otherFilters[key])
         } else if (key === 'status' && typeof otherFilters[key] === 'string' && otherFilters[key].includes(',')) {
           const statuses = otherFilters[key].split(',').map(s => s.trim());
-          query += ` AND s.status = ANY($${paramIndex++})` 
-          params.push(statuses)
+          query += ` AND s.status IN (${statuses.map(() => `$${paramIndex++}`).join(',')})` 
+          params.push(...statuses)
         } else {
           const { operator, column, isString } = filterConfig[key]
           let value = otherFilters[key]
+          if (key === 'is_online' && typeof value === 'string') {
+            if (value.toLowerCase() === 'online') value = true
+            else if (value.toLowerCase() === 'offline') value = false
+          }
           if (isString) {
             value = `%${value}%`
           }
@@ -102,25 +106,25 @@ class SalesRepository {
         }
 
         if (idArray.length > 0) {
-            query += ` AND s.id = ANY($${paramIndex++})`; 
-            params.push(idArray);
+            query += ` AND s.id IN (${idArray.map(() => `$${paramIndex++}`).join(',')})`; 
+            params.push(...idArray);
         }
     }
 
 
     const searchConfig = {
-      party_name: { operator: 'ILIKE', column: 'p.name' },
-      status: { operator: 'ILIKE', column: 's.status' },
+      party_name: { operator: 'LIKE', column: 'p.name' },
+      status: { operator: 'LIKE', column: 's.status' },
       total_amount: { operator: '=', column: 's.total_amount' },
-      invoice_number: { operator: 'ILIKE', column: 's.invoice_number' },
-      done_by_name: { operator: 'ILIKE', column: 'db.name' },
-      cost_center_name: { operator: 'ILIKE', column: 'cc.name' },
+      invoice_number: { operator: 'LIKE', column: 's.invoice_number' },
+      done_by_name: { operator: 'LIKE', column: 'db.name' },
+      cost_center_name: { operator: 'LIKE', column: 'cc.name' },
     }
 
     if (searchType && searchKey != null && searchKey !== '') {
       if (searchConfig[searchType]) {
         const { operator, column } = searchConfig[searchType]
-        let value = operator === 'ILIKE' ? `%${searchKey}%` : searchKey
+        let value = operator === 'LIKE' ? `%${searchKey}%` : searchKey
         query += ` AND ${column} ${operator} $${paramIndex}`
         params.push(value)
         paramIndex++
@@ -188,11 +192,12 @@ class SalesRepository {
       max_paid_amount: { operator: '<=', column: 's.paid_amount' },
       start_date: { operator: '>=', column: 's.date' },
       end_date: { operator: '<=', column: 's.date' },
-      party_name: { operator: 'ILIKE', column: 'p.name', isString: true },
+      party_name: { operator: 'LIKE', column: 'p.name', isString: true },
       total_amount: { operator: '=', column: 's.total_amount' },
       paid_amount: { operator: '=', column: 's.paid_amount' },
       balance: { operator: '=', column: '(s.total_amount - s.paid_amount)' },
       invoice_number: { operator: '=', column: 's.invoice_number' },
+      is_online: { operator: '=', column: 's.is_online' },
       account_id: {}, 
     }
 
@@ -206,18 +211,22 @@ class SalesRepository {
           whereClause += ` AND EXISTS (
             SELECT 1 FROM voucher_transactions vt
             JOIN voucher v ON vt.voucher_id = v.id
-            WHERE vt.invoice_id::integer = s.id 
+            WHERE vt.invoice_id = CAST(s.id AS TEXT) 
             AND vt.invoice_type = 'SALE' 
             AND v.to_ledger_id = $${paramIndex++}
           )`
           params.push(otherFilters[key])
         } else if (key === 'status' && typeof otherFilters[key] === 'string' && otherFilters[key].includes(',')) {
            const statuses = otherFilters[key].split(',').map(s => s.trim());
-           whereClause += ` AND s.status = ANY($${paramIndex++})`
-           params.push(statuses)
+           whereClause += ` AND s.status IN (${statuses.map(() => `$${paramIndex++}`).join(',')})`
+           params.push(...statuses)
         } else {
           const { operator, column, isString } = filterConfig[key]
           let value = otherFilters[key]
+          if (key === 'is_online' && typeof value === 'string') {
+            if (value.toLowerCase() === 'online') value = true
+            else if (value.toLowerCase() === 'offline') value = false
+          }
           if (isString) {
             value = `%${value}%`
           }
@@ -229,18 +238,18 @@ class SalesRepository {
     
     // Search config
     const searchConfig = {
-        party_name: { operator: 'ILIKE', column: 'p.name' },
-        status: { operator: 'ILIKE', column: 's.status' },
+        party_name: { operator: 'LIKE', column: 'p.name' },
+        status: { operator: 'LIKE', column: 's.status' },
         total_amount: { operator: '=', column: 's.total_amount' },
-        invoice_number: { operator: 'ILIKE', column: 's.invoice_number' },
-        done_by_name: { operator: 'ILIKE', column: 'db.name' },
-        cost_center_name: { operator: 'ILIKE', column: 'cc.name' },
+        invoice_number: { operator: 'LIKE', column: 's.invoice_number' },
+        done_by_name: { operator: 'LIKE', column: 'db.name' },
+        cost_center_name: { operator: 'LIKE', column: 'cc.name' },
       }
   
       if (searchType && searchKey != null && searchKey !== '') {
         if (searchConfig[searchType]) {
           const { operator, column } = searchConfig[searchType]
-          let value = operator === 'ILIKE' ? `%${searchKey}%` : searchKey
+          let value = operator === 'LIKE' ? `%${searchKey}%` : searchKey
           whereClause += ` AND ${column} ${operator} $${paramIndex}`
           params.push(value)
           paramIndex++
@@ -249,6 +258,7 @@ class SalesRepository {
   
       const aggregationQuery = `
           SELECT
+              COUNT(*) as total_count,
               COALESCE(SUM(s.total_amount), 0) as total_amount,
               COALESCE(SUM(s.paid_amount), 0) as paid_amount
           ${fromAndJoins}
@@ -262,19 +272,20 @@ class SalesRepository {
               db.name as done_by_name,      
               cc.name as cost_center_name,
               l.name as ledger_name,
-              COUNT(*) OVER() as total_count,
               (
-                SELECT json_agg(json_build_object(
-                  'voucher_id', v.id,
-                  'account_id', v.to_ledger_id,
-                  'account_name', l.name,
-                  'amount', vt.received_amount,
-                  'mode_of_payment_id', v.mode_of_payment_id
-                ))
+                SELECT json_group_array(
+                  json_object(
+                    'voucher_id', v.id,
+                    'account_id', v.to_ledger_id,
+                    'account_name', l2.name,
+                    'amount', vt.received_amount,
+                    'mode_of_payment_id', v.mode_of_payment_id
+                  )
+                )
                 FROM voucher_transactions vt
                 JOIN voucher v ON vt.voucher_id = v.id
-                JOIN ledger l ON v.to_ledger_id = l.id
-                WHERE vt.invoice_id::integer = s.id 
+                JOIN ledger l2 ON v.to_ledger_id = l2.id
+                WHERE vt.invoice_id = CAST(s.id AS TEXT) 
                   AND vt.invoice_type = 'SALE'
               ) as payment_methods
           ${fromAndJoins}
@@ -315,11 +326,10 @@ class SalesRepository {
       const { rows } = mainResult
       const aggregationData = aggregationResult.rows[0]
   
-      const totalCount = rows.length > 0 ? parseInt(rows[0].total_count, 10) : 0
-      const sales = rows.map(({ total_count, ...rest }) => rest)
+      const totalCount = parseInt(aggregationData.total_count, 10) || 0
   
       return {
-        sales,
+        sales: rows,
         totalCount,
         total_amount: aggregationData.total_amount,
         paid_amount: aggregationData.paid_amount,
@@ -341,15 +351,16 @@ class SalesRepository {
         date,
         note,
         invoice_number,
+        is_online,
       } = saleData
 
       const initialPaid = 0;
       const initialStatus = 'unpaid';
 
       const insertSaleQuery = `
-        INSERT INTO sales(tenant_id, party_id, done_by_id, cost_center_id, total_amount, paid_amount, change_return, discount, date, status, note, invoice_number, ledger_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        RETURNING *;
+        INSERT INTO sales(tenant_id, party_id, done_by_id, cost_center_id, total_amount, paid_amount, change_return, discount, date, status, note, invoice_number, ledger_id, is_online)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        RETURNING id;
       `
       const saleResult = await client.query(insertSaleQuery, [
         tenant_id,
@@ -365,18 +376,19 @@ class SalesRepository {
         note,
         invoice_number,
         saleData.ledger_id,
+        is_online,
       ])
-      const newSale = saleResult.rows[0]
+      const newSaleId = saleResult.rows[0].id
 
       await this.salesItemRepository.createMany(
         client,
-        newSale.id,
+        newSaleId,
         items,
         tenant_id
       )
       
       await client.query('COMMIT')
-      return this.getById(db, newSale.id, tenant_id)
+      return this.getById(db, newSaleId, tenant_id)
     } catch (error) {
       await client.query('ROLLBACK')
       throw error
@@ -399,14 +411,14 @@ class SalesRepository {
         date,
         note,
         invoice_number,
+        is_online,
       } = saleData
 
       const updateSaleQuery = `
         UPDATE sales
         SET party_id = $1, total_amount = $2, discount = $3, 
-            date = $4, done_by_id = $5, cost_center_id = $6, note = $7, invoice_number = $8, change_return = $9, ledger_id = $10
-        WHERE id = $11 AND tenant_id = $12
-        RETURNING *;
+            date = $4, done_by_id = $5, cost_center_id = $6, note = $7, invoice_number = $8, change_return = $9, ledger_id = $10, is_online = $11
+        WHERE id = $12 AND tenant_id = $13;
       `
       await client.query(updateSaleQuery, [
         party_id,
@@ -419,6 +431,7 @@ class SalesRepository {
         invoice_number,
         change_return,
         saleData.ledger_id,
+        is_online,
         id,
         tenantId,
       ])
@@ -437,11 +450,8 @@ class SalesRepository {
   }
 
   async delete(db, id, tenantId) {
-    const { rows } = await db.query(
-      'DELETE FROM sales WHERE id = $1 AND tenant_id = $2 RETURNING id',
-      [id, tenantId]
-    )
-    return rows[0]
+    await db.query('DELETE FROM sales WHERE id = $1 AND tenant_id = $2', [id, tenantId]);
+    return { id };
   }
 
   async getById(db, id, tenantId) {
@@ -452,33 +462,37 @@ class SalesRepository {
         p.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
         l.name as ledger_name,
         (
-          SELECT json_agg(json_build_object(
-            'id', si.id,
-            'item_id', si.item_id,
-            'item_name', i.name,
-            'quantity', si.quantity,
-            'unit_price', si.unit_price,
-            'tax_amount', si.tax_amount,
-            'total_price', si.total_price
-          )) 
+          SELECT json_group_array(
+            json_object(
+              'id', si.id, 
+              'item_id', si.item_id, 
+              'item_name', i.name, 
+              'quantity', si.quantity, 
+              'unit_price', si.unit_price, 
+              'tax_amount', si.tax_amount, 
+              'total_price', si.total_price
+            )
+          )
           FROM sale_item si 
           JOIN item i ON si.item_id = i.id
           WHERE si.sales_id = s.id
         ) as items,
         (
-          SELECT json_agg(json_build_object(
-            'voucher_id', v.id,
-            'account_id', v.to_ledger_id,
-            'account_name', l.name,
-            'amount', vt.received_amount,
-            'mode_of_payment_id', v.mode_of_payment_id,
-            'voucher_no', v.voucher_no,
-            'payment_date', v.date
-          ))
+          SELECT json_group_array(
+            json_object(
+              'voucher_id', v.id,
+              'account_id', v.to_ledger_id,
+              'account_name', l4.name,
+              'amount', vt.received_amount,
+              'mode_of_payment_id', v.mode_of_payment_id,
+              'voucher_no', v.voucher_no,
+              'payment_date', v.date
+            )
+          )
           FROM voucher_transactions vt
           JOIN voucher v ON vt.voucher_id = v.id
-          JOIN ledger l ON v.to_ledger_id = l.id
-          WHERE vt.invoice_id::integer = s.id 
+          JOIN ledger l4 ON v.to_ledger_id = l4.id
+          WHERE vt.invoice_id = CAST(s.id AS TEXT) 
             AND vt.invoice_type = 'SALE'
             AND v.tenant_id = $2
         ) as payment_methods,
@@ -492,7 +506,7 @@ class SalesRepository {
           FROM sale_item si 
           WHERE si.sales_id = s.id
         ) as sub_total,
-        json_build_object(
+        json_object(
            'company_name', ps.company_name,
            'email', ps.email,
            'phone', ps.phone,
@@ -570,25 +584,23 @@ class SalesRepository {
     return rowCount
   }
    async updatePaymentAndStatus(client, id, amountChange) {
-    const query = `
+    await client.query(`UPDATE sales SET paid_amount = paid_amount + $1 WHERE id = $2`, [amountChange, id]);
+    const { rows } = await client.query(`
       UPDATE sales
-      SET
-          paid_amount = paid_amount + $1,
-          status = CASE
-              WHEN ROUND(paid_amount + $1, 2) >= total_amount THEN 'paid'
-              WHEN ROUND(paid_amount + $1, 2) > 0 THEN 'partial'
+      SET status = CASE
+              WHEN paid_amount >= total_amount THEN 'paid'
+              WHEN paid_amount > 0 THEN 'partial'
               ELSE 'unpaid'
           END
-      WHERE id = $2
+      WHERE id = $1
       RETURNING id, status;
-    `;
-    const { rows } = await client.query(query, [amountChange, id]);
+    `, [id]);
+    
     if (rows.length === 0) {
       throw new Error(`Sale with ID ${id} not found for payment update.`);
     }
     return rows[0];
   }
 }
-
 
 module.exports = SalesRepository

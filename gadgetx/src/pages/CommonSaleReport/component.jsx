@@ -77,8 +77,7 @@ const generateBarcodeImage = (invoiceNumber) => {
   }
 };
 
-
-    const SaleRow = React.memo(
+const SaleRow = React.memo(
   ({
     sls,
     index,
@@ -91,7 +90,7 @@ const generateBarcodeImage = (invoiceNumber) => {
     accountNameMap,
     modeOfPaymentList,
   }) => {
-    const balance = (parseFloat(sls.total_amount) || 0) - (parseFloat(sls.paid_amount) || 0);
+    const balance = (parseFloat(sls.total_amount) || 0) - ((parseFloat(sls.paid_amount) || 0) - (parseFloat(sls.change_return) || 0));
 
     const menuItems = useMemo(
       () => getSaleMenuItems(sls, handlers),
@@ -103,11 +102,9 @@ const generateBarcodeImage = (invoiceNumber) => {
         <TdSL index={index} page={page} pageSize={pageSize} />
         
         {columns.map((field) => {
-          // 1. DATE
           if (field.value === "date") {
             return <TdDate key={field.value}>{sls.date}</TdDate>;
           }
-          // 2. CUSTOMER
           if (field.value === "party_name" || field.value === "customer") {
             return (
               <TdOverflow key={field.value}>
@@ -115,13 +112,11 @@ const generateBarcodeImage = (invoiceNumber) => {
               </TdOverflow>
             );
           }
-          // 3. INVOICE NUMBER
           if (field.value === "invoice_number") {
             return (
               <TdOverflow key={field.value}>{sls.invoice_number}</TdOverflow>
             );
           }
-          // 4. STATUS
           if (field.value === "payment_status" || field.value === "status") {
             return (
               <Td key={field.value}>
@@ -131,7 +126,8 @@ const generateBarcodeImage = (invoiceNumber) => {
               </Td>
             );
           }
-          // 5. ACCOUNT
+          
+          // --- UPDATED ACCOUNT LOGIC ---
           if (field.value === "account") {
             const fromPayments = (sls.payment_methods || [])
               .map((p) => p.account_name)
@@ -141,18 +137,13 @@ const generateBarcodeImage = (invoiceNumber) => {
             let accountDisplay = 
               sls.ledger_name || 
               fromPayments || 
-              sls.account_name || 
-              sls.default_account_name || 
-              accountNameMap[sls.account_id] || 
               accountNameMap[sls.ledger_id] || 
               "";
   
-            if (!accountDisplay && (sls.mode_of_payment_id || sls.ledger_id)) {
+            if (!accountDisplay && sls.mode_of_payment_id) {
               const mop = modeOfPaymentList.find(m => String(m.id) === String(sls.mode_of_payment_id));
               if (mop) {
-                accountDisplay = accountNameMap[mop.default_ledger_id] || mop.default_ledger_name || mop.name;
-              } else {
-                accountDisplay = accountNameMap[sls.ledger_id] || "";
+                accountDisplay = accountNameMap[mop.default_ledger_id] || mop.name;
               }
             }
 
@@ -162,23 +153,20 @@ const generateBarcodeImage = (invoiceNumber) => {
               </TdOverflow>
             );
           }
-          // 6. TOTAL AMOUNT
+          
           if (field.value === "total_amount") {
             return <TdNumeric key={field.value}>{sls.total_amount}</TdNumeric>;
           }
-          // 7. PAID AMOUNT
           if (field.value === "paid_amount") {
             return (
               <TdNumeric key={field.value}>{sls.paid_amount || 0}</TdNumeric>
             );
           }
-          // 8. BALANCE
           if (field.value === "balance") {
             return (
               <TdNumeric key={field.value}>{balance.toFixed(2)}</TdNumeric>
             );
           }
-          // 9. DONE BY
           if (field.value === "done_by") {
             return (
               <TdOverflow key={field.value}>
@@ -186,7 +174,6 @@ const generateBarcodeImage = (invoiceNumber) => {
               </TdOverflow>
             );
           }
-          // 10. COST CENTER
           if (field.value === "cost_center") {
             return (
               <TdOverflow key={field.value}>
@@ -194,7 +181,6 @@ const generateBarcodeImage = (invoiceNumber) => {
               </TdOverflow>
             );
           }
-          // 11. IS ONLINE (The missing piece in your previous code)
           if (field.value === "is_online") {
             return (
               <Td key={field.value}>
@@ -203,8 +189,6 @@ const generateBarcodeImage = (invoiceNumber) => {
             );
           }
 
-          // IMPORTANT: If a field is enabled in Column Selector but not handled above, 
-          // we MUST return an empty Td to prevent the table from shifting.
           return <Td key={field.value}>-</Td>;
         })}
         <Td>
@@ -217,7 +201,6 @@ const generateBarcodeImage = (invoiceNumber) => {
 
 const MobileSaleCard = React.memo(
   ({ sls, handlers, getSaleMenuItems, DotMenu, accountNameMap, modeOfPaymentList }) => {
-    const balance = (sls.total_amount || 0) - (sls.paid_amount || 0);
     const fromPayments = (sls.payment_methods || [])
       .map((p) => p.account_name)
       .filter(Boolean)
@@ -226,18 +209,13 @@ const MobileSaleCard = React.memo(
     let accountDisplay = 
       sls.ledger_name || 
       fromPayments || 
-      sls.account_name || 
-      sls.default_account_name || 
-      accountNameMap[sls.account_id] || 
       accountNameMap[sls.ledger_id] || 
       "";
 
-    if (!accountDisplay && (sls.mode_of_payment_id || sls.ledger_id)) {
+    if (!accountDisplay && sls.mode_of_payment_id) {
       const mop = modeOfPaymentList.find(m => String(m.id) === String(sls.mode_of_payment_id));
       if (mop) {
-        accountDisplay = accountNameMap[mop.default_ledger_id] || mop.default_ledger_name || mop.name;
-      } else {
-        accountDisplay = accountNameMap[sls.ledger_id] || "";
+        accountDisplay = accountNameMap[mop.default_ledger_id] || mop.name;
       }
     }
     const menuItems = useMemo(
@@ -542,7 +520,7 @@ const CommonSaleReport = ({ hooks, components, config }) => {
     totalData: {
       totalAmount: data?.total_amount || 0,
       paidAmount: data?.paid_amount || 0,
-      balance: (data?.total_amount || 0) - (data?.paid_amount || 0),
+      balance: (data?.total_amount || 0) - ((data?.paid_amount || 0) - (data?.change_return || 0)),
     },
     filterDatas: {
       customerId: state.party_id,
@@ -754,7 +732,7 @@ const CommonSaleReport = ({ hooks, components, config }) => {
                           }))
                         }
                         options={[
-                          { value: "", label: "All Accounts" },
+                          { value: "", label: "All Ledgers" },
                           ...accounts.map((a) => ({
                             value: a.id,
                             label: a.name,
@@ -931,7 +909,7 @@ const CommonSaleReport = ({ hooks, components, config }) => {
                                         setState({ account_id: e.target.value, page: 1 })
                                       }
                                       options={[
-                                        { value: "", label: "All" },
+                                        { value: "", label: "All Ledgers" },
                                         ...accounts.map((a) => ({ value: a.id, label: a.name })),
                                       ]}
                                     />
