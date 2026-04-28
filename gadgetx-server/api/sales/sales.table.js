@@ -18,12 +18,13 @@ module.exports = async (client) => {
           party_id INTEGER NOT NULL REFERENCES party(id), 
           done_by_id INTEGER REFERENCES "done_by"(id) ON DELETE SET NULL,
           cost_center_id INTEGER REFERENCES "cost_center"(id) ON DELETE SET NULL,
+          ledger_id INTEGER REFERENCES "ledger"(id) ON DELETE SET NULL, -- <<< ADDED
           total_amount DECIMAL(10, 2) NOT NULL,
           paid_amount DECIMAL(10, 2) NOT NULL,
           change_return DECIMAL(10, 2) DEFAULT 0.00, -- <<< ADDED
           discount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
           date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          status VARCHAR(255) NOT NULL,
+          status VARCHAR(255) NOT NULL DEFAULT 'unpaid',
           invoice_number VARCHAR(100) NOT NULL,
           note TEXT DEFAULT NULL
         );
