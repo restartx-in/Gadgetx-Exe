@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-} from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import PageTitleWithBackButton from "@/components/PageTitleWithBackButton";
 import {
@@ -60,7 +55,7 @@ const BrandRow = React.memo(
         onDelete={() => onDelete(item.id)}
       />
     </Tr>
-  )
+  ),
 );
 
 const ListFilter = React.memo(
@@ -106,7 +101,7 @@ const ListFilter = React.memo(
         </VStack>
       </PopUpFilter>
     );
-  }
+  },
 );
 
 // --- Main Component ---
@@ -133,9 +128,9 @@ const CommonBrandList = ({
   const [name, setName] = useState(filterState.name || "");
   const [doneById, setDoneById] = useState(filterState.done_by_id || "");
   const [costCenterId, setCostCenterId] = useState(
-    filterState.cost_center_id || defaultCostCenter
+    filterState.cost_center_id || defaultCostCenter,
   );
-  
+
   // Header filter local state
   const [headerFilters, setHeaderFilters] = useState({
     name: filterState.name || "",
@@ -155,7 +150,6 @@ const CommonBrandList = ({
     });
   }, [filterState, defaultCostCenter]);
 
-
   // Modal & URL Action Logic
   const [selectedItem, setSelectedItem] = useState(null);
   const [mode, setMode] = useState("view");
@@ -164,7 +158,7 @@ const CommonBrandList = ({
   // Helper to find item if ID is in URL but data just loaded
   const findItemById = useCallback(
     (id) => list.find((item) => item.id.toString() === id),
-    [list]
+    [list],
   );
 
   useEffect(() => {
@@ -185,7 +179,7 @@ const CommonBrandList = ({
         }
       }
     } else if (!action && isOpenModal) {
-       setIsOpenModal(false);
+      setIsOpenModal(false);
     }
   }, [searchParams, isOpenModal, findItemById]);
 
@@ -193,49 +187,61 @@ const CommonBrandList = ({
 
   const handleCloseModal = useCallback(() => {
     // Preserve existing filters, only remove action and id
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.delete("action");
-      newParams.delete("id");
-      return newParams;
-    }, { replace: true });
-    
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.delete("action");
+        newParams.delete("id");
+        return newParams;
+      },
+      { replace: true },
+    );
+
     setIsOpenModal(false);
   }, [setSearchParams]);
 
   const handleAddClick = useCallback(() => {
     // Preserve existing filters, add action
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set("action", "add");
-      return newParams;
-    }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set("action", "add");
+        return newParams;
+      },
+      { replace: true },
+    );
   }, [setSearchParams]);
 
   const handleEditClick = useCallback(
     (item) => {
-      setSearchParams((prev) => {
-        const newParams = new URLSearchParams(prev);
-        newParams.set("action", "edit");
-        newParams.set("id", item.id);
-        return newParams;
-      }, { replace: true });
+      setSearchParams(
+        (prev) => {
+          const newParams = new URLSearchParams(prev);
+          newParams.set("action", "edit");
+          newParams.set("id", item.id);
+          return newParams;
+        },
+        { replace: true },
+      );
     },
-    [setSearchParams]
+    [setSearchParams],
   );
 
   const handleViewClick = useCallback(
     (item) => {
-      setSearchParams((prev) => {
-        const newParams = new URLSearchParams(prev);
-        newParams.set("action", "view");
-        newParams.set("id", item.id);
-        return newParams;
-      }, { replace: true });
+      setSearchParams(
+        (prev) => {
+          const newParams = new URLSearchParams(prev);
+          newParams.set("action", "view");
+          newParams.set("id", item.id);
+          return newParams;
+        },
+        { replace: true },
+      );
     },
-    [setSearchParams]
+    [setSearchParams],
   );
-  
+
   // --- FIXED HANDLERS END ---
 
   const handleDelete = useCallback(
@@ -254,7 +260,7 @@ const CommonBrandList = ({
         });
       }
     },
-    [deleteItem, showToast, selectedItem, handleCloseModal]
+    [deleteItem, showToast, selectedItem, handleCloseModal],
   );
 
   // Filter Handlers
@@ -262,20 +268,20 @@ const CommonBrandList = ({
 
   const handleSearch = () => {
     onFilterChange({
-       searchType: filterState.searchType, 
-       searchKey: filterState.searchKey 
+      searchType: filterState.searchType,
+      searchKey: filterState.searchKey,
     });
   };
 
   const handleHeaderSearch = (key, value) => {
-      onFilterChange({ [key]: value });
+    onFilterChange({ [key]: value });
   };
-  
+
   const handleHeaderKeyDown = (e, key) => {
-      if(e.key === "Enter") {
-          handleHeaderSearch(key, headerFilters[key]);
-      }
-  }
+    if (e.key === "Enter") {
+      handleHeaderSearch(key, headerFilters[key]);
+    }
+  };
 
   const handleApplyPopupFilter = () => {
     onFilterChange({
@@ -287,16 +293,16 @@ const CommonBrandList = ({
   };
 
   const handleManualRefresh = () => {
-      onRefresh(); 
-      showToast({
-        type: TOASTTYPE.GENARAL,
-        message: "Report has been refreshed.",
-        status: TOASTSTATUS.SUCCESS,
-      });
-  }
+    onRefresh();
+    showToast({
+      type: TOASTTYPE.GENARAL,
+      message: "Report has been refreshed.",
+      status: TOASTSTATUS.SUCCESS,
+    });
+  };
 
   const searchOptions = [{ value: "name", name: "Name" }];
-  
+
   const filterProps = {
     showFilter,
     setShowFilter,
@@ -324,9 +330,13 @@ const CommonBrandList = ({
                   <PopupSearchField
                     searchRef={searchRef}
                     searchKey={filterState.searchKey}
-                    setSearchKey={(val) => onFilterChange({ searchKey: val }, false)} 
+                    setSearchKey={(val) =>
+                      onFilterChange({ searchKey: val }, false)
+                    }
                     searchType={filterState.searchType}
-                    setSearchType={(val) => onFilterChange({ searchType: val }, false)}
+                    setSearchType={(val) =>
+                      onFilterChange({ searchType: val }, false)
+                    }
                     handleSearch={handleSearch}
                     searchOptions={searchOptions}
                   />
@@ -352,7 +362,7 @@ const CommonBrandList = ({
                             handleSort={handleSort}
                           />
                           <ThSearchOrFilterPopover isSearch popoverWidth={200}>
-                             <InputField
+                            <InputField
                               placeholder="Enter Name"
                               value={headerFilters.name}
                               onChange={(e) =>
@@ -373,16 +383,16 @@ const CommonBrandList = ({
                         Done By
                         <ThFilterContainer>
                           <ThSort
-                             sort={filterState.sort}
-                             setSort={(val) => handleSort(val)}
-                             value="done_by"
-                             handleSort={handleSort}
+                            sort={filterState.sort}
+                            setSort={(val) => handleSort(val)}
+                            value="done_by"
+                            handleSort={handleSort}
                           />
                           <ThSearchOrFilterPopover
                             isSearch={false}
                             popoverWidth={220}
                           >
-                             <DoneByAutoComplete
+                            <DoneByAutoComplete
                               placeholder="Select Done By"
                               value={headerFilters.done_by_id}
                               onChange={(e) =>
@@ -398,23 +408,23 @@ const CommonBrandList = ({
                       <ThContainer>
                         Cost Center
                         <ThFilterContainer>
-                           <ThSort
-                             sort={filterState.sort}
-                             setSort={(val) => handleSort(val)}
-                             value="cost_center"
-                             handleSort={handleSort}
+                          <ThSort
+                            sort={filterState.sort}
+                            setSort={(val) => handleSort(val)}
+                            value="cost_center"
+                            handleSort={handleSort}
                           />
                           <ThSearchOrFilterPopover
                             isSearch={false}
                             popoverWidth={220}
                           >
-                             <CostCenterAutoComplete
+                            <CostCenterAutoComplete
                               placeholder="Select Cost Center"
                               value={headerFilters.cost_center_id}
                               onChange={(e) =>
                                 handleHeaderSearch(
                                   "cost_center_id",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               is_edit={false}
@@ -458,9 +468,13 @@ const CommonBrandList = ({
                   <MobileSearchField
                     searchRef={searchRef}
                     searchKey={filterState.searchKey}
-                    setSearchKey={(val) => onFilterChange({ searchKey: val }, false)}
+                    setSearchKey={(val) =>
+                      onFilterChange({ searchKey: val }, false)
+                    }
                     searchType={filterState.searchType}
-                    setSearchType={(val) => onFilterChange({ searchType: val }, false)}
+                    setSearchType={(val) =>
+                      onFilterChange({ searchType: val }, false)
+                    }
                     handleSearch={handleSearch}
                     searchOptions={searchOptions}
                   />

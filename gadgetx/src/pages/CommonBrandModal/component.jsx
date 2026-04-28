@@ -42,7 +42,7 @@ const CommonBrandModal = ({
 }) => {
   const showToast = useToast();
   const disabled = mode === "view";
-  
+
   // Ref to track if we successfully submitted to block race-condition saves
   const isSuccessRef = useRef(false);
 
@@ -50,19 +50,22 @@ const CommonBrandModal = ({
   const { mutateAsync: updateItem, isPending: updating } = useUpdateHook();
   const { mutateAsync: deleteItem, isPending: deleting } = useDeleteHook();
 
-  const defaultValues = useMemo(() => ({
-    name: "",
-    done_by_id: null,
-    cost_center_id: null,
-  }), []);
+  const defaultValues = useMemo(
+    () => ({
+      name: "",
+      done_by_id: null,
+      cost_center_id: null,
+    }),
+    [],
+  );
 
-  const { 
-    control, 
-    handleSubmit, 
-    reset, 
-    watch, 
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
     setFocus,
-    formState: { isSubmitting, isDirty } // Using isDirty to prevent saving reset forms
+    formState: { isSubmitting, isDirty }, // Using isDirty to prevent saving reset forms
   } = useForm({
     resolver: zodResolver(brandSchema),
     defaultValues,
@@ -87,11 +90,11 @@ const CommonBrandModal = ({
         if (selectedItem?.name) {
           reset({ ...defaultValues, name: selectedItem.name });
         } else if (savedDraft) {
-           try {
-             reset(JSON.parse(savedDraft));
-           } catch (e) {
-             reset(defaultValues);
-           }
+          try {
+            reset(JSON.parse(savedDraft));
+          } catch (e) {
+            reset(defaultValues);
+          }
         } else {
           reset(defaultValues);
         }
@@ -114,10 +117,10 @@ const CommonBrandModal = ({
     // 3. Form is DIRTY (User actually typed something)
     // 4. We haven't just successfully submitted (isSuccessRef)
     if (
-      mode === "add" && 
-      isOpen && 
-      !isSubmitting && 
-      isDirty && 
+      mode === "add" &&
+      isOpen &&
+      !isSubmitting &&
+      isDirty &&
       !isSuccessRef.current
     ) {
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(watchedFields));
@@ -146,7 +149,7 @@ const CommonBrandModal = ({
           crudItem: CRUDITEM.BRAND,
           crudType: CRUDTYPE.CREATE_SUCCESS,
         });
-        
+
         // Mark as success to block the "Save Draft" effect
         isSuccessRef.current = true;
 

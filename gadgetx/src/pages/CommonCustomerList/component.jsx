@@ -21,6 +21,7 @@ import {
   TdMenu,
   ThMenu,
   TdDate,
+  TdOverflow,
   TableCaption,
   ThContainer,
   ThSort,
@@ -93,7 +94,6 @@ const CommonCustomerList = ({
     setSort(state.sort || "");
   }, [state]);
 
-
   const { data, isLoading } = useCustomersPaginatedHook(state);
   const { mutateAsync: deleteCustomer } = useDeleteCustomerHook();
   const listData = useMemo(() => data?.data || [], [data]);
@@ -106,10 +106,13 @@ const CommonCustomerList = ({
   // Handle "Add" from URL
   useEffect(() => {
     if (searchParams.get("action") === "add") {
-      setSearchParams((prev) => {
-        prev.delete("action");
-        return prev;
-      }, { replace: true });
+      setSearchParams(
+        (prev) => {
+          prev.delete("action");
+          return prev;
+        },
+        { replace: true },
+      );
       setModal({ isOpen: true, mode: "add", item: null });
     }
   }, [searchParams, setSearchParams]);
@@ -128,6 +131,11 @@ const CommonCustomerList = ({
       sort: "",
       searchType: "",
       searchKey: "",
+    });
+    showToast({
+      type: TOASTTYPE.GENARAL,
+      message: "Report has been refreshed..",
+      status: TOASTSTATUS.SUCCESS,
     });
   }, [defaultCC]);
 
@@ -292,6 +300,19 @@ const CommonCustomerList = ({
                       {/* NAME */}
                       <Th>
                         <ThContainer>
+                          Date
+                          <ThFilterContainer>
+                            <ThSort
+                              sort={sort}
+                              setSort={setSort}
+                              value="created_at"
+                              handleSort={handleSort}
+                            />
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
+                      <Th>
+                        <ThContainer>
                           Name
                           <ThFilterContainer>
                             <ThSort
@@ -318,88 +339,6 @@ const CommonCustomerList = ({
                                 onKeyDown={(e) =>
                                   e.key === "Enter" &&
                                   handleHeaderSearch("name", uiState.name)
-                                }
-                              />
-                            </ThSearchOrFilterPopover>
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
-                      {/* DONE BY */}
-                      <Th>
-                        <ThContainer>
-                          Done By
-                          <ThFilterContainer>
-                            <ThSort
-                              sort={sort}
-                              setSort={setSort}
-                              value="done_by"
-                              handleSort={handleSort}
-                            />
-                            <ThSearchOrFilterPopover isSearch={false}>
-                              <DoneByAutoComplete
-                                value={uiState.done_by_id}
-                                onChange={(e) =>
-                                  handleHeaderSearch(
-                                    "done_by_id",
-                                    e.target.value,
-                                  )
-                                }
-                                is_edit={false}
-                              />
-                            </ThSearchOrFilterPopover>
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
-                      {/* COST CENTER */}
-                      <Th>
-                        <ThContainer>
-                          Cost Center
-                          <ThFilterContainer>
-                            <ThSort
-                              sort={sort}
-                              setSort={setSort}
-                              value="cost_center"
-                              handleSort={handleSort}
-                            />
-                            <ThSearchOrFilterPopover isSearch={false}>
-                              <CostCenterAutoComplete
-                                value={uiState.cost_center_id}
-                                disabled={defaultCC !== ""}
-                                onChange={(e) =>
-                                  handleHeaderSearch(
-                                    "cost_center_id",
-                                    e.target.value,
-                                  )
-                                }
-                                is_edit={false}
-                              />
-                            </ThSearchOrFilterPopover>
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
-                      {/* ADDRESS */}
-                      <Th>
-                        <ThContainer>
-                          Address
-                          <ThFilterContainer>
-                            <ThSearchOrFilterPopover
-                              isSearch
-                              onSearch={() =>
-                                handleHeaderSearch("address", uiState.address)
-                              }
-                            >
-                              <InputField
-                                isLabel={false}
-                                value={uiState.address}
-                                onChange={(e) =>
-                                  setUiState({
-                                    ...uiState,
-                                    address: e.target.value,
-                                  })
-                                }
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" &&
-                                  handleHeaderSearch("address", uiState.address)
                                 }
                               />
                             </ThSearchOrFilterPopover>
@@ -476,6 +415,89 @@ const CommonCustomerList = ({
                           </ThFilterContainer>
                         </ThContainer>
                       </Th>
+                      {/* ADDRESS */}
+                      <Th>
+                        <ThContainer>
+                          Address
+                          <ThFilterContainer>
+                            <ThSearchOrFilterPopover
+                              isSearch
+                              onSearch={() =>
+                                handleHeaderSearch("address", uiState.address)
+                              }
+                            >
+                              <InputField
+                                isLabel={false}
+                                value={uiState.address}
+                                onChange={(e) =>
+                                  setUiState({
+                                    ...uiState,
+                                    address: e.target.value,
+                                  })
+                                }
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" &&
+                                  handleHeaderSearch("address", uiState.address)
+                                }
+                              />
+                            </ThSearchOrFilterPopover>
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
+                      {/* DONE BY */}
+                      <Th>
+                        <ThContainer>
+                          Done By
+                          <ThFilterContainer>
+                            <ThSort
+                              sort={sort}
+                              setSort={setSort}
+                              value="done_by"
+                              handleSort={handleSort}
+                            />
+                            <ThSearchOrFilterPopover isSearch={false}>
+                              <DoneByAutoComplete
+                                value={uiState.done_by_id}
+                                onChange={(e) =>
+                                  handleHeaderSearch(
+                                    "done_by_id",
+                                    e.target.value,
+                                  )
+                                }
+                                is_edit={false}
+                              />
+                            </ThSearchOrFilterPopover>
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
+                      {/* COST CENTER */}
+                      <Th>
+                        <ThContainer>
+                          Cost Center
+                          <ThFilterContainer>
+                            <ThSort
+                              sort={sort}
+                              setSort={setSort}
+                              value="cost_center"
+                              handleSort={handleSort}
+                            />
+                            <ThSearchOrFilterPopover isSearch={false}>
+                              <CostCenterAutoComplete
+                                value={uiState.cost_center_id}
+                                disabled={defaultCC !== ""}
+                                onChange={(e) =>
+                                  handleHeaderSearch(
+                                    "cost_center_id",
+                                    e.target.value,
+                                  )
+                                }
+                                is_edit={false}
+                              />
+                            </ThSearchOrFilterPopover>
+                          </ThFilterContainer>
+                        </ThContainer>
+                      </Th>
+
                       {/* <Th>
                         <ThContainer>
                           Credit Limit
@@ -502,19 +524,7 @@ const CommonCustomerList = ({
                           </ThFilterContainer>
                         </ThContainer>
                       </Th> */}
-                      <Th>
-                        <ThContainer>
-                          Date
-                          <ThFilterContainer>
-                            <ThSort
-                              sort={sort}
-                              setSort={setSort}
-                              value="created_at"
-                              handleSort={handleSort}
-                            />
-                          </ThFilterContainer>
-                        </ThContainer>
-                      </Th>
+
                       <ThMenu />
                     </Tr>
                   </Thead>
@@ -527,15 +537,16 @@ const CommonCustomerList = ({
                             page={state.page}
                             pageSize={state.page_size}
                           />
-                          <Td>{item.name}</Td>
-                          <Td>{item.done_by_name}</Td>
-                          <Td>{item.cost_center_name}</Td>
-                          <Td>{item.address}</Td>
+                          <TdDate>{item.created_at}</TdDate>
+                          <TdOverflow>{item.name}</TdOverflow>
                           <Td>{item.phone}</Td>
-                          <Td>{item.email}</Td>
+                          <TdOverflow>{item.email}</TdOverflow>
+                          <TdOverflow>{item.address}</TdOverflow>
+                          <TdOverflow>{item.done_by_name}</TdOverflow>
+                          <TdOverflow>{item.cost_center_name}</TdOverflow>
+
                           {/* <Td>{item.credit_limit}</Td>
                           <Td>{item.outstanding_balance}</Td> */}
-                          <TdDate>{item.created_at}</TdDate>
                           <TdMenu
                             onEdit={() =>
                               setModal({ isOpen: true, mode: "edit", item })
