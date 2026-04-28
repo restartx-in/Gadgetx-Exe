@@ -13,5 +13,6 @@ router.get("/top-selling-products", (req, res, next) => controller.getTopSelling
 router.get("/stock-alerts", (req, res, next) => controller.getStockAlerts(req, res, next));
 router.get("/recent-sales", (req, res, next) => controller.getRecentSales(req, res, next));
 router.get("/recent-purchases", (req, res, next) => controller.getRecentPurchases(req, res, next));
+router.get("/recent-expenses", (req, res, next) => controller.getRecentExpenses(req, res, next));
 
 module.exports = router;

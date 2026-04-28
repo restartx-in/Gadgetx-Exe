@@ -26,6 +26,10 @@ class DashboardService {
   async getRecentPurchases(user, db) {
     return await this.repo.getRecentPurchases(db, user.tenant_id);
   }
+
+  async getRecentExpenses(user, db) {
+    return await this.repo.getRecentExpenses(db, user.tenant_id);
+  }
 }
 
 module.exports = DashboardService;

@@ -62,6 +62,15 @@ class DashboardController {
       next(e);
     }
   }
+
+  async getRecentExpenses(req, res, next) {
+    try {
+      const data = await this.service.getRecentExpenses(req.user, req.db);
+      res.json(data);
+    } catch (e) {
+      next(e);
+    }
+  }
 }
 
 module.exports = DashboardController;

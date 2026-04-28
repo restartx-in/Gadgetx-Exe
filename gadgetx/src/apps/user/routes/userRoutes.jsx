@@ -1,4 +1,4 @@
-// import Dashboard from "@/apps/user/pages/Dashboard";
+import Dashboard from "@/apps/user/pages/Dashboard";
 import DynamicCustomPage from "@/apps/user/pages/DynamicCustomPage";
 import ExpenseReport from "@/apps/user/pages/Reports/ExpenseReport";
 import ExpenseType from "@/apps/user/pages/List/ExpenseTypeList";
@@ -24,7 +24,7 @@ import SaleReport from "@/apps/user/pages/Reports/SaleReport";
 import ItemList from "@/apps/user/pages/List/ItemList";
 
 const userRoutes = [
-  // { path: "/", element: <Dashboard /> },
+  { path: "/", element: <Dashboard /> },
   { path: "/expense-report", element: <ExpenseReport /> },
   { path: "/employee-list", element: <EmployeeList /> },
   { path: "/employee-position", element: <EmployeePositionList /> },
