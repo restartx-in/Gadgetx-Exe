@@ -138,12 +138,13 @@ const query = (sql, params = []) => {
 
     const upperSqlOriginal = sqliteSql.trim().toUpperCase();
 
-    // ── 8. Swallow Postgres-specific Trigger Functions (BEFORE splitting) ──
-    if (upperSqlOriginal.includes("CREATE OR REPLACE FUNCTION") || 
-        (upperSqlOriginal.includes("DO $$") && !upperSqlOriginal.includes("ALTER TABLE"))) {
-      resolve({ rows: [] });
-      return;
-    }
+if (upperSqlOriginal.includes("CREATE OR REPLACE FUNCTION") || 
+    upperSqlOriginal.includes("CREATE TRIGGER") ||
+    upperSqlOriginal.includes("LANGUAGE PLPGSQL")) {
+  console.log("ℹ️ Skipping Postgres-specific trigger/function block.");
+  resolve({ rows: [] });
+  return;
+}
 
     // ── 9. Extract ALTER TABLE from DO blocks (BEFORE splitting) ───────────
     if (upperSqlOriginal.includes("DO $$") && upperSqlOriginal.includes("ALTER TABLE")) {
@@ -292,3 +293,4 @@ module.exports = {
   pool: { connect: getClient, query, exec },
   getPool: () => ({ query, exec, connect: getClient }),
 };
+

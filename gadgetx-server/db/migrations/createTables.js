@@ -48,7 +48,7 @@ const createTables = async () => {
   try {
     console.log("🚀 Starting database migration...");
 
-    await createQueryTable(client);
+    // await createQueryTable(client);
 
     await createTenantTable(client);
     await createRoleTable(client);

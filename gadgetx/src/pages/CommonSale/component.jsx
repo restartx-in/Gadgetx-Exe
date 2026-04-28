@@ -576,7 +576,6 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
             <div className="sale-page__form-content">
               <HStack
                 justifyContent="flex-start"
-                style={{ marginTop: "5px", flexWrap: "wrap" }}
               >
                 <Controller
                   name="partyId"
@@ -590,19 +589,6 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
                   )}
                 />
                 <Controller
-                  name="saleDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DateField
-                      label="Date "
-                      value={new Date(field.value)}
-                      onChange={(date) => field.onChange(date.toISOString())}
-                      disabled={isViewMode}
-                    />
-                  )}
-                />
-                <HStack>
-                  <Controller
                     name="done_by_id"
                     control={control}
                     render={({ field }) => (
@@ -624,6 +610,21 @@ const CommonSale = ({ hooks = {}, components = {}, config = {} }) => {
                       />
                     )}
                   />
+               
+                <HStack justifyContent="flex-end">
+                  
+                   <Controller
+                  name="saleDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DateField
+                      label="Date "
+                      value={new Date(field.value)}
+                      onChange={(date) => field.onChange(date.toISOString())}
+                      disabled={isViewMode}
+                    />
+                  )}
+                />
                 </HStack>
               </HStack>
 
