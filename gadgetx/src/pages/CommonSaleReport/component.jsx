@@ -92,7 +92,6 @@ const generateBarcodeImage = (invoiceNumber) => {
     modeOfPaymentList,
   }) => {
     const balance = (parseFloat(sls.total_amount) || 0) - (parseFloat(sls.paid_amount) || 0);
-        console.log("cutomer",sls);
 
     const menuItems = useMemo(
       () => getSaleMenuItems(sls, handlers),
@@ -386,8 +385,10 @@ const CommonSaleReport = ({ hooks, components, config }) => {
   );
   const { data: permissionsData, isLoading: isLoadingPermissions } =
     useReportFieldPermissions();
-  const { mutate: updatePermissions } = useUpdateReportFieldPermissions();
-  const { mutate: createPermissions } = useCreateReportFieldPermissions();
+  const { mutate: updatePermissions, isLoading: isUpdatingPermissions } = useUpdateReportFieldPermissions();
+  const { mutate: createPermissions, isLoading: isCreatingPermissions } = useCreateReportFieldPermissions();
+
+  const isSavingColumns = isUpdatingPermissions || isCreatingPermissions;
 
   const authDetails = useMemo(
     () => JSON.parse(localStorage.getItem("AUTH_DETAILS") || "{}"),
@@ -420,6 +421,37 @@ const CommonSaleReport = ({ hooks, components, config }) => {
     allPossibleFields,
     reportSettingsKey,
   ]);
+
+  const handleSaveColumns = useCallback(
+    (newColumnKeys, closeModalCallback) => {
+      const payload = { [reportSettingsKey]: newColumnKeys };
+      const onSuccess = () => closeModalCallback();
+      if (permissionsData?.id) {
+        updatePermissions(
+          { id: permissionsData.id, permissionsData: payload },
+          { onSuccess },
+        );
+      } else if (currentUserId) {
+        createPermissions(
+          { ...payload, user_id: currentUserId },
+          { onSuccess },
+        );
+      } else {
+        showToast({
+          message: "Could not save settings. User not found.",
+          crudType: "error",
+        });
+      }
+    },
+    [
+      permissionsData,
+      reportSettingsKey,
+      updatePermissions,
+      createPermissions,
+      currentUserId,
+      showToast,
+    ],
+  );
 
   useSyncURLParams({
     page: state.page,
@@ -692,19 +724,8 @@ const CommonSaleReport = ({ hooks, components, config }) => {
                     savedColumnKeys={extraFields
                       .filter((f) => f.show)
                       .map((f) => f.value)}
-                    onApply={(keys, cb) => {
-                      const payload = { [reportSettingsKey]: keys };
-                      if (permissionsData?.id)
-                        updatePermissions(
-                          { id: permissionsData.id, permissionsData: payload },
-                          { onSuccess: cb },
-                        );
-                      else
-                        createPermissions(
-                          { ...payload, user_id: currentUserId },
-                          { onSuccess: cb },
-                        );
-                    }}
+                    onApply={handleSaveColumns}
+                    isLoading={isSavingColumns}
                   />
                   <PopUpFilter
                     isOpen={showFilter}
@@ -815,163 +836,238 @@ const CommonSaleReport = ({ hooks, components, config }) => {
                     {extraFields
                       .filter((f) => f.show)
                       .map((field) => {
-                        const isSearchable = [
-                          "invoice_number",
-                          "total_amount",
-                          "paid_amount",
-                        ].includes(field.value);
-                        const isFilterable = [
-                          "customer",
-                          "account",  
-                          "done_by",
-                          "cost_center",
-                        ].includes(field.value);
-                        return (
-                          <Th key={field.value}>
-                            <ThContainer>
-                              {field.label}
-                              <ThFilterContainer>
+                        if (field.value === "date")
+                          return (
+                            <Th key={field.value}>
+                              <ThContainer>
+                                Date
                                 <ThSort
                                   sort={state.sort}
                                   setSort={setState}
-                                  value={field.value}
-                                  handleSort={(v) =>
-                                    setState({ sort: v, page: 1 })
-                                  }
+                                  value="date"
+                                  handleSort={(v) => setState({ sort: v, page: 1 })}
                                 />
-                                {(isSearchable || isFilterable) && (
+                              </ThContainer>
+                            </Th>
+                          );
+                        if (field.value === "party_name")
+                          return (
+                            <Th key={field.value}>
+                              <ThContainer>
+                                Customer
+                                <ThFilterContainer>
+                                  <ThSort
+                                    sort={state.sort}
+                                    setSort={setState}
+                                    value="party_name"
+                                    handleSort={(v) => setState({ sort: v, page: 1 })}
+                                  />
+                                  <ThSearchOrFilterPopover isSearch={false} popoverWidth={220}>
+                                    <CustomerAutoComplete
+                                      value={state.party_id}
+                                      onChange={(e) =>
+                                        setState({ party_id: e.target.value, page: 1 })
+                                      }
+                                    />
+                                  </ThSearchOrFilterPopover>
+                                </ThFilterContainer>
+                              </ThContainer>
+                            </Th>
+                          );
+                        if (field.value === "invoice_number")
+                          return (
+                            <Th key={field.value}>
+                              <ThContainer>
+                                Invoice No
+                                <ThFilterContainer>
+                                  <ThSort
+                                    sort={state.sort}
+                                    setSort={setState}
+                                    value="invoice_number"
+                                    handleSort={(v) => setState({ sort: v, page: 1 })}
+                                  />
                                   <ThSearchOrFilterPopover
-                                    isSearch={isSearchable}
-                                    onSearch={
-                                      isSearchable
-                                        ? () =>
-                                            handleHeaderSearch(
-                                              field.value,
-                                              headerFilters[field.value],
-                                            )
-                                        : undefined
+                                    isSearch={true}
+                                    popoverWidth={220}
+                                    onSearch={() =>
+                                      handleHeaderSearch("invoice_number", headerFilters.invoice_number)
                                     }
                                   >
-                                    {field.value === "invoice_number" && (
-                                      <InputField
-                                        placeholder="Search Invoice"
-                                        value={headerFilters.invoice_number}
-                                        onChange={(e) =>
-                                          setHeaderFilters((p) => ({
-                                            ...p,
-                                            invoice_number: e.target.value,
-                                          }))
-                                        }
-                                        onKeyDown={(e) =>
-                                          e.key === "Enter" &&
-                                          handleHeaderSearch(
-                                            "invoice_number",
-                                            headerFilters.invoice_number,
-                                          )
-                                        }
-                                        isLabel={false}
-                                      />
-                                    )}
-                                    {field.value === "total_amount" && (
-                                      <InputField
-                                        type="number"
-                                        placeholder="Exact Amount"
-                                        value={headerFilters.total_amount}
-                                        onChange={(e) =>
-                                          setHeaderFilters((p) => ({
-                                            ...p,
-                                            total_amount: e.target.value,
-                                          }))
-                                        }
-                                        onKeyDown={(e) =>
-                                          e.key === "Enter" &&
-                                          handleHeaderSearch(
-                                            "total_amount",
-                                            headerFilters.total_amount,
-                                          )
-                                        }
-                                        isLabel={false}
-                                      />
-                                    )}
-                                    {field.value === "paid_amount" && (
-                                      <InputField
-                                        type="number"
-                                        placeholder="Exact Amount"
-                                        value={headerFilters.paid_amount}
-                                        onChange={(e) =>
-                                          setHeaderFilters((p) => ({
-                                            ...p,
-                                            paid_amount: e.target.value,
-                                          }))
-                                        }
-                                        onKeyDown={(e) =>
-                                          e.key === "Enter" &&
-                                          handleHeaderSearch(
-                                            "paid_amount",
-                                            headerFilters.paid_amount,
-                                          )
-                                        }
-                                        isLabel={false}
-                                      />
-                                    )}
-                                    {field.value === "customer" && (
-                                      <CustomerAutoComplete
-                                        value={state.party_id}
-                                        onChange={(e) =>
-                                          setState({
-                                            party_id: e.target.value,
-                                            page: 1,
-                                          })
-                                        }
-                                      />
-                                    )}
-                                    {field.value === "account" && (
-                                      <AccountAutoComplete
-                                        value={state.account_id}
-                                        onChange={(e) =>
-                                          setState({
-                                            account_id: e.target.value,
-                                            page: 1,
-                                          })
-                                        }
-                                        options={[
-                                          { value: "", label: "All" },
-                                          ...accounts.map((a) => ({
-                                            value: a.id,
-                                            label: a.name,
-                                          })),
-                                        ]}
-                                      />
-                                    )}
-                                    {field.value === "done_by" && (
-                                      <DoneByAutoComplete
-                                        value={state.done_by_id}
-                                        onChange={(e) =>
-                                          setState({
-                                            done_by_id: e.target.value,
-                                            page: 1,
-                                          })
-                                        }
-                                      />
-                                    )}
-                                    {field.value === "cost_center" && (
-                                      <CostCenterAutoComplete
-                                        value={state.cost_center_id}
-                                        onChange={(e) =>
-                                          setState({
-                                            cost_center_id: e.target.value,
-                                            page: 1,
-                                          })
-                                        }
-                                        disabled={isDisableCostCenter}
-                                      />
-                                    )}
+                                    <InputField
+                                      placeholder="Search Invoice"
+                                      value={headerFilters.invoice_number}
+                                      onChange={(e) =>
+                                        setHeaderFilters((p) => ({ ...p, invoice_number: e.target.value }))
+                                      }
+                                      onKeyDown={(e) =>
+                                        e.key === "Enter" &&
+                                        handleHeaderSearch("invoice_number", headerFilters.invoice_number)
+                                      }
+                                      isLabel={false}
+                                    />
                                   </ThSearchOrFilterPopover>
-                                )}
-                              </ThFilterContainer>
-                            </ThContainer>
-                          </Th>
-                        );
+                                </ThFilterContainer>
+                              </ThContainer>
+                            </Th>
+                          );
+                        if (field.value === "payment_status")
+                          return <Th key={field.value}>Status</Th>;
+                        if (field.value === "account")
+                          return (
+                            <Th key={field.value}>
+                              <ThContainer>
+                                Account
+                                <ThFilterContainer>
+                                  <ThSort
+                                    sort={state.sort}
+                                    setSort={setState}
+                                    value="account"
+                                    handleSort={(v) => setState({ sort: v, page: 1 })}
+                                  />
+                                  <ThSearchOrFilterPopover isSearch={false} popoverWidth={220}>
+                                    <AccountAutoComplete
+                                      value={state.account_id}
+                                      onChange={(e) =>
+                                        setState({ account_id: e.target.value, page: 1 })
+                                      }
+                                      options={[
+                                        { value: "", label: "All" },
+                                        ...accounts.map((a) => ({ value: a.id, label: a.name })),
+                                      ]}
+                                    />
+                                  </ThSearchOrFilterPopover>
+                                </ThFilterContainer>
+                              </ThContainer>
+                            </Th>
+                          );
+                        if (field.value === "total_amount")
+                          return (
+                            <Th key={field.value}>
+                              <ThContainer>
+                                Total
+                                <ThFilterContainer>
+                                  <ThSort
+                                    sort={state.sort}
+                                    setSort={setState}
+                                    value="total_amount"
+                                    handleSort={(v) => setState({ sort: v, page: 1 })}
+                                  />
+                                  <ThSearchOrFilterPopover
+                                    isSearch={true}
+                                    popoverWidth={220}
+                                    onSearch={() =>
+                                      handleHeaderSearch("total_amount", headerFilters.total_amount)
+                                    }
+                                  >
+                                    <InputField
+                                      type="number"
+                                      placeholder="Exact Amount"
+                                      value={headerFilters.total_amount}
+                                      onChange={(e) =>
+                                        setHeaderFilters((p) => ({ ...p, total_amount: e.target.value }))
+                                      }
+                                      onKeyDown={(e) =>
+                                        e.key === "Enter" &&
+                                        handleHeaderSearch("total_amount", headerFilters.total_amount)
+                                      }
+                                      isLabel={false}
+                                    />
+                                  </ThSearchOrFilterPopover>
+                                </ThFilterContainer>
+                              </ThContainer>
+                            </Th>
+                          );
+                        if (field.value === "paid_amount")
+                          return (
+                            <Th key={field.value}>
+                              <ThContainer>
+                                Paid
+                                <ThFilterContainer>
+                                  <ThSort
+                                    sort={state.sort}
+                                    setSort={setState}
+                                    value="paid_amount"
+                                    handleSort={(v) => setState({ sort: v, page: 1 })}
+                                  />
+                                  <ThSearchOrFilterPopover
+                                    isSearch={true}
+                                    popoverWidth={220}
+                                    onSearch={() =>
+                                      handleHeaderSearch("paid_amount", headerFilters.paid_amount)
+                                    }
+                                  >
+                                    <InputField
+                                      type="number"
+                                      placeholder="Exact Amount"
+                                      value={headerFilters.paid_amount}
+                                      onChange={(e) =>
+                                        setHeaderFilters((p) => ({ ...p, paid_amount: e.target.value }))
+                                      }
+                                      onKeyDown={(e) =>
+                                        e.key === "Enter" &&
+                                        handleHeaderSearch("paid_amount", headerFilters.paid_amount)
+                                      }
+                                      isLabel={false}
+                                    />
+                                  </ThSearchOrFilterPopover>
+                                </ThFilterContainer>
+                              </ThContainer>
+                            </Th>
+                          );
+                        if (field.value === "balance")
+                          return <Th key={field.value}>Balance</Th>;
+                        if (field.value === "done_by")
+                          return (
+                            <Th key={field.value}>
+                              <ThContainer>
+                                Done By
+                                <ThFilterContainer>
+                                  <ThSort
+                                    sort={state.sort}
+                                    setSort={setState}
+                                    value="done_by"
+                                    handleSort={(v) => setState({ sort: v, page: 1 })}
+                                  />
+                                  <ThSearchOrFilterPopover isSearch={false} popoverWidth={220}>
+                                    <DoneByAutoComplete
+                                      value={state.done_by_id}
+                                      onChange={(e) =>
+                                        setState({ done_by_id: e.target.value, page: 1 })
+                                      }
+                                      is_edit={false}
+                                    />
+                                  </ThSearchOrFilterPopover>
+                                </ThFilterContainer>
+                              </ThContainer>
+                            </Th>
+                          );
+                        if (field.value === "cost_center")
+                          return (
+                            <Th key={field.value}>
+                              <ThContainer>
+                                Cost Center
+                                <ThFilterContainer>
+                                  <ThSort
+                                    sort={state.sort}
+                                    setSort={setState}
+                                    value="cost_center"
+                                    handleSort={(v) => setState({ sort: v, page: 1 })}
+                                  />
+                                  <ThSearchOrFilterPopover isSearch={false} popoverWidth={220}>
+                                    <CostCenterAutoComplete
+                                      value={state.cost_center_id}
+                                      onChange={(e) =>
+                                        setState({ cost_center_id: e.target.value, page: 1 })
+                                      }
+                                      disabled={isDisableCostCenter}
+                                      is_edit={false}
+                                    />
+                                  </ThSearchOrFilterPopover>
+                                </ThFilterContainer>
+                              </ThContainer>
+                            </Th>
+                          );
+                        return <Th key={field.value}>{field.label}</Th>;
                       })}
                     <ThDotMenu />
                   </Tr>
