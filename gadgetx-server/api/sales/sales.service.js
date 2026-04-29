@@ -8,7 +8,16 @@ class SalesService {
   }
 
   async getAll(tenantId, filters, db) {
-    return await this.repository.getByUserId(db, tenantId, filters)
+    const rows = await this.repository.getByUserId(db, tenantId, filters)
+    return rows.map((sale) => ({
+      ...sale,
+      // pg returns json_agg as a real array; handle both array and string cases
+      payment_methods: Array.isArray(sale.payment_methods)
+        ? sale.payment_methods
+        : typeof sale.payment_methods === 'string'
+          ? JSON.parse(sale.payment_methods || '[]')
+          : (sale.payment_methods || []),
+    }))
   }
 
   async _processSaleItems(items, tenantId, db) {
@@ -108,8 +117,8 @@ async create(user, saleData, db) {
       ledger_id,
       discount: parseFloat(discount),
       total_amount: grandTotal,
-      paid_amount: totalPaid, // Pass actual value
-      status: status,         // Pass actual value
+      paid_amount: 0,       // voucherService.create() will increment this via updatePaymentAndStatus
+      status: 'unpaid',     // same - will be updated after each voucher is created
       change_return: parseFloat(change_return),
       date: saleDetails.date || new Date(),
       note,
@@ -143,7 +152,7 @@ async update(id, user, saleData, db) {
     const tenantId = user.tenant_id
 
     // 1. Fetch Original Sale
-    const originalSale = await this.repository.getById(db, id, tenantId)
+    const originalSale = await this.getById(id, tenantId, db)
     if (!originalSale) {
       throw new Error('Sale not found or not authorized to update')
     }
@@ -175,20 +184,25 @@ async update(id, user, saleData, db) {
     }
 
     // 2. Handle Payment Methods (Sync Vouchers)
-    const validIncomingPayments = payment_methods
+    const validIncomingPayments = (payment_methods || [])
       .map((p) => ({
         account_id: p.account_id,
         amount: parseFloat(p.amount) || 0,
         mode_of_payment_id: p.mode_of_payment_id,
-        voucher_id: p.voucher_id,
+        voucher_id: p.voucher_id ? Number(p.voucher_id) : null,
+        voucher_no: p.voucher_no,
       }))
       .filter((p) => p.amount !== 0 && p.account_id)
 
-    const incomingVoucherIds = new Set(validIncomingPayments.map((p) => p.voucher_id).filter((id) => id != null))
+    const incomingVoucherIds = new Set(
+      validIncomingPayments
+        .map((p) => p.voucher_id)
+        .filter((id) => id != null)
+    )
     const existingVouchers = originalSale.payment_methods || []
 
     for (const existingVoucher of existingVouchers) {
-      if (existingVoucher.voucher_id && !incomingVoucherIds.has(existingVoucher.voucher_id)) {
+      if (existingVoucher.voucher_id && !incomingVoucherIds.has(Number(existingVoucher.voucher_id))) {
         try {
           await this.voucherService.delete(existingVoucher.voucher_id, user, db)
         } catch (err) {
@@ -202,8 +216,8 @@ async update(id, user, saleData, db) {
       ledger_id,
       discount: parseFloat(discount),
       total_amount: grandTotal,
-      paid_amount: totalPaid, // Added actual value
-      status: status,         // Added actual value
+      paid_amount: originalSale.paid_amount || 0, 
+      status: status, // Use newly calculated status
       change_return: parseFloat(change_return),
       note: note !== undefined ? note : originalSale.note,
     }
@@ -241,6 +255,9 @@ async update(id, user, saleData, db) {
     if (updatedSales && validIncomingPayments.length > 0) {
       await this._processVouchersForPayments(updatedSales, user, validIncomingPayments, db)
     }
+
+    // 6. Final Reconciliation: Ensure paid_amount is exactly the sum of vouchers
+    await this.repository.reconcilePaidAmount(db, id)
 
     const result = await this.getById(id, tenantId, db)
     return {
@@ -297,13 +314,22 @@ async update(id, user, saleData, db) {
       }
 
       if (payment.voucher_id) {
-        // UPDATE existing voucher
-        await this.voucherService.update(
-          payment.voucher_id,
-          user,
-          voucherData,
-          db,
-        )
+        try {
+          // UPDATE existing voucher
+          await this.voucherService.update(
+            payment.voucher_id,
+            user,
+            voucherData,
+            db,
+          )
+        } catch (err) {
+          if (err.message.includes('Voucher not found')) {
+            console.warn(`Voucher ${payment.voucher_id} not found, creating a new one instead.`);
+            await this.voucherService.create(user, voucherData, db);
+          } else {
+            throw err;
+          }
+        }
       } else {
         // CREATE new voucher
         await this.voucherService.create(user, voucherData, db)
@@ -326,8 +352,18 @@ async update(id, user, saleData, db) {
     const paidAmount = parseFloat(paid_amount || 0)
     const pending_amount = totalAmount - paidAmount
 
+    // Parse payment_methods: pg returns json_agg as a real array; handle both array and string
+    const parsedSales = sales.map((sale) => ({
+      ...sale,
+      payment_methods: Array.isArray(sale.payment_methods)
+        ? sale.payment_methods
+        : typeof sale.payment_methods === 'string'
+          ? JSON.parse(sale.payment_methods || '[]')
+          : (sale.payment_methods || []),
+    }))
+
     return {
-      data: sales,
+      data: parsedSales,
       count: totalCount,
       page_count,
       total_amount: totalAmount,
@@ -359,14 +395,24 @@ async update(id, user, saleData, db) {
           sales.store.full_header_image_url,
         )
     }
-    return sales
+    return {
+      ...sales,
+      items:
+        typeof sales.items === 'string'
+          ? JSON.parse(sales.items || '[]')
+          : sales.items || [],
+      payment_methods:
+        typeof sales.payment_methods === 'string'
+          ? JSON.parse(sales.payment_methods || '[]')
+          : sales.payment_methods || [],
+    }
   }
 
   // api/sales/sales.service.js
 
   async delete(id, user, db) {
     const tenantId = user.tenant_id
-    const saleToDelete = await this.repository.getById(db, id, tenantId)
+    const saleToDelete = await this.getById(id, tenantId, db)
 
     if (!saleToDelete) throw new Error('Sale not found')
 

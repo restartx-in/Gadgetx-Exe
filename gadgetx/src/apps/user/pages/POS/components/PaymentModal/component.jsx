@@ -122,6 +122,8 @@ const PaymentModal = ({
         if (initialPayments && initialPayments.length > 0) {
           const mappedPayments = initialPayments.map((p, index) => ({
             id: index,
+            voucher_id: p.voucher_id,
+            voucher_no: p.voucher_no,
             mode_of_payment_id: p.mode_of_payment_id || "",
             amount: parseFloat(p.amount).toFixed(2),
             account_id: p.account_id || "",
@@ -334,10 +336,12 @@ const PaymentModal = ({
     setValidationError("");
 
     let payment_methods = payments.map(
-      ({ account_id, amount, mode_of_payment_id }) => ({
+      ({ account_id, amount, mode_of_payment_id, voucher_id, voucher_no }) => ({
         account_id,
         mode_of_payment_id,
         amount: parseFloat(amount) || 0,
+        voucher_id,
+        voucher_no,
       }),
     );
 
