@@ -336,7 +336,7 @@ class SalesRepository {
       }
   }
 
-  async create(db, saleData, items) {
+async create(db, saleData, items) {
     const client = await db.connect()
     try {
       await client.query('BEGIN')
@@ -346,6 +346,8 @@ class SalesRepository {
         done_by_id,
         cost_center_id,
         total_amount,
+        paid_amount, // Use value from service
+        status,      // Use value from service
         change_return = 0,
         discount,
         date,
@@ -353,9 +355,6 @@ class SalesRepository {
         invoice_number,
         is_online,
       } = saleData
-
-      const initialPaid = 0;
-      const initialStatus = 'unpaid';
 
       const insertSaleQuery = `
         INSERT INTO sales(tenant_id, party_id, done_by_id, cost_center_id, total_amount, paid_amount, change_return, discount, date, status, note, invoice_number, ledger_id, is_online)
@@ -368,11 +367,11 @@ class SalesRepository {
         done_by_id,
         cost_center_id,
         total_amount,
-        initialPaid,
+        paid_amount, // Corrected
         change_return,
         discount,
         date,
-        initialStatus,
+        status,      // Corrected
         note,
         invoice_number,
         saleData.ledger_id,
@@ -397,7 +396,7 @@ class SalesRepository {
     }
   }
 
-  async update(db, id, tenantId, saleData, items) {
+async update(db, id, tenantId, saleData, items) {
     const client = await db.connect()
     try {
       await client.query('BEGIN')
@@ -406,6 +405,8 @@ class SalesRepository {
         done_by_id,
         cost_center_id,
         total_amount,
+        paid_amount, // NEW: Added
+        status,      // NEW: Added
         change_return = 0,
         discount,
         date,
@@ -417,8 +418,10 @@ class SalesRepository {
       const updateSaleQuery = `
         UPDATE sales
         SET party_id = $1, total_amount = $2, discount = $3, 
-            date = $4, done_by_id = $5, cost_center_id = $6, note = $7, invoice_number = $8, change_return = $9, ledger_id = $10, is_online = $11
-        WHERE id = $12 AND tenant_id = $13;
+            date = $4, done_by_id = $5, cost_center_id = $6, note = $7, 
+            invoice_number = $8, change_return = $9, ledger_id = $10, 
+            is_online = $11, paid_amount = $12, status = $13
+        WHERE id = $14 AND tenant_id = $15;
       `
       await client.query(updateSaleQuery, [
         party_id,
@@ -432,8 +435,10 @@ class SalesRepository {
         change_return,
         saleData.ledger_id,
         is_online,
-        id,
-        tenantId,
+        paid_amount, // NEW: Index 12
+        status,      // NEW: Index 13
+        id,          // Index 14
+        tenantId,    // Index 15
       ])
 
       await this.salesItemRepository.deleteBySalesId(client, id)
@@ -448,7 +453,6 @@ class SalesRepository {
       client.release()
     }
   }
-
   async delete(db, id, tenantId) {
     await db.query('DELETE FROM sales WHERE id = $1 AND tenant_id = $2', [id, tenantId]);
     return { id };
