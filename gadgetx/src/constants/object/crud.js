@@ -77,6 +77,7 @@ export const CRUDITEM = Object.freeze({
   STAFF: "Staff",
   TENANT: "Tenant",
   EXPENSETYPE: "ExpenseType",
+  LEDGER: "Ledger",
 
   FlightTicket: "Flight Ticket",
   Visa: "Visa",
