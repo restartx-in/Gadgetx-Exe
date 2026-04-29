@@ -5,7 +5,7 @@ class ReportFieldPermissionsRepository {
       WHERE user_id = $1 AND tenant_id = $2;
     `;
     const { rows } = await db.query(query, [userId, tenantId]);
-    return rows[0];
+    return rows && rows.length > 0 ? rows[0] : null;
   }
 
   async getById(db, id, tenantId) {
@@ -14,12 +14,11 @@ class ReportFieldPermissionsRepository {
         WHERE id = $1 AND tenant_id = $2;
     `;
     const { rows } = await db.query(query, [id, tenantId]);
-    return rows[0];
+    return rows && rows.length > 0 ? rows[0] : null;
   }
 
   async create(db, data) {
     const { user_id, tenant_id, ...fields } = data;
-
     const columns = ['user_id', 'tenant_id'];
     const values = [user_id, tenant_id];
     const placeholders = ['$1', '$2'];
@@ -33,14 +32,20 @@ class ReportFieldPermissionsRepository {
       }
     }
 
-    const query = `
+    const queryStr = `
       INSERT INTO report_field_permissions (${columns.join(', ')})
-      VALUES (${placeholders.join(', ')})
-      RETURNING *;
+      VALUES (${placeholders.join(', ')});
     `;
 
-    const { rows } = await db.query(query, values);
-    return rows[0];
+    // Execute insert. db.js shim handles returning result for inserts via lastID
+    const result = await db.query(queryStr, values);
+    
+    // Fetch the newly created record
+    const newId = result.lastID || (result.rows && result.rows[0] ? result.rows[0].id : null);
+    if (newId) {
+        return this.getById(db, newId, tenantId);
+    }
+    return this.getByUserId(db, user_id, tenant_id);
   }
 
   async update(db, id, tenantId, data) {
@@ -66,15 +71,17 @@ class ReportFieldPermissionsRepository {
       return this.getById(db, id, tenantId);
     }
 
-    const query = `
+    const queryStr = `
       UPDATE report_field_permissions
       SET ${setClauses.join(', ')}
-      WHERE id = $${paramIndex++} AND tenant_id = $${paramIndex++}
-      RETURNING *;
+      WHERE id = $${paramIndex++} AND tenant_id = $${paramIndex++};
     `;
 
-    const { rows } = await db.query(query, [...values, id, tenantId]);
-    return rows[0];
+    // SQLite doesn't support RETURNING on UPDATE in this environment
+    await db.query(queryStr, [...values, id, tenantId]);
+    
+    // Fetch and return the updated record manually
+    return this.getById(db, id, tenantId);
   }
 }
 

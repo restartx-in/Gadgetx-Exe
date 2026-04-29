@@ -4,17 +4,19 @@ class ReportFieldPermissionsService {
   }
 
   async getForCurrentUser(user, db) {
-    const permissions = await this.repository.getByUserId(
+    // FIX: Changed const to let to allow reassignment
+    let permissions = await this.repository.getByUserId(
       db,
       user.id,
       user.tenant_id,
     );
-     if (!permissions) {
+    
+    if (!permissions) {
       const defaultPayload = {
         user_id: user.id,
         tenant_id: user.tenant_id,
       };
-       permissions = await this.repository.create(db, defaultPayload);
+      permissions = await this.repository.create(db, defaultPayload);
     }
     return permissions;
   }
@@ -48,6 +50,7 @@ class ReportFieldPermissionsService {
       id,
       user.tenant_id,
     );
+    
     if (!existingRecord) {
       throw new Error(
         `Permissions record with ID ${id} not found or you do not have permission to edit it.`,
@@ -62,6 +65,7 @@ class ReportFieldPermissionsService {
       user.tenant_id,
       updateData,
     );
+    
     if (!updatedPermissions) {
       throw new Error('Failed to update permissions.');
     }
