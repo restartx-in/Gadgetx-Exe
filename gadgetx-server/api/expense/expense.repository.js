@@ -12,13 +12,13 @@ class ExpenseRepository {
       cost_center_id,
     } = expenseData;
 
-    const { rows } = await db.query(
+    // Removed RETURNING * for SQLite compatibility
+    const result = await db.query(
       `INSERT INTO expenses (
         tenant_id, description, amount, expense_type_id, date, 
         ledger_id, amount_paid, done_by_id, cost_center_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING *`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         tenant_id,
         description,
@@ -29,19 +29,27 @@ class ExpenseRepository {
         amount_paid || 0,
         done_by_id,
         cost_center_id,
-      ]
+      ],
     );
-    return rows[0];
+
+    // Fetch the new record using the last inserted ID
+    const newId = result.lastID;
+    return await this.getById(db, newId, tenant_id);
   }
 
   async updatePaymentAndStatus(client, id, amount) {
     const query = `
       UPDATE expenses 
       SET amount_paid = amount_paid + $1 
-      WHERE id = $2
-      RETURNING *;
+      WHERE id = $2;
     `;
-    const { rows } = await client.query(query, [amount, id]);
+    await client.query(query, [amount, id]);
+
+    // Manually fetch updated record
+    const { rows } = await client.query(
+      `SELECT * FROM expenses WHERE id = $1`,
+      [id],
+    );
     return rows[0];
   }
 
@@ -92,7 +100,7 @@ class ExpenseRepository {
         conditions.push(
           ` ${filterConfig[key].column} ${
             filterConfig[key].operator
-          } $${paramIndex++}`
+          } $${paramIndex++}`,
         );
         params.push(otherFilters[key]);
       }
@@ -196,13 +204,12 @@ class ExpenseRepository {
         conditions.push(
           ` ${filterConfig[key].column} ${
             filterConfig[key].operator
-          } $${paramIndex++}`
+          } $${paramIndex++}`,
         );
         params.push(otherFilters[key]);
       }
     });
 
-    // --- RESTORED searchConfig section ---
     const searchConfig = {
       description: { operator: "ILIKE", column: "e.description" },
       category: { operator: "ILIKE", column: "et.name" },
@@ -223,7 +230,6 @@ class ExpenseRepository {
       conditions.push(` ${column} ${operator} $${paramIndex++}`);
       params.push(operator === "ILIKE" ? `%${searchKey}%` : searchKey);
     }
-    // ------------------------------------
 
     const whereClause =
       conditions.length > 0 ? ` WHERE ` + conditions.join(" AND ") : "";
@@ -279,23 +285,27 @@ class ExpenseRepository {
        LEFT JOIN "done_by" db ON e.done_by_id = db.id 
        LEFT JOIN "cost_center" cc ON e.cost_center_id = cc.id 
        WHERE e.id = $1 AND e.tenant_id = $2`,
-      [id, tenantId]
+      [id, tenantId],
     );
     return rows[0];
   }
 
   async update(db, id, tenantId, data) {
-    // 1. Prepare data (exclude restricted fields)
-    const { tenant_id, id: _, category, ledger_name, done_by_name, cost_center_name, ...updateData } = data;
-    
+    const {
+      tenant_id,
+      id: _,
+      category,
+      ledger_name,
+      done_by_name,
+      cost_center_name,
+      ...updateData
+    } = data;
     const fields = Object.keys(updateData);
     const values = Object.values(updateData);
-    
+
     if (fields.length === 0) return this.getById(db, id, tenantId);
 
-    // 2. Construct the Update Query
     const setClause = fields.map((f, i) => `"${f}" = $${i + 1}`).join(", ");
-    
     const query = `
       UPDATE expenses 
       SET ${setClause} 
@@ -303,20 +313,18 @@ class ExpenseRepository {
       AND tenant_id = $${fields.length + 2}
     `;
 
-    // 3. Execute the update
     await db.query(query, [...values, id, tenantId]);
-
-    // 4. Manually fetch and return the updated record
-    // This bypasses the "RETURNING" issue in the SQLite bridge
     return await this.getById(db, id, tenantId);
   }
 
   async delete(db, id, tenantId) {
-    const { rows } = await db.query(
-      "DELETE FROM expenses WHERE id = $1 AND tenant_id = $2 RETURNING id",
-      [id, tenantId]
+    // Removed RETURNING clause for SQLite bridge compatibility
+    const result = await db.query(
+      "DELETE FROM expenses WHERE id = $1 AND tenant_id = $2",
+      [id, tenantId],
     );
-    return rows[0];
+    // In SQLite bridge, we check result.changes to see if a row was affected
+    return result.changes > 0 || result.rowsAffected > 0;
   }
 }
 
