@@ -18,8 +18,8 @@ export function useCreateSales() {
 
       queryClient.refetchQueries({ queryKey: ["sales_paginated"] });
       if (!isQueued) {
-        queryClient.setQueriesData({ queryKey: ["sales"] }, (oldData) => {
-          if (!oldData) return oldData;
+        queryClient.setQueriesData({ queryKey: ["sales", "list"] }, (oldData) => {
+          if (!Array.isArray(oldData)) return oldData;
           return [...oldData, response.data];
         });
       }

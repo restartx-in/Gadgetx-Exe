@@ -9,9 +9,9 @@ export function useDeleteSales() {
       return api.delete(API_ENDPOINTS.SALES.BY_ID(id));
     },
     onSuccess: (data, deletedId) => {
-      queryClient.setQueriesData({ queryKey: ["sales"] }, (oldData) => {
-        if (!oldData) {
-          return [];
+      queryClient.setQueriesData({ queryKey: ["sales", "list"] }, (oldData) => {
+        if (!Array.isArray(oldData)) {
+          return oldData || [];
         }
         return oldData.filter((item) => item.id !== deletedId);
       });

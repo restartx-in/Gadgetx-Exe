@@ -17,7 +17,7 @@ export function useUpdateSales() {
         queryClient.setQueriesData(
           { queryKey: ["sales", "list"] },
           (oldData) => {
-            if (!oldData) {
+            if (!Array.isArray(oldData)) {
               return oldData;
             }
             return oldData.map((item) =>
