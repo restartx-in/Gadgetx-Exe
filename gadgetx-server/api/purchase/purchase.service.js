@@ -33,25 +33,37 @@ class PurchaseService {
     );
     const grandTotal = itemsSubtotal - parseFloat(discount);
 
-    // 2. Filter valid payments
+    // 2. Calculate total paid amount and status
+    const totalPaid = payment_methods.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    
+    let status = 'unpaid';
+    if (totalPaid >= grandTotal) {
+        status = 'paid';
+    } else if (totalPaid > 0) {
+        status = 'partial';
+    }
+
+    // Filter valid payments (for vouchers)
     const validPayments = payment_methods
       .map((p) => ({
         account_id: p.account_id,
         amount: parseFloat(p.amount) || 0,
         mode_of_payment_id: p.mode_of_payment_id,
       }))
-      .filter((p) => p.amount > 0 && p.account_id);
+      .filter((p) => p.amount !== 0 && p.account_id);
 
     const purchasePayload = {
       ...purchaseDetails,
       tenant_id: tenantId,
       discount: parseFloat(discount),
       total_amount: grandTotal,
+      paid_amount: totalPaid, // Pass actual value
+      status: status,         // Pass actual value
       date: purchaseDetails.date || new Date(),
       note,
     };
 
-    // 3. Create Purchase (Initial paid_amount is 0, updated via vouchers)
+    // 3. Create Purchase (With correct initial totals)
     const newPurchase = await this.repository.create(
       db,
       purchasePayload,
@@ -109,6 +121,15 @@ class PurchaseService {
     const grandTotal = itemsSubtotal - parseFloat(discount);
 
     // 2. Handle Payment Methods (Sync Vouchers)
+    const totalPaid = payment_methods.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    
+    let status = 'unpaid';
+    if (totalPaid >= grandTotal) {
+        status = 'paid';
+    } else if (totalPaid > 0) {
+        status = 'partial';
+    }
+
     const validIncomingPayments = payment_methods
       .map((p) => ({
         account_id: p.account_id,
@@ -116,7 +137,7 @@ class PurchaseService {
         mode_of_payment_id: p.mode_of_payment_id,
         voucher_id: p.voucher_id, // Important: ID passed from frontend to identify existing vouchers
       }))
-      .filter((p) => p.amount > 0 && p.account_id);
+      .filter((p) => p.amount !== 0 && p.account_id);
 
     // Collect IDs of incoming vouchers to identify which ones to keep
     const incomingVoucherIds = new Set(
@@ -169,6 +190,8 @@ class PurchaseService {
       ...purchaseDetails,
       discount: parseFloat(discount),
       total_amount: grandTotal,
+      paid_amount: totalPaid,
+      status: status,
       note,
     };
 
@@ -230,7 +253,6 @@ class PurchaseService {
 
         voucher_type: 0, // 0 = Paid (Money Out)
 
-        // For Purchase: Money goes FROM internal account TO supplier ledger
         from_ledger: { ledger_id: payment.account_id },
         to_ledger: { ledger_id: purchase.party_ledger_id },
 
@@ -278,26 +300,22 @@ class PurchaseService {
     try {
       await client.query("BEGIN");
 
-      // First delete associated vouchers (logic handled by DB triggers or manually)
-      // If your system doesn't automatically delete vouchers via DB triggers:
+      // 1. Delete associated Vouchers
       if (purchaseToDelete.payment_methods) {
         for (const pm of purchaseToDelete.payment_methods) {
           if (pm.voucher_id)
-            await this.voucherService.delete(pm.voucher_id, user, client);
+            await this.voucherService.delete(pm.voucher_id, user, db, client);
         }
       }
 
-      const deletedPurchase = await this.repository.delete(
-        client,
-        id,
-        tenantId,
-      );
-      if (!deletedPurchase)
-        throw new Error("Failed to delete purchase record.");
+      // 2. Adjust Stock
+      const items =
+        typeof purchaseToDelete.items === "string"
+          ? JSON.parse(purchaseToDelete.items)
+          : purchaseToDelete.items;
 
-      // Revert Stock (Decrease for Purchase)
-      if (Array.isArray(purchaseToDelete.items)) {
-        for (const item of purchaseToDelete.items) {
+      if (Array.isArray(items)) {
+        for (const item of items) {
           await this.itemRepository.updateStock(
             client,
             item.item_id,
@@ -306,10 +324,17 @@ class PurchaseService {
         }
       }
 
+      // 3. Manual cleanup of items (safety)
+      await client.query("DELETE FROM purchase_item WHERE purchase_id = $1", [id]);
+
+      // 4. Delete Purchase Record itself
+      await this.repository.delete(client, id, tenantId);
+
       await client.query("COMMIT");
-      return { status: "success", data: deletedPurchase };
+      return { status: "success" };
     } catch (error) {
       await client.query("ROLLBACK");
+      console.error("❌ Delete Purchase Error:", error.message);
       throw error;
     } finally {
       client.release();

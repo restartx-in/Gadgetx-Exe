@@ -127,7 +127,7 @@ const PurchaseRow = React.memo(
           if (field.value === "account")
             return (
               <TdOverflow key={field.value}>
-                {prchs.payment_methods?.map((p) => p.account_name).filter(Boolean).join(", ") ||
+                {[...new Set(prchs.payment_methods?.map((p) => p.account_name).filter(Boolean))].join(", ") ||
                   prchs.default_account_name ||
                   "N/A"}
               </TdOverflow>
@@ -189,7 +189,7 @@ const MobilePurchaseCard = React.memo(
             <div>{new Date(prchs.date).toLocaleDateString("en-IN")}</div>
             <div>
               Account:{" "}
-              {prchs.payment_methods?.map((p) => p.account_name).join(", ") ||
+              {[...new Set(prchs.payment_methods?.map((p) => p.account_name).filter(Boolean))].join(", ") ||
                 "N/A"}
             </div>
             {prchs.done_by_name && <div>Done By: {prchs.done_by_name}</div>}

@@ -16,13 +16,12 @@ class PurchaseRepository {
         done_by_id,
         cost_center_id,
         total_amount,
+        paid_amount,
+        status,
         discount,
         date,
         invoice_number,
       } = purchaseData;
-
-      const initialPaid = 0;
-      const initialStatus = "unpaid";
 
       const insertPurchaseQuery = `
         INSERT INTO purchase(tenant_id, party_id, done_by_id, cost_center_id, total_amount, paid_amount, discount, date, invoice_number, status)
@@ -35,11 +34,11 @@ class PurchaseRepository {
         done_by_id,
         cost_center_id,
         total_amount,
-        initialPaid,
+        paid_amount,
         discount,
         date,
         invoice_number,
-        initialStatus,
+        status,
       ]);
       const newPurchase = purchaseResult.rows[0];
 
@@ -69,6 +68,8 @@ class PurchaseRepository {
         done_by_id,
         cost_center_id,
         total_amount,
+        paid_amount,
+        status,
         discount,
         date,
         invoice_number,
@@ -77,8 +78,9 @@ class PurchaseRepository {
       const updatePurchaseQuery = `
         UPDATE purchase
         SET party_id = $1, total_amount = $2,
-            discount = $3, date = $4, done_by_id = $5, cost_center_id = $6, invoice_number = $7
-        WHERE id = $8 AND tenant_id = $9;
+            discount = $3, date = $4, done_by_id = $5, cost_center_id = $6, invoice_number = $7,
+            paid_amount = $8, status = $9
+        WHERE id = $10 AND tenant_id = $11;
       `;
       await client.query(updatePurchaseQuery, [
         party_id,
@@ -88,6 +90,8 @@ class PurchaseRepository {
         done_by_id,
         cost_center_id,
         invoice_number,
+        paid_amount,
+        status,
         id,
         tenantId,
       ]);
@@ -110,7 +114,7 @@ class PurchaseRepository {
       `SELECT 
          p.*, 
          pa.name as party_name,
-         pa.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
+         pa.ledger_id as party_ledger_id,
          db.name as done_by_name,
          cc.name as cost_center_name,
          (
@@ -128,22 +132,19 @@ class PurchaseRepository {
            WHERE pi.purchase_id = p.id
          ) as items,
          (
-          SELECT json_agg(json_build_object(
-            'voucher_id', v.id,
-            'account_id', v.from_ledger_id,
-            'account_name', l.name,
-            'amount', vt.received_amount,
-            'mode_of_payment_id', v.mode_of_payment_id,
-            'voucher_no', v.voucher_no,
-            'payment_date', v.date
-          ))
-          FROM voucher_transactions vt
-          JOIN voucher v ON vt.voucher_id = v.id
-          JOIN ledger l ON v.from_ledger_id = l.id
-          WHERE vt.invoice_id::integer = p.id 
-            AND vt.invoice_type = 'PURCHASE'
-            AND v.tenant_id = $2
-        ) as payment_methods
+           SELECT json_agg(json_build_object(
+             'voucher_id', v.id,
+             'account_id', COALESCE(v.from_ledger_id, v.to_ledger_id),
+             'account_name', COALESCE(lf.name, lt.name),
+             'amount', vt.received_amount,
+             'mode_of_payment_id', v.mode_of_payment_id
+           ))
+           FROM voucher_transactions vt
+           JOIN voucher v ON vt.voucher_id = v.id
+           LEFT JOIN ledger lf ON v.from_ledger_id = lf.id
+           LEFT JOIN ledger lt ON v.to_ledger_id = lt.id
+           WHERE vt.invoice_id = CAST(p.id AS TEXT) AND vt.invoice_type = 'PURCHASE'
+         ) as payment_methods
        FROM purchase p
        LEFT JOIN party pa ON p.party_id = pa.id
        LEFT JOIN "done_by" db ON p.done_by_id = db.id
@@ -155,11 +156,11 @@ class PurchaseRepository {
   }
 
   async delete(db, id, tenantId) {
-    const { rows } = await db.query(
-      "DELETE FROM purchase WHERE id = $1 AND tenant_id = $2 RETURNING id",
-      [id, tenantId],
-    );
-    return rows[0];
+    await db.query("DELETE FROM purchase WHERE id = $1 AND tenant_id = $2", [
+      id,
+      tenantId,
+    ]);
+    return { id };
   }
 
   async getByUserId(db, tenantId, filters = {}) {
@@ -170,22 +171,24 @@ class PurchaseRepository {
             SELECT 
                 p.*, 
                 pa.name as party_name,
-                pa.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
+                pa.ledger_id as party_ledger_id,
                 db.name as done_by_name,
                 cc.name as cost_center_name,
-                (
-                  SELECT json_agg(json_build_object(
-                    'account_id', v.from_ledger_id,
-                    'account_name', l.name,
-                    'amount', vt.received_amount,
-                    'mode_of_payment_id', v.mode_of_payment_id
-                  ))
-                  FROM voucher_transactions vt
-                  JOIN voucher v ON vt.voucher_id = v.id
-                  JOIN ledger l ON v.from_ledger_id = l.id
-                  WHERE vt.invoice_id::integer = p.id 
-                    AND vt.invoice_type = 'PURCHASE'
-                ) as payment_methods
+                  (
+                    SELECT json_agg(json_build_object(
+                      'voucher_id', v.id,
+                      'account_id', COALESCE(v.from_ledger_id, v.to_ledger_id),
+                      'account_name', COALESCE(lf.name, lt.name),
+                      'amount', vt.received_amount,
+                      'mode_of_payment_id', v.mode_of_payment_id
+                    ))
+                    FROM voucher_transactions vt
+                    JOIN voucher v ON vt.voucher_id = v.id
+                    LEFT JOIN ledger lf ON v.from_ledger_id = lf.id
+                    LEFT JOIN ledger lt ON v.to_ledger_id = lt.id
+                    WHERE vt.invoice_id = CAST(p.id AS TEXT) 
+                      AND vt.invoice_type = 'PURCHASE'
+                  ) as payment_methods
             FROM purchase p
             LEFT JOIN party pa ON p.party_id = pa.id 
             LEFT JOIN "done_by" db ON p.done_by_id = db.id
@@ -397,22 +400,24 @@ class PurchaseRepository {
       SELECT 
           p.*, 
           pa.name as party_name,
-          pa.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
+          pa.ledger_id as party_ledger_id,
           db.name as done_by_name,
           cc.name as cost_center_name,
           COUNT(*) OVER() AS total_count,
-          (
-            SELECT json_agg(json_build_object(
-              'account_id', v.from_ledger_id,
-              'account_name', l.name,
-              'amount', vt.received_amount,
-              'mode_of_payment_id', v.mode_of_payment_id
-            ))
-            FROM voucher_transactions vt
-            JOIN voucher v ON vt.voucher_id = v.id
-            JOIN ledger l ON v.from_ledger_id = l.id
-            WHERE vt.invoice_id::integer = p.id AND vt.invoice_type = 'PURCHASE'
-          ) as payment_methods
+            (
+              SELECT json_agg(json_build_object(
+                'voucher_id', v.id,
+                'account_id', COALESCE(v.from_ledger_id, v.to_ledger_id),
+                'account_name', COALESCE(lf.name, lt.name),
+                'amount', vt.received_amount,
+                'mode_of_payment_id', v.mode_of_payment_id
+              ))
+              FROM voucher_transactions vt
+              JOIN voucher v ON vt.voucher_id = v.id
+              LEFT JOIN ledger lf ON v.from_ledger_id = lf.id
+              LEFT JOIN ledger lt ON v.to_ledger_id = lt.id
+              WHERE vt.invoice_id = CAST(p.id AS TEXT) AND vt.invoice_type = 'PURCHASE'
+            ) as payment_methods
       ${fromAndJoins}
       ${whereClause}
     `;
