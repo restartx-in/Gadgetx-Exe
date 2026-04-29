@@ -203,28 +203,18 @@ class PayrollRepository {
     return rows;
   }
 
-  // ADDED: db param
-  async update(db, id, tenantId = null, data) {
-    const fields = Object.keys(data);
-    const values = Object.values(data);
-
-    if (fields.length === 0) {
-      return this.getById(db, id, tenantId); // Pass db recursively
-    }
-
-    const setClause = fields.map((field, index) => `"${field}" = $${index + 1}`).join(", ");
-    let query = `UPDATE payroll SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $${fields.length + 1}`;
-    const params = [...values, id];
-
-    if (tenantId) {
-      query += ` AND tenant_id = $${fields.length + 2}`;
-      params.push(tenantId);
-    }
+async update(db, id, tenantId, data) {
+    const { tenant_id, id: _, ...updateData } = data;
+    const fields = Object.keys(updateData);
+    const values = Object.values(updateData);
     
-    query += " RETURNING *";
-    const { rows } = await db.query(query, params);
-    return rows[0];
-  }
+    const setClause = fields.map((field, index) => `"${field}" = $${index + 1}`).join(", ");
+    const query = `UPDATE payroll SET ${setClause}, updated_at = CURRENT_TIMESTAMP 
+                   WHERE id = $${fields.length + 1} AND tenant_id = $${fields.length + 2}`;
+    
+    await db.query(query, [...values, id, tenantId]);
+    return await this.getById(db, id, tenantId); // Fetch fresh after update
+}
 
   // ADDED: db param
   async delete(db, id, tenantId = null) {

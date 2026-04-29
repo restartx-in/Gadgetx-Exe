@@ -152,50 +152,59 @@ class EmployeeRepository {
   }
 
   async update(db, id, tenantId = null, data) {
-    const fields = Object.keys(data);
-    const values = Object.values(data);
+  const fields = Object.keys(data);
+  const values = Object.values(data);
 
-    if (fields.length === 0) {
-      return this.getById(db, id, tenantId);
-    }
+  if (fields.length === 0) return this.getById(db, id, tenantId);
 
-    const setClause = fields.map((field, index) => `"${field}" = $${index + 1}`).join(", ");
-    let query = `UPDATE employee SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $${fields.length + 1}`;
-    const params = [...values, id];
+  const setClause = fields.map((field, index) => `"${field}" = $${index + 1}`).join(", ");
+  
+  // Build query
+  let query = `UPDATE employee SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $${fields.length + 1}`;
+  const params = [...values, id];
 
-    if (tenantId) {
-      query += ` AND tenant_id = $${fields.length + 2}`;
-      params.push(tenantId);
-    }
-    
-    query += " RETURNING *";
+  if (tenantId) {
+    query += ` AND tenant_id = $${fields.length + 2}`;
+    params.push(tenantId);
+  }
+  
+  // Execute the update
+  const result = await db.query(query, params);
 
-    const { rows } = await db.query(query, params);
-    return rows[0];
+  // If rowCount is 0, nothing was updated (id or tenant mismatch)
+  if (result.rowCount === 0) return null;
+
+  // Fetch and return the fresh record
+  return await this.getById(db, id, tenantId);
+}
+
+ async delete(db, id, tenantId = null) {
+  // 1. Delete associated payroll (Optional: ensure this doesn't block the next step)
+  let payrollQuery = "DELETE FROM payroll WHERE employee_id = $1";
+  const payrollParams = [id];
+  if (tenantId) {
+    payrollQuery += " AND tenant_id = $2";
+    payrollParams.push(tenantId);
+  }
+  await db.query(payrollQuery, payrollParams);
+
+  // 2. Delete the employee
+  let employeeQuery = "DELETE FROM employee WHERE id = $1";
+  const employeeParams = [id];
+  if (tenantId) {
+    employeeQuery += " AND tenant_id = $2";
+    employeeParams.push(tenantId);
   }
 
-  async delete(db, id, tenantId = null) {
-    let payrollQuery = "DELETE FROM payroll WHERE employee_id = $1";
-    const payrollParams = [id];
-
-    if (tenantId) {
-      payrollQuery += " AND tenant_id = $2";
-      payrollParams.push(tenantId);
-    }
-    await db.query(payrollQuery, payrollParams);
-
-    let employeeQuery = "DELETE FROM employee WHERE id = $1";
-    const employeeParams = [id];
-    
-    if (tenantId) {
-      employeeQuery += " AND tenant_id = $2";
-      employeeParams.push(tenantId);
-    }
-
-    employeeQuery += " RETURNING id";
-    const { rows } = await db.query(employeeQuery, employeeParams);
-    return rows[0];
-  }
+  // Adding RETURNING clause is Postgres-specific. 
+  // SQLite implementation in your db.js handles it, 
+  // but let's check for rowCount/changes instead.
+  const result = await db.query(employeeQuery, employeeParams);
+  
+  // Use .changes (SQLite) or .rowCount (Postgres)
+  // Your db.js wrapper returns { rows, lastID, changes }
+  return result.changes > 0 ? { id } : null; 
+}
 }
 
 module.exports = EmployeeRepository;
