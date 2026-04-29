@@ -21,15 +21,11 @@ class ExpenseController {
 
       const expenseData = {
         ...req.body,
-        tenant_id: tenantId, 
+        tenant_id: tenantId,
       };
 
-      const newExpense = await this.service.create(
-        expenseData,
-        req.user,
-        req.db
-      );
-      res.status(201).json(newExpense);
+      const result = await this.service.create(expenseData, req.user, req.db);
+      res.status(201).json(result);
     } catch (error) {
       next(error);
     }
@@ -38,11 +34,9 @@ class ExpenseController {
   async getAll(req, res, next) {
     try {
       let tenantId = req.user.tenant_id;
-
       if (req.user.role === "super_admin") {
         tenantId = req.query.tenant_id || null;
       }
-
       const data = await this.service.getAll(tenantId, req.query, req.db);
       res.json(data);
     } catch (error) {
@@ -53,15 +47,13 @@ class ExpenseController {
   async getAllPaginated(req, res, next) {
     try {
       let tenantId = req.user.tenant_id;
-
       if (req.user.role === "super_admin") {
         tenantId = req.query.tenant_id || null;
       }
-
       const data = await this.service.getPaginatedByTenantId(
         tenantId,
         req.query,
-        req.db
+        req.db,
       );
       res.json(data);
     } catch (error) {
@@ -74,32 +66,27 @@ class ExpenseController {
       const expense = await this.service.getById(
         req.params.id,
         req.user.tenant_id,
-        req.db
+        req.db,
       );
-      if (!expense) {
-        return res
-          .status(404)
-          .json({ message: "Expense not found or not authorized" });
-      }
       res.json(expense);
     } catch (error) {
+      if (error.message.includes("not found")) {
+        return res.status(404).json({ message: error.message });
+      }
       next(error);
     }
   }
 
-async update(req, res, next) {
+  async update(req, res, next) {
     try {
-      
-      const updatedExpense = await this.service.update(
+      const result = await this.service.update(
         req.params.id,
         req.user.tenant_id,
         req.body,
-        req.db
+        req.db,
       );
-      
-      res.json(updatedExpense);
+      res.json(result);
     } catch (error) {
-      // If our service throws the "Not found" error, it comes here
       next(error);
     }
   }
@@ -109,15 +96,20 @@ async update(req, res, next) {
       const result = await this.service.delete(
         req.params.id,
         req.user.tenant_id,
-        req.db
+        req.db,
       );
+
       if (!result) {
         return res
           .status(404)
-          .json({ message: "Expense not found or not authorized to delete" });
+          .json({ message: "Expense not found or already deleted" });
       }
+
       res.status(200).json({ message: "Expense deleted successfully" });
     } catch (error) {
+      if (error.message.includes("not found")) {
+        return res.status(404).json({ message: error.message });
+      }
       next(error);
     }
   }

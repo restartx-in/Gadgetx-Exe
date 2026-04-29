@@ -458,7 +458,7 @@ const CommonSaleReport = ({ hooks, components, config }) => {
   const { data: accounts = [] } = useAccounts();
   const { data: customers = [] } = useCustomers();
   const { data: modeOfPaymentList = [] } = useModeOfPayments();
-  const { mutateAsync: deleteSale, isLoading: isDeleting } = useDeleteSales();
+  const { mutate: deleteSale, isLoading: isDeleting } = useDeleteSales();
   const { data: doneBy = [] } = useDoneBys();
   const { data: costCenter = [] } = useCostCenters();
   const { data: saleDetails, isSuccess } = useSalesById(saleIdToFetch);
@@ -646,17 +646,28 @@ const CommonSaleReport = ({ hooks, components, config }) => {
     [navigate, customerNameMap],
   );
 
-  const handleDeleteConfirm = async () => {
+const handleDeleteConfirm = () => {
     if (!saleToDelete) return;
-    try {
-      await deleteSale(saleToDelete.id);
-      showToast({ crudItem: CRUDITEM.SALE, crudType: CRUDTYPE.DELETE_SUCCESS });
-      setSaleToDelete(null);
-      refetchList();
-    } catch (e) {
-      showToast({ crudItem: CRUDITEM.SALE, crudType: CRUDTYPE.DELETE_ERROR });
-      setSaleToDelete(null);
-    }
+
+    // Use the second argument of mutate for callbacks
+    deleteSale(saleToDelete.id, {
+      onSuccess: () => {
+        showToast({ 
+          crudItem: CRUDITEM.SALE, 
+          crudType: CRUDTYPE.DELETE_SUCCESS 
+        });
+        setSaleToDelete(null);
+        refetchList(); // Automatically refreshes the list after success
+      },
+      onError: (error) => {
+        console.error("Delete Sale Error:", error);
+        showToast({ 
+          crudItem: CRUDITEM.SALE, 
+          crudType: CRUDTYPE.DELETE_ERROR 
+        });
+        setSaleToDelete(null);
+      },
+    });
   };
 
   return (

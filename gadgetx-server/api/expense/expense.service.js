@@ -24,21 +24,20 @@ class ExpenseService {
         expenseData,
       );
 
-      // VOUCHER METHOD: If money is paid, create a Voucher and Voucher Transaction
       if (parseFloat(newExpense.amount_paid) > 0 && newExpense.ledger_id) {
         const voucherPayload = {
           tenant_id: user.tenant_id,
           amount: newExpense.amount_paid,
           date: newExpense.date,
           description: `Payment for Expense: ${newExpense.description}`,
-          voucher_no: `VOU-EXP-${Date.now()}-${newExpense.id}`, // Ensured uniqueness
-          voucher_type: 0, // 0 for Paid
+          voucher_no: `VOU-EXP-${Date.now()}-${newExpense.id}`,
+          voucher_type: 0,
           from_ledger: { ledger_id: newExpense.ledger_id },
           to_ledger: { ledger_id: null },
           cost_center_id: newExpense.cost_center_id,
           done_by_id: newExpense.done_by_id,
           mode_of_payment_id: null,
-          expense_type_id: newExpense.expense_type_id, // FIX: Explicitly passing the ID
+          expense_type_id: newExpense.expense_type_id,
         };
 
         const newVoucher = await this.voucherRepository.create(
@@ -46,7 +45,6 @@ class ExpenseService {
           voucherPayload,
         );
 
-        // Create the record in voucher_transactions table
         await this.voucherTransactionsService.createMany(
           client,
           newVoucher.id,
@@ -59,7 +57,6 @@ class ExpenseService {
           ],
         );
 
-        // Adjust the Ledger balance
         await this.ledgerService.adjustBalance(
           client,
           newExpense.ledger_id,
@@ -69,18 +66,13 @@ class ExpenseService {
       }
 
       await client.query("COMMIT");
-      const data = this.getById(newExpense.id, newExpense.tenant_id, db);
       return {
         status: "success",
-        data:newExpense,
+        data: newExpense,
       };
     } catch (error) {
       await client.query("ROLLBACK");
-      return {
-        status: "failed",
-        message: error.message,
-      };
-      // throw error;
+      throw error;
     } finally {
       client.release();
     }
@@ -121,30 +113,26 @@ class ExpenseService {
     const client = await db.connect();
     try {
       await client.query("BEGIN");
-      
-      // 1. Fetch the existing expense
+
       const oldExpense = await this.expenseRepository.getById(
         client,
         id,
         tenantId,
       );
 
-      // SAFETY CHECK: This prevents the "undefined" error
       if (!oldExpense) {
         throw new Error(`Expense with ID ${id} not found or not authorized.`);
       }
 
-      // 2. Reverse old payment logic from Ledger
       if (parseFloat(oldExpense.amount_paid) > 0 && oldExpense.ledger_id) {
         await this.ledgerService.adjustBalance(
           client,
           oldExpense.ledger_id,
           tenantId,
-          parseFloat(oldExpense.amount_paid), // Add back the old amount
+          parseFloat(oldExpense.amount_paid),
         );
       }
 
-      // 3. Update the record
       const updatedExpense = await this.expenseRepository.update(
         client,
         id,
@@ -153,10 +141,9 @@ class ExpenseService {
       );
 
       if (!updatedExpense) {
-          throw new Error("Failed to update expense record.");
+        throw new Error("Failed to update expense record.");
       }
 
-      // 4. Apply new payment logic and create Voucher
       if (
         parseFloat(updatedExpense.amount_paid) > 0 &&
         updatedExpense.ledger_id
@@ -193,7 +180,6 @@ class ExpenseService {
           ],
         );
 
-        // Deduct the new amount
         await this.ledgerService.adjustBalance(
           client,
           updatedExpense.ledger_id,
@@ -209,7 +195,7 @@ class ExpenseService {
       };
     } catch (error) {
       await client.query("ROLLBACK");
-      throw error; // Let the controller handle the error message
+      throw error;
     } finally {
       client.release();
     }
@@ -225,6 +211,11 @@ class ExpenseService {
         tenantId,
       );
 
+      // FIX: Added safety check to prevent "undefined" error
+      if (!expense) {
+        throw new Error("Expense not found or not authorized to delete");
+      }
+
       if (parseFloat(expense.amount_paid) > 0 && expense.ledger_id) {
         await this.ledgerService.adjustBalance(
           client,
@@ -236,7 +227,9 @@ class ExpenseService {
 
       const result = await this.expenseRepository.delete(client, id, tenantId);
       await client.query("COMMIT");
-         return await this.getById(id, tenantId, db); 
+
+      // FIX: Return result boolean instead of trying to fetch a deleted record
+      return result;
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
