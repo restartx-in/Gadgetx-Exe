@@ -16,7 +16,7 @@ export function useCreateExpenseType() {
       // queryClient.invalidateQueries({ queryKey: ["expense_types"] });
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       // queryClient.invalidateQueries({ queryKey: ['expenses_paginated'] });
-      queryClient.setQueriesData({ queryKey: ["expense_types"] }, (oldData) => {
+      queryClient.refetchQueries({ queryKey: ["expense_types"] }, (oldData) => {
         if (!oldData) return oldData;
         return [...oldData, response.data];
       });

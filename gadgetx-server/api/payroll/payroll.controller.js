@@ -51,14 +51,16 @@ class PayrollController {
     }
   }
 
-  async update(req, res, next) {
+ async update(req, res, next) {
     try {
+      // Ensure the service is receiving the data properly
       const updatedPayroll = await this.service.update(req.params.id, req.body, req.user, req.db);
+      if (!updatedPayroll) return res.status(404).json({ message: "Payroll not found" });
       res.json(updatedPayroll);
     } catch (error) {
       next(error);
     }
-  }
+}
 
   async delete(req, res, next) {
     try {
@@ -70,4 +72,4 @@ class PayrollController {
   }
 }
 
-module.exports = PayrollController;
+module.exports = PayrollController;

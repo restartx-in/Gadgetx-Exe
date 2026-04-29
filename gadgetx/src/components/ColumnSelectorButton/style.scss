@@ -2,11 +2,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
+  // width: 36px;
   height: 36px;
   background-color: #ffffff;
   color: #374151; // This sets the context for `currentColor` in the SVG
   border-radius: 6px;
+  padding: 0.6rem;
   border: 1px solid #d1d5db;
   cursor: pointer;
   transition:
