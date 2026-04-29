@@ -15,7 +15,7 @@ export function useUpdateExpenseType() {
         queryKey: ["expense_type", updatedExpenseType.id],
       });
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.setQueriesData({ queryKey: ["expense_types"] }, (oldData) => {
+      queryClient.refetchQueries({ queryKey: ["expense_types"] }, (oldData) => {
         if (!oldData) {
           return oldData;
         }

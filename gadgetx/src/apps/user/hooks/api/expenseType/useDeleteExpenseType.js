@@ -13,7 +13,7 @@ export function useDeleteExpenseType() {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       queryClient.invalidateQueries({ queryKey: ["expenses_paginated"] });
       // queryClient.invalidateQueries({ queryKey: ["expense_types"] });
-      queryClient.setQueriesData({ queryKey: ["expense_types"] }, (oldData) => {
+      queryClient.refetchQueries({ queryKey: ["expense_types"] }, (oldData) => {
         if (!oldData) {
           return [];
         }
