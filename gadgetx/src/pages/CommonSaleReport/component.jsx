@@ -129,14 +129,18 @@ const SaleRow = React.memo(
           
           // --- UPDATED ACCOUNT LOGIC ---
           if (field.value === "account") {
-            const fromPayments = (sls.payment_methods || [])
-              .map((p) => p.account_name)
-              .filter(Boolean)
-              .join(", ");
+            // Deduplicate account names from all payment vouchers
+            const fromPayments = [...new Set(
+              (sls.payment_methods || [])
+                .map((p) => p.account_name)
+                .filter(Boolean)
+            )].join(", ");
             
+            // Payment methods take priority; ledger_name is only a fallback
+            // for unpaid/no-voucher sales
             let accountDisplay = 
-              sls.ledger_name || 
               fromPayments || 
+              sls.ledger_name || 
               accountNameMap[sls.ledger_id] || 
               "";
   
@@ -201,14 +205,18 @@ const SaleRow = React.memo(
 
 const MobileSaleCard = React.memo(
   ({ sls, handlers, getSaleMenuItems, DotMenu, accountNameMap, modeOfPaymentList }) => {
-    const fromPayments = (sls.payment_methods || [])
-      .map((p) => p.account_name)
-      .filter(Boolean)
-      .join(", ");
+    // Deduplicate account names from all payment vouchers
+    const fromPayments = [...new Set(
+      (sls.payment_methods || [])
+        .map((p) => p.account_name)
+        .filter(Boolean)
+    )].join(", ");
     
+    // Payment methods take priority; ledger_name is only a fallback
+    // for unpaid/no-voucher sales
     let accountDisplay = 
-      sls.ledger_name || 
       fromPayments || 
+      sls.ledger_name || 
       accountNameMap[sls.ledger_id] || 
       "";
 

@@ -16,21 +16,30 @@ class SalesRepository {
                 db.name as done_by_name,      
                 cc.name as cost_center_name,
                 l.name as ledger_name,
-                (
-                  SELECT json_group_array(
-                    json_object(
-                      'voucher_id', v.id,
-                      'account_id', v.to_ledger_id,
-                      'account_name', l2.name,
-                      'amount', vt.received_amount,
-                      'mode_of_payment_id', v.mode_of_payment_id
+                COALESCE(
+                  (
+                    SELECT json_group_array(
+                      json_object(
+                        'voucher_id', pm.voucher_id,
+                        'account_id', pm.to_ledger_id,
+                        'account_name', pm.ledger_name,
+                        'amount', pm.received_amount,
+                        'mode_of_payment_id', pm.mode_of_payment_id
+                      )
                     )
-                  )
-                  FROM voucher_transactions vt
-                  JOIN voucher v ON vt.voucher_id = v.id
-                  JOIN ledger l2 ON v.to_ledger_id = l2.id
-                  WHERE vt.invoice_id = CAST(s.id AS TEXT) 
-                    AND vt.invoice_type = 'SALE'
+                    FROM (
+                      SELECT v.id as voucher_id, v.to_ledger_id, l2.name as ledger_name,
+                             vt.received_amount, v.mode_of_payment_id
+                      FROM voucher_transactions vt
+                      JOIN voucher v ON vt.voucher_id = v.id
+                      JOIN ledger l2 ON v.to_ledger_id = l2.id
+                      WHERE CAST(vt.invoice_id AS INTEGER) = s.id
+                        AND vt.invoice_type = 'SALE'
+                        AND v.tenant_id = $1
+                        AND l2.name IS NOT NULL
+                    ) pm
+                  ),
+                  '[]'
                 ) as payment_methods
             FROM sales s
             JOIN party p ON s.party_id = p.id 
@@ -72,7 +81,7 @@ class SalesRepository {
           query += ` AND EXISTS (
             SELECT 1 FROM voucher_transactions vt
             JOIN voucher v ON vt.voucher_id = v.id
-            WHERE vt.invoice_id = CAST(s.id AS TEXT) 
+            WHERE CAST(vt.invoice_id AS INTEGER) = s.id
             AND vt.invoice_type = 'SALE' 
             AND v.to_ledger_id = $${paramIndex++}
           )`
@@ -211,7 +220,7 @@ class SalesRepository {
           whereClause += ` AND EXISTS (
             SELECT 1 FROM voucher_transactions vt
             JOIN voucher v ON vt.voucher_id = v.id
-            WHERE vt.invoice_id = CAST(s.id AS TEXT) 
+            WHERE CAST(vt.invoice_id AS INTEGER) = s.id
             AND vt.invoice_type = 'SALE' 
             AND v.to_ledger_id = $${paramIndex++}
           )`
@@ -272,21 +281,30 @@ class SalesRepository {
               db.name as done_by_name,      
               cc.name as cost_center_name,
               l.name as ledger_name,
-              (
-                SELECT json_group_array(
-                  json_object(
-                    'voucher_id', v.id,
-                    'account_id', v.to_ledger_id,
-                    'account_name', l2.name,
-                    'amount', vt.received_amount,
-                    'mode_of_payment_id', v.mode_of_payment_id
+              COALESCE(
+                (
+                  SELECT json_group_array(
+                    json_object(
+                      'voucher_id', pm.voucher_id,
+                      'account_id', pm.to_ledger_id,
+                      'account_name', pm.ledger_name,
+                      'amount', pm.received_amount,
+                      'mode_of_payment_id', pm.mode_of_payment_id
+                    )
                   )
-                )
-                FROM voucher_transactions vt
-                JOIN voucher v ON vt.voucher_id = v.id
-                JOIN ledger l2 ON v.to_ledger_id = l2.id
-                WHERE vt.invoice_id = CAST(s.id AS TEXT) 
-                  AND vt.invoice_type = 'SALE'
+                  FROM (
+                    SELECT v.id as voucher_id, v.to_ledger_id, l2.name as ledger_name,
+                           vt.received_amount, v.mode_of_payment_id
+                    FROM voucher_transactions vt
+                    JOIN voucher v ON vt.voucher_id = v.id
+                    JOIN ledger l2 ON v.to_ledger_id = l2.id
+                    WHERE CAST(vt.invoice_id AS INTEGER) = s.id
+                      AND vt.invoice_type = 'SALE'
+                      AND v.tenant_id = $1
+                      AND l2.name IS NOT NULL
+                  ) pm
+                ),
+                '[]'
               ) as payment_methods
           ${fromAndJoins}
           ${whereClause}
@@ -465,40 +483,51 @@ async update(db, id, tenantId, saleData, items) {
         p.name as party_name,
         p.ledger_id as party_ledger_id, -- <<< FETCH LEDGER ID FROM PARTY
         l.name as ledger_name,
-        (
-          SELECT json_group_array(
-            json_object(
-              'id', si.id, 
-              'item_id', si.item_id, 
-              'item_name', i.name, 
-              'quantity', si.quantity, 
-              'unit_price', si.unit_price, 
-              'tax_amount', si.tax_amount, 
-              'total_price', si.total_price
+        COALESCE(
+          (
+            SELECT json_group_array(
+              json_object(
+                'id', si.id,
+                'item_id', si.item_id,
+                'item_name', i.name,
+                'quantity', si.quantity,
+                'unit_price', si.unit_price,
+                'tax_amount', si.tax_amount,
+                'total_price', si.total_price
+              )
             )
-          )
-          FROM sale_item si 
-          JOIN item i ON si.item_id = i.id
-          WHERE si.sales_id = s.id
+            FROM sale_item si
+            JOIN item i ON si.item_id = i.id
+            WHERE si.sales_id = s.id
+          ),
+          '[]'
         ) as items,
-        (
-          SELECT json_group_array(
-            json_object(
-              'voucher_id', v.id,
-              'account_id', v.to_ledger_id,
-              'account_name', l4.name,
-              'amount', vt.received_amount,
-              'mode_of_payment_id', v.mode_of_payment_id,
-              'voucher_no', v.voucher_no,
-              'payment_date', v.date
+        COALESCE(
+          (
+            SELECT json_group_array(
+              json_object(
+                'voucher_id', pm.voucher_id,
+                'account_id', pm.to_ledger_id,
+                'account_name', pm.ledger_name,
+                'amount', pm.received_amount,
+                'mode_of_payment_id', pm.mode_of_payment_id,
+                'voucher_no', pm.voucher_no,
+                'payment_date', pm.v_date
+              )
             )
-          )
-          FROM voucher_transactions vt
-          JOIN voucher v ON vt.voucher_id = v.id
-          JOIN ledger l4 ON v.to_ledger_id = l4.id
-          WHERE vt.invoice_id = CAST(s.id AS TEXT) 
-            AND vt.invoice_type = 'SALE'
-            AND v.tenant_id = $2
+            FROM (
+              SELECT v.id as voucher_id, v.to_ledger_id, l4.name as ledger_name,
+                     vt.received_amount, v.mode_of_payment_id, v.voucher_no, v.date as v_date
+              FROM voucher_transactions vt
+              JOIN voucher v ON vt.voucher_id = v.id
+              JOIN ledger l4 ON v.to_ledger_id = l4.id
+              WHERE CAST(vt.invoice_id AS INTEGER) = s.id
+                AND vt.invoice_type = 'SALE'
+                AND v.tenant_id = $2
+                AND l4.name IS NOT NULL
+            ) pm
+          ),
+          '[]'
         ) as payment_methods,
         (
           SELECT SUM(si.tax_amount) 
@@ -588,22 +617,44 @@ async update(db, id, tenantId, saleData, items) {
     return rowCount
   }
    async updatePaymentAndStatus(client, id, amountChange) {
-    await client.query(`UPDATE sales SET paid_amount = paid_amount + $1 WHERE id = $2`, [amountChange, id]);
-    const { rows } = await client.query(`
+    await client.query(`UPDATE sales SET paid_amount = COALESCE(paid_amount, 0) + $1 WHERE id = $2`, [amountChange, id]);
+    
+    // Update status based on new paid_amount
+    await client.query(`
       UPDATE sales
       SET status = CASE
-              WHEN paid_amount >= total_amount THEN 'paid'
+              WHEN paid_amount >= total_amount - 0.01 THEN 'paid'
               WHEN paid_amount > 0 THEN 'partial'
               ELSE 'unpaid'
           END
       WHERE id = $1
-      RETURNING id, status;
     `, [id]);
+
+    // Return the updated sale record (without RETURNING for SQLite compatibility)
+    const { rows } = await client.query(`SELECT id, status, paid_amount, total_amount FROM sales WHERE id = $1`, [id]);
     
     if (rows.length === 0) {
       throw new Error(`Sale with ID ${id} not found for payment update.`);
     }
     return rows[0];
+  }
+
+  async reconcilePaidAmount(db, id) {
+    const query = `
+      UPDATE sales
+      SET paid_amount = (
+        SELECT COALESCE(SUM(received_amount), 0)
+        FROM voucher_transactions
+        WHERE CAST(invoice_id AS INTEGER) = $1 AND invoice_type = 'SALE'
+      ),
+      status = CASE
+        WHEN (SELECT COALESCE(SUM(received_amount), 0) FROM voucher_transactions WHERE CAST(invoice_id AS INTEGER) = $1 AND invoice_type = 'SALE') >= total_amount - 0.01 THEN 'paid'
+        WHEN (SELECT COALESCE(SUM(received_amount), 0) FROM voucher_transactions WHERE CAST(invoice_id AS INTEGER) = $1 AND invoice_type = 'SALE') > 0 THEN 'partial'
+        ELSE 'unpaid'
+      END
+      WHERE id = $1;
+    `;
+    return await db.query(query, [id]);
   }
 }
 
