@@ -55,7 +55,7 @@ class SalesService {
     return Array.from(uniqueItemsMap.values())
   }
 
-  async create(user, saleData, db) {
+async create(user, saleData, db) {
     const tenantId = user.tenant_id
     const {
       items,
@@ -83,6 +83,16 @@ class SalesService {
     )
     const grandTotal = itemsSubtotal - parseFloat(discount)
 
+    // --- FIX: Calculate total paid amount and status before creating the sale ---
+    const totalPaid = payment_methods.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    
+    let status = 'unpaid';
+    if (totalPaid >= grandTotal) {
+        status = 'paid';
+    } else if (totalPaid > 0) {
+        status = 'partial';
+    }
+
     // Filter valid payments (for vouchers)
     const validPayments = payment_methods
       .map((p) => ({
@@ -92,19 +102,20 @@ class SalesService {
       }))
       .filter((p) => p.amount !== 0 && p.account_id)
 
-    // Note: paid_amount is initially 0, updated by VoucherService later
     const salePayload = {
       ...saleDetails,
       tenant_id: tenantId,
       ledger_id,
       discount: parseFloat(discount),
       total_amount: grandTotal,
+      paid_amount: totalPaid, // Pass actual value
+      status: status,         // Pass actual value
       change_return: parseFloat(change_return),
       date: saleDetails.date || new Date(),
       note,
     }
 
-    // 3. Create Sale (Unpaid)
+    // 3. Create Sale (With correct initial totals)
     const newSales = await this.repository.create(
       db,
       salePayload,
@@ -128,10 +139,10 @@ class SalesService {
     }
   }
 
-  async update(id, user, saleData, db) {
+async update(id, user, saleData, db) {
     const tenantId = user.tenant_id
 
-    // 1. Fetch Original Sale (includes existing vouchers/payments)
+    // 1. Fetch Original Sale
     const originalSale = await this.repository.getById(db, id, tenantId)
     if (!originalSale) {
       throw new Error('Sale not found or not authorized to update')
@@ -148,52 +159,40 @@ class SalesService {
     } = saleData
 
     const uniqueInputItems = this._deduplicateAndCleanItems(updatedItems)
+    const itemsWithDetails = await this._processSaleItems(uniqueInputItems, tenantId, db)
 
-    const itemsWithDetails = await this._processSaleItems(
-      uniqueInputItems,
-      tenantId,
-      db,
-    )
-
-    const itemsSubtotal = itemsWithDetails.reduce(
-      (sum, item) => sum + item.total_price,
-      0,
-    )
+    const itemsSubtotal = itemsWithDetails.reduce((sum, item) => sum + item.total_price, 0)
     const grandTotal = itemsSubtotal - parseFloat(discount)
 
+    // --- FIX: Calculate total paid and status for the update payload ---
+    const totalPaid = payment_methods.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    
+    let status = 'unpaid';
+    if (totalPaid >= grandTotal) {
+        status = 'paid';
+    } else if (totalPaid > 0) {
+        status = 'partial';
+    }
+
     // 2. Handle Payment Methods (Sync Vouchers)
-    // Filter and map valid payments
     const validIncomingPayments = payment_methods
       .map((p) => ({
         account_id: p.account_id,
         amount: parseFloat(p.amount) || 0,
         mode_of_payment_id: p.mode_of_payment_id,
-        voucher_id: p.voucher_id, // Ensure ID is passed if it exists
+        voucher_id: p.voucher_id,
       }))
       .filter((p) => p.amount !== 0 && p.account_id)
 
-    // Collect IDs of incoming vouchers to identify which existing ones should be kept
-    const incomingVoucherIds = new Set(
-      validIncomingPayments.map((p) => p.voucher_id).filter((id) => id != null),
-    )
-
-    // Get existing vouchers from the DB record
+    const incomingVoucherIds = new Set(validIncomingPayments.map((p) => p.voucher_id).filter((id) => id != null))
     const existingVouchers = originalSale.payment_methods || []
 
     for (const existingVoucher of existingVouchers) {
-      if (
-        existingVoucher.voucher_id &&
-        !incomingVoucherIds.has(existingVoucher.voucher_id)
-      ) {
+      if (existingVoucher.voucher_id && !incomingVoucherIds.has(existingVoucher.voucher_id)) {
         try {
-          // Pass the current 'db' or 'client' to ensure it's in the same transaction
           await this.voucherService.delete(existingVoucher.voucher_id, user, db)
         } catch (err) {
-          console.error(
-            `Cleanup failed for voucher ${existingVoucher.voucher_id}:`,
-            err.message,
-          )
-          // We don't throw here so the sale update can continue
+          console.error(`Cleanup failed for voucher ${existingVoucher.voucher_id}:`, err.message)
         }
       }
     }
@@ -203,42 +202,31 @@ class SalesService {
       ledger_id,
       discount: parseFloat(discount),
       total_amount: grandTotal,
+      paid_amount: totalPaid, // Added actual value
+      status: status,         // Added actual value
       change_return: parseFloat(change_return),
       note: note !== undefined ? note : originalSale.note,
     }
 
     // Calculate Stock Differences
-    const originalItemQuantities = new Map(
-      (originalSale.items || []).map((item) => [item.item_id, item.quantity]),
-    )
-    const updatedItemQuantities = new Map(
-      (itemsWithDetails || []).map((item) => [item.item_id, item.quantity]),
-    )
+    const originalItemQuantities = new Map((originalSale.items || []).map((item) => [item.item_id, item.quantity]))
+    const updatedItemQuantities = new Map((itemsWithDetails || []).map((item) => [item.item_id, item.quantity]))
 
     const stockAdjustments = new Map()
-    const allItemIds = new Set([
-      ...originalItemQuantities.keys(),
-      ...updatedItemQuantities.keys(),
-    ])
+    const allItemIds = new Set([...originalItemQuantities.keys(), ...updatedItemQuantities.keys()])
 
     for (const itemId of allItemIds) {
       const originalQty = originalItemQuantities.get(itemId) || 0
       const updatedQty = updatedItemQuantities.get(itemId) || 0
-      const difference = originalQty - updatedQty // + means return to stock (orig > updated), - means take from stock
+      const difference = originalQty - updatedQty
 
       if (difference !== 0) {
         stockAdjustments.set(itemId, difference)
       }
     }
 
-    // 3. Update Sale Details
-    const updatedSales = await this.repository.update(
-      db,
-      id,
-      tenantId,
-      salePayload,
-      itemsWithDetails,
-    )
+    // 3. Update Sale Details (Now includes paid_amount and status)
+    const updatedSales = await this.repository.update(db, id, tenantId, salePayload, itemsWithDetails)
 
     if (!updatedSales) {
       throw new Error('Failed to update the sale.')
@@ -251,12 +239,7 @@ class SalesService {
 
     // 5. Process Create/Update for incoming payments
     if (updatedSales && validIncomingPayments.length > 0) {
-      await this._processVouchersForPayments(
-        updatedSales,
-        user,
-        validIncomingPayments,
-        db,
-      )
+      await this._processVouchersForPayments(updatedSales, user, validIncomingPayments, db)
     }
 
     const result = await this.getById(id, tenantId, db)
