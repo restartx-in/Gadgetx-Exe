@@ -224,6 +224,9 @@ class VoucherService {
         'subtract',
       )
 
+      // Delete associated transactions
+      await this.voucherTransactionsService.deleteByVoucherId(dbClient, id)
+
       // Delete the voucher record
       await this.repository.delete(dbClient, id, user.tenant_id)
 

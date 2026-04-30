@@ -216,7 +216,7 @@ async update(id, user, saleData, db) {
       ledger_id,
       discount: parseFloat(discount),
       total_amount: grandTotal,
-      paid_amount: originalSale.paid_amount || 0, 
+      paid_amount: totalPaid, 
       status: status, // Use newly calculated status
       change_return: parseFloat(change_return),
       note: note !== undefined ? note : originalSale.note,

@@ -78,43 +78,10 @@ class VoucherRepository {
     return result.rows[0]
   }
 
-  async delete(id, user, db, client = null) {
-    const existing = await this.repository.getById(db, id, user.tenant_id)
-
-    // IF NOT FOUND, JUST RETURN. Don't throw an error during an update cleanup.
-    if (!existing) {
-      console.warn(`Voucher ${id} not found, skipping delete.`)
-      return { status: 'success', message: 'Already gone' }
-    }
-
-    const dbClient = client || (await db.connect())
-    try {
-      if (!client) await dbClient.query('BEGIN')
-
-      await this._updateInvoicePayments(
-        dbClient,
-        existing.transactions,
-        'subtract',
-      )
-      await this._updateLedgerBalances(
-        dbClient,
-        existing.from_ledger_id,
-        existing.to_ledger_id,
-        user.tenant_id,
-        existing.amount,
-        'subtract',
-      )
-
-      const deleted = await this.repository.delete(dbClient, id, user.tenant_id)
-
-      if (!client) await dbClient.query('COMMIT')
-      return { status: 'success', data: deleted }
-    } catch (error) {
-      if (!client) await dbClient.query('ROLLBACK')
-      throw error
-    } finally {
-      if (!client) dbClient.release()
-    }
+  async delete(client, id, tenantId) {
+    const query = `DELETE FROM voucher WHERE id = $1 AND tenant_id = $2`;
+    const result = await client.query(query, [id, tenantId]);
+    return result.rowCount > 0;
   }
   async getById(db, id, tenantId) {
     const { rows } = await db.query(
@@ -124,7 +91,7 @@ class VoucherRepository {
             cc.name as cost_center_name,
             db.name as done_by_name,
             et.name as expense_type_name,
-            (SELECT JSON_GROUP_ARRAY(
+            (SELECT JSON_AGG(
                JSON_OBJECT(
                  'id', vt.id, 
                  'invoice_id', vt.invoice_id, 
@@ -143,7 +110,7 @@ class VoucherRepository {
      LEFT JOIN "cost_center" cc ON v.cost_center_id = cc.id
      LEFT JOIN "done_by" db ON v.done_by_id = db.id
      LEFT JOIN "expense_type" et ON v.expense_type_id = et.id
-     WHERE v.id = ? AND v.tenant_id = ?`,
+     WHERE v.id = $1 AND v.tenant_id = $2`,
       [id, tenantId],
     )
     return rows[0]
