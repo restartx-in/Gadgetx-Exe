@@ -18,6 +18,7 @@ class PurchaseService {
       discount = 0,
       payment_methods = [],
       note = null,
+      ledger_id = null,
       ...purchaseDetails
     } = purchaseData;
 
@@ -35,18 +36,20 @@ class PurchaseService {
 
     // 2. Calculate total paid amount and status
     const totalPaid = payment_methods.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-    
+
     let status = 'unpaid';
     if (totalPaid >= grandTotal) {
-        status = 'paid';
+      status = 'paid';
     } else if (totalPaid > 0) {
-        status = 'partial';
+      status = 'partial';
     }
 
     // Filter valid payments (for vouchers)
+    const payloadLedgerId = ledger_id || (payment_methods.length > 0 ? (payment_methods[0].account_id || payment_methods[0].ledger_id) : null);
+
     const validPayments = payment_methods
-      .map((p) => ({
-        account_id: p.account_id,
+      .map((p, idx) => ({
+        account_id: p.account_id || p.ledger_id || (idx === 0 ? payloadLedgerId : null),
         amount: parseFloat(p.amount) || 0,
         mode_of_payment_id: p.mode_of_payment_id,
       }))
@@ -61,6 +64,7 @@ class PurchaseService {
       status: status,         // Pass actual value
       date: purchaseDetails.date || new Date(),
       note,
+      ledger_id: payloadLedgerId,
     };
 
     // 3. Create Purchase (With correct initial totals)
@@ -106,6 +110,7 @@ class PurchaseService {
       discount = 0,
       payment_methods = [],
       note = null,
+      ledger_id = null,
       ...purchaseDetails
     } = purchaseData;
 
@@ -122,20 +127,23 @@ class PurchaseService {
 
     // 2. Handle Payment Methods (Sync Vouchers)
     const totalPaid = payment_methods.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-    
+
     let status = 'unpaid';
     if (totalPaid >= grandTotal) {
-        status = 'paid';
+      status = 'paid';
     } else if (totalPaid > 0) {
-        status = 'partial';
+      status = 'partial';
     }
 
+    const payloadLedgerId = ledger_id || (payment_methods.length > 0 ? (payment_methods[0].account_id || payment_methods[0].ledger_id) : originalPurchase.ledger_id);
+
     const validIncomingPayments = payment_methods
-      .map((p) => ({
-        account_id: p.account_id,
+      .map((p, idx) => ({
+        account_id: p.account_id || p.ledger_id || (idx === 0 ? payloadLedgerId : null),
         amount: parseFloat(p.amount) || 0,
         mode_of_payment_id: p.mode_of_payment_id,
         voucher_id: p.voucher_id, // Important: ID passed from frontend to identify existing vouchers
+        voucher_no: p.voucher_no,
       }))
       .filter((p) => p.amount !== 0 && p.account_id);
 
@@ -186,13 +194,16 @@ class PurchaseService {
       }
     }
 
+
     const purchasePayload = {
       ...purchaseDetails,
+      tenant_id: tenantId,
       discount: parseFloat(discount),
       total_amount: grandTotal,
       paid_amount: totalPaid,
       status: status,
       note,
+      ledger_id: payloadLedgerId,
     };
 
     // 4. Update Purchase Details
@@ -351,8 +362,17 @@ class PurchaseService {
     const paidAmount = parseFloat(paid_amount || 0);
     const pending_amount = totalAmount - paidAmount;
 
+    const parsedPurchases = purchases.map((purchase) => ({
+      ...purchase,
+      payment_methods: Array.isArray(purchase.payment_methods)
+        ? purchase.payment_methods
+        : typeof purchase.payment_methods === 'string'
+          ? JSON.parse(purchase.payment_methods || '[]')
+          : (purchase.payment_methods || []),
+    }));
+
     return {
-      data: purchases,
+      data: parsedPurchases,
       count: totalCount,
       page_count,
       total_amount: totalAmount,
@@ -364,7 +384,20 @@ class PurchaseService {
   async getById(id, tenantId, db) {
     const purchase = await this.repository.getById(db, id, tenantId);
     if (!purchase) throw new Error("Purchase not found or not authorized");
-    return purchase;
+
+    return {
+      ...purchase,
+      items: Array.isArray(purchase.items)
+        ? purchase.items
+        : typeof purchase.items === 'string'
+          ? JSON.parse(purchase.items || '[]')
+          : (purchase.items || []),
+      payment_methods: Array.isArray(purchase.payment_methods)
+        ? purchase.payment_methods
+        : typeof purchase.payment_methods === 'string'
+          ? JSON.parse(purchase.payment_methods || '[]')
+          : (purchase.payment_methods || []),
+    };
   }
 
   async _processPurchaseItems(items, tenantId, db) {

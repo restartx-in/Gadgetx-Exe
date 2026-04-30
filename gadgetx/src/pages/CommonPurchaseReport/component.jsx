@@ -91,6 +91,7 @@ const PurchaseRow = React.memo(
     columns,
     getPurchaseMenuItems,
     DotMenu,
+    accountNameMap = {},
   }) => {
     const dueAmount = (prchs.total_amount || 0) - (prchs.paid_amount || 0);
     const menuItems = useMemo(
@@ -124,14 +125,18 @@ const PurchaseRow = React.memo(
               </Td>
             );
           
-          if (field.value === "account")
+          if (field.value === "account") {
+            const fromPayments = [...new Set(prchs.payment_methods?.map((p) => p.account_name).filter(Boolean))].join(", ");
+            const fallbackAccount = prchs.payment_methods?.length > 0 
+              ? accountNameMap[prchs.payment_methods[0].account_id] 
+              : null;
+
             return (
               <TdOverflow key={field.value}>
-                {[...new Set(prchs.payment_methods?.map((p) => p.account_name).filter(Boolean))].join(", ") ||
-                  prchs.default_account_name ||
-                  "N/A"}
+                {fromPayments || fallbackAccount || prchs.default_account_name || "N/A"}
               </TdOverflow>
             );
+          }
           
           if (field.value === "total_amount")
             return (
@@ -174,7 +179,7 @@ const PurchaseRow = React.memo(
 );
 
 const MobilePurchaseCard = React.memo(
-  ({ prchs, handlers, getPurchaseMenuItems, DotMenu }) => {
+  ({ prchs, handlers, getPurchaseMenuItems, DotMenu, accountNameMap = {} }) => {
     const dueAmount = (prchs.total_amount || 0) - (prchs.paid_amount || 0);
     const menuItems = useMemo(
       () => getPurchaseMenuItems(prchs, handlers),
@@ -190,6 +195,8 @@ const MobilePurchaseCard = React.memo(
             <div>
               Account:{" "}
               {[...new Set(prchs.payment_methods?.map((p) => p.account_name).filter(Boolean))].join(", ") ||
+                (prchs.payment_methods?.length > 0 && accountNameMap[prchs.payment_methods[0].account_id]) ||
+                prchs.default_account_name ||
                 "N/A"}
             </div>
             {prchs.done_by_name && <div>Done By: {prchs.done_by_name}</div>}
@@ -1260,6 +1267,7 @@ const CommonPurchaseReport = ({ hooks = {}, components = {}, config = {} }) => {
                           columns={extraFields.filter((f) => f.show)}
                           getPurchaseMenuItems={getPurchaseMenuItems}
                           DotMenu={DotMenu}
+                          accountNameMap={accountNameMap}
                         />
                       ))
                     ) : (
@@ -1325,6 +1333,7 @@ const CommonPurchaseReport = ({ hooks = {}, components = {}, config = {} }) => {
                         handlers={rowHandlers}
                         getPurchaseMenuItems={getPurchaseMenuItems}
                         DotMenu={DotMenu}
+                        accountNameMap={accountNameMap}
                       />
                     ))}
                   </div>
