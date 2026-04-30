@@ -298,7 +298,7 @@ const CommonPurchase = ({ hooks = {}, components = {}, config = {} }) => {
         invoice_number: purchaseData.invoice_number,
       });
 
-      if (purchaseData.payment_methods) {
+      if (purchaseData.payment_methods && purchaseData.payment_methods.length > 0) {
         const validPayments = purchaseData.payment_methods.filter(
           (p) => p && p.account_id,
         );
@@ -307,6 +307,16 @@ const CommonPurchase = ({ hooks = {}, components = {}, config = {} }) => {
           mode_of_payment_id: p.mode_of_payment_id || p.mode_of_payment,
         }));
         setExistingPayments(mappedPayments);
+      } else if (parseFloat(purchaseData.paid_amount) > 0) {
+        // Fallback: If no vouchers found but paid_amount > 0, create a synthetic payment
+        setExistingPayments([
+          {
+            account_id: purchaseData.ledger_id || "",
+            account_name: purchaseData.default_account_name || "Existing Payment",
+            amount: parseFloat(purchaseData.paid_amount),
+            mode_of_payment_id: purchaseData.mode_of_payment_id || "",
+          }
+        ]);
       }
     }
     if (mode === "add" && partyRef.current) {
@@ -459,6 +469,7 @@ const CommonPurchase = ({ hooks = {}, components = {}, config = {} }) => {
         formData.mode_of_payment_id ||
         paymentData.payment_methods?.[0]?.mode_of_payment_id ||
         null,
+      ledger_id: paymentData.payment_methods?.[0]?.account_id || null,
       status: paymentData.status,
       paid_amount: calculatedPaidAmount,
       discount: formData.discount,

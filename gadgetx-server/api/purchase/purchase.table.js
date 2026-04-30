@@ -7,16 +7,16 @@ module.exports = async (client) => {
 
     if (tableExists) {
       console.log('ℹ️ "purchase" table already exists.')
-      // *** IMPORTANT: Add ALTER TABLE command to add 'status' if it doesn't exist ***
+      // *** SQLite compatible ALTER TABLE commands ***
       await client.query(`
-        DO $$ 
-        BEGIN
-            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='purchase' AND column_name='status') THEN
-                ALTER TABLE purchase ADD COLUMN status VARCHAR(255) NOT NULL DEFAULT 'unpaid';
-            END IF;
-        END $$;
-      `);
-      console.log('✅ "purchase" table updated with status column.')
+        ALTER TABLE purchase ADD COLUMN status VARCHAR(255) NOT NULL DEFAULT 'unpaid';
+      `).catch(() => {}); // Catch if already exists
+      
+      await client.query(`
+        ALTER TABLE purchase ADD COLUMN ledger_id INTEGER REFERENCES "ledger"(id) ON DELETE SET NULL;
+      `).catch(() => {}); // Catch if already exists
+
+      console.log('✅ "purchase" table updated with missing columns.')
 
     } else {
       await client.query(`
@@ -26,13 +26,14 @@ module.exports = async (client) => {
           party_id INTEGER NOT NULL REFERENCES party(id), 
           done_by_id INTEGER REFERENCES "done_by"(id) ON DELETE SET NULL,
           cost_center_id INTEGER REFERENCES "cost_center"(id) ON DELETE SET NULL,
+          ledger_id INTEGER REFERENCES "ledger"(id) ON DELETE SET NULL,
           
           total_amount DECIMAL(10, 2) NOT NULL,
           paid_amount DECIMAL(10, 2) NOT NULL,
           discount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
           invoice_number VARCHAR(100) NOT NULL,
           date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          status VARCHAR(255) NOT NULL DEFAULT 'unpaid' -- <<< ADDED STATUS COLUMN
+          status VARCHAR(255) NOT NULL DEFAULT 'unpaid'
         );
       `)
       console.log('✅ "purchase" table created.')

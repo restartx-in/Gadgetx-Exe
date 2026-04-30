@@ -22,6 +22,7 @@ import {
   ThMenu,
   TdDate,
   TdNumeric,
+  TdOverflow,
   TableCaption,
   ThContainer,
   ThSort,
@@ -469,11 +470,11 @@ const CommonPayrollList = ({
                         pageSize={state.page_size}
                       />
                       <TdDate>{rec.pay_date}</TdDate>
-                      <Td>{rec.employee_name}</Td>
-                      <Td>{rec.ledger_name || "-"}</Td>
+                      <TdOverflow>{rec.employee_name}</TdOverflow>
+                      <TdOverflow>{rec.ledger_name || "-"}</TdOverflow>
                       <TdNumeric>{rec.salary}</TdNumeric>
-                      <Td>{rec.cost_center_name || "-"}</Td>
-                      <Td>{rec.done_by_name || "-"}</Td>
+                      <TdOverflow>{rec.cost_center_name || "-"}</TdOverflow>
+                      <TdOverflow>{rec.done_by_name || "-"}</TdOverflow>
                       <TdDate>{rec.created_at}</TdDate>
                       <TdMenu
                         onEdit={() =>

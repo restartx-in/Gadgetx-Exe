@@ -22,6 +22,7 @@ import {
   ThMenu,
   TdDate,
   TdNumeric,
+  TdOverflow,
   TableCaption,
   ThContainer,
   ThSort,
@@ -508,17 +509,17 @@ const CommonEmployeeList = ({
                         pageSize={state.page_size}
                       />
                       <TdDate>{emp.hire_date}</TdDate>
-                      <Td>{emp.name}</Td>
-                      <Td>{emp.email}</Td>
+                      <TdOverflow>{emp.name}</TdOverflow>
+                      <TdOverflow>{emp.email}</TdOverflow>
                       <Td>{emp.phone}</Td>
-                      <Td>
+                      <TdOverflow>
                         {positions?.find(
                           (p) =>
                             String(p.id) === String(emp.employee_position_id),
                         )?.name || "-"}
-                      </Td>
-                      <Td>{emp.done_by_name}</Td>
-                      <Td>{emp.cost_center_name}</Td>
+                      </TdOverflow>
+                      <TdOverflow>{emp.done_by_name}</TdOverflow>
+                      <TdOverflow>{emp.cost_center_name}</TdOverflow>
                       <TdNumeric>{emp.salary}</TdNumeric>
                       <TdMenu
                         onEdit={() =>
