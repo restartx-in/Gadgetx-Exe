@@ -23,7 +23,7 @@ import ReceiptModal from "@/apps/user/components/ReceiptModal";
 import ReceiptPDF from "@/apps/user/components/ReceiptPDF";
 import AmountSummary from "@/apps/user/components/AmountSummary";
 import PaymentsModal from "@/apps/user/components/PaymentsModal";
-import AccountAutoComplete from "@/apps/user/components/AccountAutoComplete";
+import LedgerAutoComplete from "@/apps/user/components/LedgerAutoComplete";
 import CustomerAutoComplete from "@/apps/user/components/CustomerAutoComplete";
 import DoneByAutoComplete from "@/apps/user/components/DoneByAutoComplete";
 import CostCenterAutoComplete from "@/apps/user/components/CostCenterAutoComplete";
@@ -63,7 +63,7 @@ const SaleReport = () => {
     ReceiptPDF,
     AmountSummary,
     PaymentsModal,
-    AccountAutoComplete,
+    LedgerAutoComplete,
     CustomerAutoComplete,
     DoneByAutoComplete,
     CostCenterAutoComplete,

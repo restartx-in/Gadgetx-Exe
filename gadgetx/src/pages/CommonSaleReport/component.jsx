@@ -54,7 +54,6 @@ import { format, isValid } from "date-fns";
 import ExportMenu from "@/components/ExportMenu";
 import useSyncURLParams from "@/hooks/useSyncURLParams";
 import ColumnSelectorModal from "@/components/ColumnSelectorModal";
-import FullScreenButton from "@/components/FullScreenButton";
 import DateFilter from "@/components/DateFilter";
 
 const stateReducer = (state, newState) => ({ ...state, ...newState });
@@ -288,7 +287,7 @@ const CommonSaleReport = ({ hooks, components, config }) => {
     ReceiptPDF,
     AmountSummary,
     PaymentsModal,
-    AccountAutoComplete,
+    LedgerAutoComplete,
     CustomerAutoComplete,
     DoneByAutoComplete,
     CostCenterAutoComplete,
@@ -742,7 +741,7 @@ const handleDeleteConfirm = () => {
                           }))
                         }
                       />
-                      <AccountAutoComplete
+                      <LedgerAutoComplete
                         value={localFilterState.account_id}
                         onChange={(e) =>
                           setLocalFilterState((p) => ({
@@ -798,7 +797,6 @@ const handleDeleteConfirm = () => {
               }
               topRight={
                 <>
-                  <FullScreenButton />
                   <RefreshButton onClick={handleRefresh} />
                   <DateFilter
                     value={{
@@ -922,7 +920,7 @@ const handleDeleteConfirm = () => {
                                     handleSort={(v) => setState({ sort: v, page: 1 })}
                                   />
                                   <ThSearchOrFilterPopover isSearch={false} popoverWidth={220}>
-                                    <AccountAutoComplete
+                                    <LedgerAutoComplete
                                       value={state.account_id}
                                       onChange={(e) =>
                                         setState({ account_id: e.target.value, page: 1 })
